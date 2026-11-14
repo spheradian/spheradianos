@@ -6,7 +6,7 @@ Status: **draft for review, pre-implementation**. Nothing described here exists 
 
 > Originality note: this is an original work inspired by a *feeling*: a short, cinematic, sound-and-light-driven moment at power-on that makes the machine feel alive, as in the startup intro of the original Xbox console. It uses **no** Microsoft or Xbox assets, logo, sounds, shapes, colours or trade dress, and it must not be made to resemble them. Every visual and audio element is generated from XSphereOS's own sphere motif and its own code.
 
-> Reference note: the reference video was not available to the author of this draft, so nothing here claims to reproduce specific frames, shapes or sounds from it. Questions that need the video owner's input are collected in section 13.
+> Reference note: the reference video was analysed visually, frame by frame, and the findings are in Appendix A. Its **audio was not analysed** (the analysis had no way to listen to it), so nothing here describes or derives from its sound. The appendix extracts *principles*; it is not a shot list to reproduce.
 
 ---
 
@@ -14,7 +14,7 @@ Status: **draft for review, pre-implementation**. Nothing described here exists 
 
 XSphereDE is a sphere: windows live on its surface, trust domains are regions of it, and the Mini-Globe shows it from outside. The boot experience is the **first appearance of that same sphere**, and the desktop is where it ends up. The boot is not an intro video placed in front of the desktop; it is the desktop assembling itself.
 
-The sequence, in one sentence: *a point of light appears in the dark, gathers into a sphere, its surface lights up as the system genuinely comes alive, and then the sphere unfolds around the viewer and becomes the desktop*.
+The sequence, in one sentence: *a seed of light appears in the dark, restless and alive; its own glow reveals the lattice of the sphere around it, region by region, as the system genuinely comes up; when the system is ready the seed releases, its shell sweeps past the viewer, and the viewer is standing inside the lit sphere, which is the desktop*.
 
 Design principles:
 
@@ -23,6 +23,10 @@ Design principles:
 3. **Light and sound as one timeline.** Visual and audio events come from one deterministic timeline, so they cannot drift apart.
 4. **Failure is a first-class state.** A fault is shown in the same visual language *and* with readable text. The splash can never hide an error.
 5. **Cheap.** The boot experience must not be a reason a machine boots slower. It degrades down to plain text on hardware that cannot afford it.
+6. **The light is the subject.** The seed is the only light source in the scene. Everything else is visible only because the seed illuminates it. Nothing is lit "from nowhere" (Appendix A, principle 1).
+7. **What the light reveals is real.** The structure that emerges from the dark is not a set built for the intro: it is the actual geometry of the desktop sphere (its lattice, its trust-domain regions) seen from where the user will stand. Nothing shown during boot is thrown away afterwards.
+8. **The climax is earned.** Tension rises with real boot activity and the release fires on the real "session ready" event, never on a fixed clock.
+9. **Stillness after release.** The sequence ends in calm: a quiet, fully lit desktop, with no further motion demanded of the viewer.
 
 Target feel (not a spec of frames): calm, confident, about two to three seconds of *authored* motion that overlaps the real boot rather than extending it; a single, soft, low-register sound at the moment the sphere resolves into the desktop.
 
@@ -66,11 +70,17 @@ Times are targets measured from the first frame drawn, on a mid-range 2020 lapto
 
 | Phase | Stage hook | Visual | Sound | Notes |
 |---|---|---|---|---|
-| Ignite | Plymouth, initramfs | Dark field; a single point of light fades in at the centre | none | Matches the bootloader background so there is no flash |
-| Gather | Plymouth | The point expands into a faint sphere wireframe, rotating slowly | none | Loops indefinitely if the boot is slow; never speeds up artificially |
-| Wake | Plymouth, `systemd` | Regions of the surface (trust-domain meridians) light up as real milestones complete: root mounted, devices settled, session services ready | none | Section 4 |
-| Resolve | Hand-off | Sphere reaches full brightness; the compositor takes over on the same frame | Soft low tone begins (if enabled) | Section 5 |
-| Unfold | Compositor | The camera moves from outside the sphere to the inside; the surface becomes the desktop; Mini-Globe fades in | Tone resolves into a short, original chord | About 0.8 to 1.2 s, and input is already live |
+| Ignite | Plymouth, initramfs | True black. A barely visible speck appears at the centre and slowly gains strength | none | Matches the bootloader background so there is no flash |
+| Gather | Plymouth | The speck grows into a small, soft, *living* seed of light: its outline is never still, it breathes and ripples. Nothing else is visible yet | none | Loops indefinitely if the boot is slow; never speeds up artificially |
+| Wake | Plymouth, `systemd` | The seed's glow starts to reach its surroundings: arcs of the sphere's lattice emerge from the dark, lit only by the seed. Each region becomes visible when its real milestone completes (root mounted, devices settled, session services ready). The seed grows more agitated as more of the system is in motion | none | Section 4. Agitation is driven by real activity, bounded by the photosensitivity limits of section 8 |
+| Resolve | Hand-off | Session ready: the seed draws in, brightens toward a hot core (the one moment the palette leaves its base hue), and the compositor takes over on that frame | A low tone tightens with the seed (if enabled) | Section 5. A bounded bloom, not a full-screen white flash |
+| Unfold | Compositor | The seed releases: a shell of light expands outward and passes *through the viewer*. Where it passes, the lattice stays lit and becomes the desktop surface. The viewer is now inside the sphere. Motion settles to stillness; the Mini-Globe fades in; a small wordmark may appear near a pole and fade | The tone resolves into a short, original chord, then silence | About 0.8 to 1.2 s; input is already live; no hold on a logo |
+
+Three properties make each boot its own while staying testable:
+
+- **Driven, not canned.** The seed's turbulence is a function of real boot activity (milestone events, unit start rate), so a busy boot looks different from a quiet one.
+- **A per-boot signature.** A non-secret random value (for example the kernel's per-boot identifier) seeds small variations in the seed's motion, so no two boots are identical. In tests the seed is fixed, so frames are reproducible.
+- **Colour as information.** The seed starts near-neutral; each region of the lattice takes its trust-domain colour as it wakes, so the palette is assembled by the boot rather than applied to it. (Final palette is an open question, section 13.)
 
 The sound is **synthesised procedurally** from a small, deterministic description (a few oscillators, an envelope, a filter sweep), not recorded or sampled. This keeps the repository free of binary audio, makes the output reproducible and licence-clean, and removes any chance of resembling an existing jingle. It also lets the same timeline description drive both light and sound.
 
@@ -228,6 +238,10 @@ An honest survey of the field, with the caveat that claims about other distribut
 5. **Explicit capability tiers with a monotonic downgrade rule.** Text, static, 2D, full, chosen by probes, so old hardware gets a smaller experience rather than a broken one.
 6. **Boot experience as an engineered, budgeted component.** Hard budgets, property-tested logic, and a CI boot test that asserts a clean splash exit and a running session.
 
+7. **The set is the product.** In the reference, the environment revealed by the light exists only for the intro and is discarded by a cut to a logo. Here the revealed structure is the desktop itself, and there is no cut: the user ends up standing inside what they watched being lit.
+8. **A boot that is alive rather than replayed.** Motion driven by real system activity plus a per-boot signature means the sequence is never the same video twice, while a fixed seed keeps it deterministic under test.
+9. **No logo hold.** The reference spends about a third of its length on a static brand lock-up. Here that time is given back to the user: the "hold" is a usable desktop.
+
 It is *not* new to have a short cinematic boot. The novelty is continuity, honesty and testability.
 
 ---
@@ -264,9 +278,9 @@ Deliverable 2 of this effort (after approval of this document) is B1, optionally
 
 For the user, about the vision:
 
-1. **The reference video.** What specifically should carry over: the pacing, the use of a single bright colour on dark, a transformation of one shape into another, the sound character (deep, bright, metallic)? Which three adjectives describe it best?
+1. **The reference video.** The visual analysis is in Appendix A. Still needed from the user: is the reading of its principles right, and what is the character of its **sound** (not analysed), in words: deep or bright, mechanical or organic, rising or pulsing, how it ends?
 2. **Duration.** Is a short sequence (about 2 to 3 s of authored motion that overlaps the boot) right, or should a longer, fixed-length intro be possible as an option, understanding that it would delay the session?
-3. **Colour identity.** Which palette is the sphere's: the existing code-rain green, or something else?
+3. **Colour identity.** Which palette is the sphere's? Recommendation: *not* a single glowing green on black, because that is the reference's signature look and XSphereDE's code-rain green would land very close to it. Proposed instead: a near-neutral seed with the trust-domain colours emerging region by region.
 4. **Audio default.** Proposed: off on the live image, with a first-boot choice to enable it. Acceptable, or should it be on by default when the system is not muted?
 
 For engineering:
@@ -278,3 +292,58 @@ For engineering:
 9. Spoken or tonal diagnostics for blind users: in scope, or a later milestone?
 10. Is the KVM-capable runner available for hard timing gates, or are timing measurements trend-only (ENGINEERING-PLAN open question 4)?
 11. Whether the bootloader menu is visible by default on the live ISO (it matters for the "no text before the splash" goal, and for BIOS boot).
+
+---
+
+## Appendix A. Reference analysis
+
+Source: the user's reference video, a 10.5 s capture of the original Xbox console's startup sequence. It was examined visually at about twenty sampled positions. **The audio was not heard**, so this appendix says nothing about sound. The description below exists only to extract design principles; none of its shapes, colours, marks or composition may be reproduced.
+
+### A.1 What happens on screen
+
+| Time (approx.) | Observation |
+|---|---|
+| 0.0 to 1.0 s | Black. Nothing |
+| 1.3 s | A tiny, dim speck of coloured light at the centre of a black frame |
+| 1.5 to 2.1 s | The speck grows into a small, soft glowing mass. Still nothing else visible |
+| 2.6 to 3.0 s | The mass is bright and roughly round, with an unsteady outline. A faint hint of surrounding structure appears, lit by it |
+| 3.4 to 4.2 s | The mass deforms continuously into irregular lobes, like something fluid or alive. A mechanical enclosure around it (rings, ribbed conduits, circular fixtures above and below) is now legible, entirely in the same hue and entirely lit by the mass |
+| 4.6 to 5.5 s | The camera moves in and tilts; the enclosure brightens; the mass gets hotter (toward white) and more agitated |
+| 6.0 s | The core turns white-hot with a warm tint, the only departure from the single hue in the whole sequence, and contracts |
+| 6.5 s | A burst of light overexposes the whole frame; the brand emblem's silhouette is visible inside the burst |
+| 7.0 s | Black background again, the emblem now crisp and solid; the wordmark is still arriving from below at large scale |
+| 7.6 to 10.5 s | Static brand lock-up on black, held for about three seconds; a small company line fades in near the end |
+
+Structure: about 1 s of darkness, about 5.5 s of action, about 3 s of hold.
+
+### A.2 Principles extracted
+
+1. **The light source is the protagonist, and the lighting is diegetic.** The environment is never lit independently. We learn where we are only because the thing we are watching glows. This is the single strongest reason the sequence feels like one coherent event rather than an animation over a background.
+2. **Organic inside mechanical.** The energy is fluid, irregular and never repeats a pose; its surroundings are rigid and symmetrical. The contrast reads as "something alive is being woken inside a machine".
+3. **One hue, one exception.** A strict monochrome palette throughout, broken exactly once, at the climax, by a hot white core. The restraint is what gives the climax its weight.
+4. **A single rising curve, then release.** Size, brightness, agitation and camera motion all increase together, with no plateau, until one burst; then complete stillness. Tension and release, in under six seconds.
+5. **The mark is a consequence, not an overlay.** The emblem appears *out of* the burst, as if the energy became it. The brand is the result of the event.
+6. **It starts from nothing.** A full second of true black and a nearly invisible first speck. The quiet opening makes the ending feel large.
+7. **Depth and a moving camera.** It reads as a place, not a flat graphic, because the camera travels through it.
+8. **A long, calm hold.** Roughly a third of the running time is a static frame, letting the moment land.
+9. **Fixed length, canned content.** The sequence appears to be the same every time and does not reflect what the machine is doing.
+
+### A.3 How XSphereOS uses each principle, and where it goes further
+
+| Principle | Kept | Changed or surpassed |
+|---|---|---|
+| 1. Diegetic light | Yes, as vision principle 6 | What the light reveals is the real desktop geometry, not a set (vision principle 7) |
+| 2. Organic inside structure | Yes: a living seed inside the sphere's regular lattice | The seed's restlessness is driven by real boot activity and a per-boot signature, so it is alive in fact, not by animation |
+| 3. One hue, one exception | The discipline is kept: a restrained base and a single hot moment at Resolve | A different palette entirely; colour arrives per region as information (trust domains) |
+| 4. Rising curve and release | Yes | The curve is elastic and the release is triggered by the real "session ready" event (vision principle 8). On a slow boot the tension holds; it never fakes a climax |
+| 5. Mark as consequence | Yes, in spirit | The consequence of the release is not a logo but the desktop itself. An optional small wordmark is secondary and transient |
+| 6. Start from nothing | Yes: true black matched to the bootloader background, then a faint speck | Also solves a technical problem: dark first frames hide driver and mode hand-offs |
+| 7. Depth and camera | Yes | The reference's camera pushes *toward* the energy and then cuts away. Ours lets the released shell pass through the viewer, ending *inside* the lit sphere with no cut |
+| 8. Calm hold | The stillness is kept | The hold is a live, usable desktop instead of three seconds of logo |
+| 9. Fixed, canned | Rejected | Elastic timing, honest progress, skippable, and tiered for weak hardware |
+
+Constraints the reference did not have and this design does: it must never delay or hide the system (sections 6 and 7); it replaces the full-frame white burst with a bounded bloom for photosensitivity and offers a reduced-motion variant (section 8); and every stage is covered by automated tests (section 9).
+
+### A.4 What must not be carried over
+
+A glowing green mass on black, an X-shaped emblem or any mark emerging from a burst in that arrangement, the mechanical chamber imagery, the wordmark style, and any element of the sound. The palette recommendation in section 13 exists to keep clear distance from the reference's look.
