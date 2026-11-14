@@ -1,0 +1,14 @@
+# XSphereOS M0 base manifest.
+# Rule: every package has a one-line justification. No justification, no package.
+# live-boot / live-config / the kernel are added by live-build itself.
+
+systemd-sysv      # init system (kept, see design doc 3.4)
+dbus              # system message bus, required by systemd-logind and later by the session
+udev              # device management
+login             # login and getty tooling
+bash              # interactive shell for the M0 console
+iproute2          # network inspection (ip)
+iputils-ping      # basic connectivity check
+ca-certificates   # TLS trust store for later network use
+less              # pager for logs
+nano              # minimal editor for on-device debugging

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Trim documentation and locale bulk from the image to respect the size budget.
+set -e
+rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* /usr/share/lintian/*
+find /usr/share/locale -mindepth 1 -maxdepth 1 ! -name 'en*' ! -name 'pt*' -exec rm -rf {} +

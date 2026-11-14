@@ -1,0 +1,17 @@
+# live-build artifacts
+/binary/
+/cache/
+/chroot/
+/local/
+/.build/
+/config/binary
+/config/bootstrap
+/config/chroot
+/config/common
+/config/source
+*.iso
+*.packages
+*.contents
+*.files
+*.hybrid.iso.zsync
+build.log
