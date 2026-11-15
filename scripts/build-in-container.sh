@@ -17,7 +17,9 @@ command -v podman >/dev/null 2>&1 || {
 	exit 1
 }
 
-podman run --rm --privileged \
+# Host networking: the default container network can fail to resolve DNS on
+# hosts that use a local stub resolver, and the build needs the Debian mirrors.
+podman run --rm --privileged --network host \
 	--volume "$PWD:/work" --workdir /work \
 	"$image" sh -euc '
 		export DEBIAN_FRONTEND=noninteractive
