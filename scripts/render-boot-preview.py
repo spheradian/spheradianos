@@ -369,6 +369,10 @@ def render_audio(signature):
         add_bell(left, right, when + rng.uniform(-0.01, 0.01), freq, 0.14 + 0.02 * i, 0.7 - 0.4 * (i % 2), decay=0.35)
     add_release_chord(left, right)
     add_bell(left, right, T_UNFOLD + 0.06, 1174.66, 0.16, 0.5, decay=1.1)
+    # Impact layers (docs/BOOT-EXPERIENCE.md, Appendix B): spectrum moves, level stays modest.
+    add_breath_sweep(left, right, rng)
+    add_low_bloom(left, right)
+    add_air_shimmer(left, right, rng)
     left, right = add_reverb(left, 0), add_reverb(right, 23)
     return to_pcm(left, right)
 
@@ -411,6 +415,55 @@ def add_release_chord(left, right):
             tone = math.sin(2 * math.pi * freq * age) + 0.18 * math.sin(4 * math.pi * freq * age)
             left[n] += level * envelope * tone * (1 - pan)
             right[n] += level * envelope * tone * pan
+
+
+def filtered_noise(rng, cutoff, state, highpass=False):
+    """One sample of white noise through a state-variable filter (band- or high-pass)."""
+    f = 2 * math.sin(math.pi * min(cutoff, SAMPLE_RATE / 7) / SAMPLE_RATE)
+    state[0] += f * state[1]
+    high = rng.uniform(-1, 1) - state[0] - 0.7 * state[1]
+    state[1] += f * high
+    return high if highpass else state[1]
+
+
+def add_breath_sweep(left, right, rng):
+    """A breath-like riser under the Resolve run: brightness climbs, then lets go."""
+    states = ([0.0, 0.0], [0.0, 0.0])
+    for n in range(int(T_RESOLVE * SAMPLE_RATE), int((T_UNFOLD + 0.1) * SAMPLE_RATE)):
+        t = n / SAMPLE_RATE
+        u = clamp((t - T_RESOLVE) / (T_UNFOLD - T_RESOLVE))
+        cutoff = 250 * 14**u
+        level = 0.09 * u**1.5 * (1 - smooth(T_UNFOLD - 0.02, T_UNFOLD + 0.1, t))
+        left[n] += level * filtered_noise(rng, cutoff, states[0])
+        right[n] += level * filtered_noise(rng, cutoff, states[1])
+
+
+def add_low_bloom(left, right):
+    """A round low swell on the release, doubled an octave up for small speakers."""
+    voices = ((36.71, 0.10), (73.42, 0.22), (146.83, 0.12))
+    phases = [0.0] * len(voices)
+    start = int(T_UNFOLD * SAMPLE_RATE)
+    for n in range(start, min(len(left), start + int(6 * SAMPLE_RATE))):
+        age = (n - start) / SAMPLE_RATE
+        envelope = smooth(0.0, 0.09, age) * math.exp(-age / 1.4)
+        settle = 1 + 0.06 * math.exp(-age / 0.05)  # lands from slightly above: a soft "drop"
+        sample = 0.0
+        for i, (freq, level) in enumerate(voices):
+            phases[i] += 2 * math.pi * freq * settle / SAMPLE_RATE
+            sample += level * math.sin(phases[i])
+        left[n] += envelope * sample
+        right[n] += envelope * sample
+
+
+def add_air_shimmer(left, right, rng):
+    """A brief, quiet breath of high-frequency air as the shell passes the viewer."""
+    states = ([0.0, 0.0], [0.0, 0.0])
+    start = int(T_UNFOLD * SAMPLE_RATE)
+    for n in range(start, start + int(1.2 * SAMPLE_RATE)):
+        age = (n - start) / SAMPLE_RATE
+        level = 0.035 * smooth(0.0, 0.03, age) * math.exp(-age / 0.28)
+        left[n] += level * filtered_noise(rng, 5000, states[0], highpass=True)
+        right[n] += level * filtered_noise(rng, 5000, states[1], highpass=True)
 
 
 def add_reverb(dry, offset, wet=0.28):
