@@ -28,7 +28,7 @@ Design principles:
 8. **The climax is earned.** Tension rises with real boot activity and the release fires on the real "session ready" event, never on a fixed clock.
 9. **Stillness after release.** The sequence ends in calm: a quiet, fully lit desktop, with no further motion demanded of the viewer.
 
-Target feel (not a spec of frames): calm, confident, about two to three seconds of *authored* motion that overlaps the real boot rather than extending it; a single, soft, low-register sound at the moment the sphere resolves into the desktop.
+Target feel (not a spec of frames): calm, confident, about two to three seconds of *authored* motion that overlaps the real boot rather than extending it; a bright, organic sound that rises with the seed and ends on a pleasant, settled note as the sphere becomes the desktop.
 
 ---
 
@@ -73,8 +73,8 @@ Times are targets measured from the first frame drawn, on a mid-range 2020 lapto
 | Ignite | Plymouth, initramfs | True black. A barely visible speck appears at the centre and slowly gains strength | none | Matches the bootloader background so there is no flash |
 | Gather | Plymouth | The speck grows into a small, soft, *living* seed of light: its outline is never still, it breathes and ripples. Nothing else is visible yet | none | Loops indefinitely if the boot is slow; never speeds up artificially |
 | Wake | Plymouth, `systemd` | The seed's glow starts to reach its surroundings: arcs of the sphere's lattice emerge from the dark, lit only by the seed. Each region becomes visible when its real milestone completes (root mounted, devices settled, session services ready). The seed grows more agitated as more of the system is in motion | none | Section 4. Agitation is driven by real activity, bounded by the photosensitivity limits of section 8 |
-| Resolve | Hand-off | Session ready: the seed draws in, brightens toward a hot core (the one moment the palette leaves its base hue), and the compositor takes over on that frame | A low tone tightens with the seed (if enabled) | Section 5. A bounded bloom, not a full-screen white flash |
-| Unfold | Compositor | The seed releases: a shell of light expands outward and passes *through the viewer*. Where it passes, the lattice stays lit and becomes the desktop surface. The viewer is now inside the sphere. Motion settles to stillness; the Mini-Globe fades in; a small wordmark may appear near a pole and fade | The tone resolves into a short, original chord, then silence | About 0.8 to 1.2 s; input is already live; no hold on a logo |
+| Resolve | Hand-off | Session ready: the seed draws in, brightens toward a hot core (the one moment the palette leaves its base hue), and the compositor takes over on that frame | A bright, organic swell rises with the seed (if enabled) | Section 5. A bounded bloom, not a full-screen white flash |
+| Unfold | Compositor | The seed releases: a shell of light expands outward and passes *through the viewer*. Where it passes, the lattice stays lit and becomes the desktop surface. The viewer is now inside the sphere. Motion settles to stillness; the Mini-Globe fades in; a small wordmark may appear near a pole and fade | The swell resolves into a short, original, consonant chord that decays gently into silence | About 0.8 to 1.2 s; input is already live; no hold on a logo |
 
 Three properties make each boot its own while staying testable:
 
@@ -83,6 +83,13 @@ Three properties make each boot its own while staying testable:
 - **Colour as information.** The seed starts near-neutral; each region of the lattice takes its trust-domain colour as it wakes, so the palette is assembled by the boot rather than applied to it. (Final palette is an open question, section 13.)
 
 The sound is **synthesised procedurally** from a small, deterministic description (a few oscillators, an envelope, a filter sweep), not recorded or sampled. This keeps the repository free of binary audio, makes the output reproducible and licence-clean, and removes any chance of resembling an existing jingle. It also lets the same timeline description drive both light and sound.
+
+Sound direction (from the user's description of the feeling wanted, in words only; the reference audio was not analysed and is not to be imitated): **bright, organic, rising, with a pleasant ending**. Translated into synthesis terms:
+
+- *Bright*: energy in the upper harmonics, an opening filter rather than a bass-heavy drone.
+- *Organic*: slight, slow, irregular modulation of pitch and amplitude (breath-like, never a perfectly steady machine tone), driven by the same turbulence parameter that moves the seed.
+- *Rising*: pitch, brightness and density climb together with the visual tension curve and peak at Resolve.
+- *Pleasant ending*: resolution to a consonant chord with a soft attack and a gentle decay; no hard stop, no dissonance, no sudden loudness.
 
 ---
 
@@ -278,7 +285,7 @@ Deliverable 2 of this effort (after approval of this document) is B1, optionally
 
 For the user, about the vision:
 
-1. **The reference video.** The visual analysis is in Appendix A. Still needed from the user: is the reading of its principles right, and what is the character of its **sound** (not analysed), in words: deep or bright, mechanical or organic, rising or pulsing, how it ends?
+1. **The reference video.** The visual analysis is in Appendix A. Sound character is answered (bright, organic, rising, pleasant ending; see section 3). Still needed from the user: is the reading of the visual principles right?
 2. **Duration.** Is a short sequence (about 2 to 3 s of authored motion that overlaps the boot) right, or should a longer, fixed-length intro be possible as an option, understanding that it would delay the session?
 3. **Colour identity.** Which palette is the sphere's? Recommendation: *not* a single glowing green on black, because that is the reference's signature look and XSphereDE's code-rain green would land very close to it. Proposed instead: a near-neutral seed with the trust-domain colours emerging region by region.
 4. **Audio default.** Proposed: off on the live image, with a first-boot choice to enable it. Acceptable, or should it be on by default when the system is not muted?
