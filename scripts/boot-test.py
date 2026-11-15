@@ -6,7 +6,8 @@ Asserts (docs/BOOT-EXPERIENCE.md, milestone B1):
      animates (or, with --reduced-motion, stays a still frame);
   2. the splash exits cleanly: the sphere is gone and console text is visible;
   3. the session starts: a command typed on tty1 is executed by the
-     auto-logged-in user (its output fills the screen).
+     auto-logged-in user, and a failure report exists only if a failure was
+     injected (--fault fail); with --fault stall, the watchdog ends the splash.
 
 Usage: scripts/boot-test.py [ISO] [--shots DIR] [--reduced-motion] [--fault fail|stall]
 Standard library only. Uses KVM when /dev/kvm is writable, else emulation.
@@ -30,7 +31,9 @@ SESSION_TIMEOUT = 20.0
 STALL_HOLD = 8.0  # well past a normal boot, well before the watchdog
 WATCHDOG_TIMEOUT = 40.0  # the watchdog fires after 20 s without progress
 POLL = 0.5
-KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal"}
+KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal", "-": "minus", "/": "slash"}
+SHIFTED = {"&": "7", "|": "backslash"}  # US layout, the live image default
+REPORT = "/run/xsphereos/boot-report"
 MOTION_SAMPLES = 6
 
 
@@ -72,8 +75,8 @@ class Guest:
 
     def type_text(self, text):
         for char in text:
-            key = {"type": "qcode", "data": KEYS.get(char, char)}
-            self.command("send-key", keys=[key])
+            names = ["shift", SHIFTED[char]] if char in SHIFTED else [KEYS.get(char, char)]
+            self.command("send-key", keys=[{"type": "qcode", "data": name} for name in names])
             time.sleep(0.05)
 
     def screen(self, keep_as=None):
@@ -204,10 +207,16 @@ def run(iso, shots, reduced_motion=False, fault=None):
                     else "splash exits to a readable console")
             results[name] = wait_until(Frame.shows_console, guest, EXIT_TIMEOUT, shots, "exit")
             time.sleep(3 * guest.slowdown)
-            # "yes" needs no privileges and no special keys; only a real shell
-            # scrolls its output down to the bottom of the screen.
-            guest.type_text("yes\n")
-            results["session starts (typed command runs)"] = wait_until(
+            # Only a real shell runs this, and "yes" fills the screen only when
+            # the failure report is where it should be: present after an injected
+            # failure, absent after a healthy boot.
+            if fault:
+                guest.type_text(f"test -e {REPORT} && yes\n")
+                name = "session starts and the failure was reported in plain text"
+            else:
+                guest.type_text(f"test -e {REPORT} || yes\n")
+                name = "session starts and a healthy boot reports no failure"
+            results[name] = wait_until(
                 Frame.shows_output_at_bottom, guest, SESSION_TIMEOUT, shots, "session")
         finally:
             guest.kill()

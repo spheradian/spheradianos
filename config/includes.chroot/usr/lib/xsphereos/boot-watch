@@ -3,24 +3,33 @@
 #
 # While the splash is up, look once a second for a failed unit or for a boot
 # that has stopped making progress. On either, end the splash and print what is
-# wrong, in plain text, on the console. Exits as soon as the splash is gone.
+# wrong, in plain text, on the console. When the splash goes away by itself,
+# look one last time, so a unit that failed in its final moment is still
+# reported. The same text is kept in a file for later display.
 set -eu
 
 plymouth="${XSPHERE_PLYMOUTH:-plymouth}"
 systemctl="${XSPHERE_SYSTEMCTL:-systemctl}"
 pause="${XSPHERE_SLEEP:-sleep}"
 console="${XSPHERE_CONSOLE:-/dev/console}"
+report_file="${XSPHERE_REPORT:-/run/xsphereos/boot-report}"
 stall_limit="${XSPHERE_STALL_SECONDS:-20}"
 
-# Ends the splash, then explains. The text must be readable without the theme.
-reveal() {
-	"$plymouth" quit || true
+# Says what is wrong. The text must be readable without the theme.
+report() {
+	mkdir -p "$(dirname "$report_file")"
 	{
 		printf '\n'
 		printf 'XSphereOS: %s\n\n' "$1"
 		printf '%s\n\n' "$2"
 		printf 'Full log: journalctl -b    Unit details: systemctl status UNIT\n\n'
-	} >"$console"
+	} | tee "$report_file" >"$console"
+}
+
+# Ends the splash first, so the explanation is visible.
+reveal() {
+	"$plymouth" quit || true
+	report "$@"
 }
 
 failed_units() {
@@ -55,3 +64,9 @@ while "$plymouth" --ping; do
 
 	"$pause" 1
 done
+
+# The splash is gone. A unit that failed just before it left has not been seen.
+failed="$(failed_units)"
+if [ -n "$failed" ]; then
+	report "a unit failed during startup." "$failed"
+fi

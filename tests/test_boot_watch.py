@@ -70,16 +70,25 @@ class BootWatch(unittest.TestCase):
                 "XSPHERE_SYSTEMCTL": executable(fake / "systemctl", FAKE_SYSTEMCTL),
                 "XSPHERE_SLEEP": "true",
                 "XSPHERE_CONSOLE": str(console),
+                "XSPHERE_REPORT": str(fake / "run" / "boot-report"),
                 "XSPHERE_STALL_SECONDS": str(stall_seconds),
             }
             result = subprocess.run([str(WATCH)], env=environment, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
+            report = fake / "run" / "boot-report"
+            self.assertEqual(report.read_text() if report.exists() else "", console.read_text())
             return (fake / "quit").exists(), console.read_text()
 
-    def test_does_nothing_when_no_splash_is_running(self):
-        ended, text = self.watch(splash_seconds=0, failed="broken.service loaded failed failed")
+    def test_does_nothing_when_no_splash_is_running_and_nothing_failed(self):
+        ended, text = self.watch(splash_seconds=0)
         self.assertFalse(ended)
         self.assertEqual(text, "")
+
+    def test_a_unit_that_failed_as_the_splash_left_is_still_reported(self):
+        ended, text = self.watch(splash_seconds=0, failed="late.service loaded failed failed")
+        self.assertFalse(ended)  # nothing to end: the splash is already gone
+        self.assertIn("a unit failed during startup", text)
+        self.assertIn("late.service", text)
 
     def test_a_healthy_boot_is_left_alone(self):
         ended, text = self.watch(splash_seconds=10, jobs="changing", stall_seconds=3)
