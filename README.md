@@ -35,10 +35,11 @@ Layout:
 
 ## Boot splash (B1 prototype)
 
-A static Plymouth theme (`xsphere`) is wired into the recipe; see [docs/BOOT-EXPERIENCE.md](docs/BOOT-EXPERIENCE.md). It has static checks only and has not been booted yet, because the image has never been built.
+A static Plymouth theme (`xsphere`) is wired into the recipe; see [docs/BOOT-EXPERIENCE.md](docs/BOOT-EXPERIENCE.md). `scripts/boot-test.py` boots the built ISO in QEMU and checks that the splash is shown, exits to a readable console, and that the session starts.
 
 ```sh
 python3 -m unittest discover -s tests -v   # static checks, no root needed
+scripts/boot-test.py                       # boots the ISO headless in QEMU and checks the splash contract
 scripts/gen-boot-assets.py                 # regenerate the splash image
 ```
 

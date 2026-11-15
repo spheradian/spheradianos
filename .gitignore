@@ -24,3 +24,6 @@ __pycache__/
 /config/package-lists/live.list.chroot
 # rendered concept video (scripts/render-boot-preview.py)
 /preview/
+/binary.modified_timestamps
+/chroot.packages.install
+/chroot.packages.live

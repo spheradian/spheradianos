@@ -38,3 +38,6 @@ plymouth
 
 # fc-match and fc-cache, called by Debian's plymouth initramfs hook for any graphical theme
 fontconfig
+
+# live-config creates the live user only when this package is installed
+user-setup
