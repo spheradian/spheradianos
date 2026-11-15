@@ -35,3 +35,6 @@ nano
 
 # boot splash daemon and script plugin (docs/BOOT-EXPERIENCE.md, B1)
 plymouth
+
+# fc-match and fc-cache, called by Debian's plymouth initramfs hook for any graphical theme
+fontconfig
