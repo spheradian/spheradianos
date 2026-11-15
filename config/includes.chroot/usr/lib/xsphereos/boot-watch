@@ -1,0 +1,57 @@
+#!/bin/sh
+# Never let the boot splash hide a problem (docs/BOOT-EXPERIENCE.md, section 7).
+#
+# While the splash is up, look once a second for a failed unit or for a boot
+# that has stopped making progress. On either, end the splash and print what is
+# wrong, in plain text, on the console. Exits as soon as the splash is gone.
+set -eu
+
+plymouth="${XSPHERE_PLYMOUTH:-plymouth}"
+systemctl="${XSPHERE_SYSTEMCTL:-systemctl}"
+pause="${XSPHERE_SLEEP:-sleep}"
+console="${XSPHERE_CONSOLE:-/dev/console}"
+stall_limit="${XSPHERE_STALL_SECONDS:-20}"
+
+# Ends the splash, then explains. The text must be readable without the theme.
+reveal() {
+	"$plymouth" quit || true
+	{
+		printf '\n'
+		printf 'XSphereOS: %s\n\n' "$1"
+		printf '%s\n\n' "$2"
+		printf 'Full log: journalctl -b    Unit details: systemctl status UNIT\n\n'
+	} >"$console"
+}
+
+failed_units() {
+	"$systemctl" list-units --state=failed --no-legend --plain 2>/dev/null || true
+}
+
+pending_jobs() {
+	"$systemctl" list-jobs --no-legend --plain 2>/dev/null || true
+}
+
+previous_jobs=""
+idle_seconds=0
+
+while "$plymouth" --ping; do
+	failed="$(failed_units)"
+	if [ -n "$failed" ]; then
+		reveal "a unit failed during startup." "$failed"
+		exit 0
+	fi
+
+	jobs="$(pending_jobs)"
+	if [ "$jobs" = "$previous_jobs" ]; then
+		idle_seconds=$((idle_seconds + 1))
+	else
+		idle_seconds=0
+		previous_jobs="$jobs"
+	fi
+	if [ "$idle_seconds" -ge "$stall_limit" ]; then
+		reveal "startup has made no progress for ${stall_limit} seconds. Still waiting for:" "$jobs"
+		exit 0
+	fi
+
+	"$pause" 1
+done

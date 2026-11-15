@@ -115,3 +115,59 @@ def still_frame():
         "reveal_radius": REVEAL_FULL,
         "spin": STILL_SPIN,
     }
+
+
+# --- Honest progress (milestone B3) -------------------------------------------
+#
+# systemd tells Plymouth the name of every service that finishes starting. Each
+# region of the lattice (a 60 degree slice of longitude) wakes, taking its
+# colour, when its milestone service is up. Nothing is estimated or faked.
+
+MILESTONES = (
+    ("systemd-journald.service", "logging"),
+    ("systemd-udevd.service", "devices"),
+    ("systemd-tmpfiles-setup.service", "filesystems"),
+    ("dbus.service", "message bus"),
+    ("systemd-logind.service", "seats and login"),
+    ("systemd-user-sessions.service", "sessions"),
+)
+REGION_COLOURS = (
+    (58, 214, 197),  # teal
+    (74, 163, 255),  # azure
+    (155, 123, 255),  # violet
+    (255, 111, 168),  # rose
+    (255, 179, 71),  # amber
+    (226, 234, 250),  # ice
+)
+REGION_SPAN = 360 // len(MILESTONES)
+WAKE_SECONDS = 0.7
+ASLEEP_GLOW = 0.45  # a region lit by the seed but not yet awake
+
+
+def region_of(lon_degrees):
+    return int(lon_degrees % 360) // REGION_SPAN
+
+
+def readiness(events):
+    """Which regions are awake after a stream of status events.
+
+    Unknown events are ignored, repeats change nothing, and a region never goes
+    back to sleep: progress can only move forward.
+    """
+    names = [name for name, _ in MILESTONES]
+    awake = [False] * len(names)
+    for event in events:
+        if event in names:
+            awake[names.index(event)] = True
+    return awake
+
+
+def wake_level(t, woke_at):
+    """0 while asleep, rising smoothly to 1 after the region's milestone."""
+    if woke_at is None:
+        return 0.0
+    return smooth(woke_at, woke_at + WAKE_SECONDS, t)
+
+
+def region_glow(level):
+    return ASLEEP_GLOW + (1 - ASLEEP_GLOW) * level

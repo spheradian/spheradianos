@@ -8,7 +8,7 @@ Asserts (docs/BOOT-EXPERIENCE.md, milestone B1):
   3. the session starts: a command typed on tty1 is executed by the
      auto-logged-in user (its output fills the screen).
 
-Usage: scripts/boot-test.py [ISO] [--shots DIR] [--reduced-motion]
+Usage: scripts/boot-test.py [ISO] [--shots DIR] [--reduced-motion] [--fault fail|stall]
 Standard library only. Uses KVM when /dev/kvm is writable, else emulation.
 """
 
@@ -27,6 +27,8 @@ MENU_WAIT = 4.0
 SPLASH_TIMEOUT = 40.0
 EXIT_TIMEOUT = 60.0
 SESSION_TIMEOUT = 20.0
+STALL_HOLD = 8.0  # well past a normal boot, well before the watchdog
+WATCHDOG_TIMEOUT = 40.0  # the watchdog fires after 20 s without progress
 POLL = 0.5
 KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal"}
 MOTION_SAMPLES = 6
@@ -115,6 +117,19 @@ class Frame:
     def centre_brightness(self):
         return self.mean(self.width // 2 - 8, self.height // 2 - 8, 16, 16)
 
+    def seed_area(self):
+        """Pixels of a small square around the centre, where only the seed draws.
+
+        In the reduced-motion theme the seed never changes, although lattice
+        regions may still change colour as the boot progresses.
+        """
+        half = min(self.width, self.height) // 40
+        left, top = self.width // 2 - half, self.height // 2 - half
+        return b"".join(
+            self.pixels[((top + row) * self.width + left) * 3 : ((top + row) * self.width + left + 2 * half) * 3]
+            for row in range(2 * half)
+        )
+
     def shows_splash(self):
         corner_is_black = self.mean(0, 0, 120, 120) < 3
         return corner_is_black and self.centre_brightness() > 120
@@ -140,7 +155,7 @@ def wait_until(predicate, guest, timeout, shots, label):
 
 
 def splash_moves(guest):
-    """True if the splash changes between screenshots, False if it stays identical.
+    """True if the seed changes between screenshots, False if it stays identical.
 
     None when the splash ended before two comparable screenshots were taken.
     """
@@ -149,33 +164,45 @@ def splash_moves(guest):
         frame = guest.screen()
         if not frame.shows_splash():
             break
+        seed = frame.seed_area()
         if previous is not None:
-            if frame.pixels != previous:
+            if seed != previous:
                 return True
             verdict = False
-        previous = frame.pixels
+        previous = seed
         time.sleep(0.25)
     return verdict
 
 
-def run(iso, shots, reduced_motion):
+def run(iso, shots, reduced_motion=False, fault=None):
+    """Boot once and return {assertion: passed}."""
+    parameters = []
+    if reduced_motion:
+        parameters.append("xsphere.motion=reduced")
+    if fault:
+        parameters.append(f"xsphere.test.{fault}")
     results = {}
     with tempfile.TemporaryDirectory() as workdir:
         guest = Guest(iso, workdir)
         try:
             time.sleep(MENU_WAIT * guest.slowdown)
-            # Tab opens the boot entry for editing, so a parameter can be appended.
-            guest.type_text("\t xsphere.motion=reduced\n" if reduced_motion else "\n")
+            # Tab opens the boot entry for editing, so parameters can be appended.
+            guest.type_text("\t " + " ".join(parameters) + "\n" if parameters else "\n")
             results["splash is shown"] = wait_until(
                 Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash")
-            if results["splash is shown"]:
-                moves = splash_moves(guest)
-                if reduced_motion:
-                    results["reduced motion: splash is a still frame"] = moves is False
-                else:
-                    results["splash animates"] = moves is True
-            results["splash exits to a readable console"] = results["splash is shown"] and wait_until(
-                Frame.shows_console, guest, EXIT_TIMEOUT, shots, "exit")
+            if not results["splash is shown"]:
+                return results
+            if fault == "stall":
+                check_stall(guest, shots, results)
+                return results
+            moves = splash_moves(guest)
+            if reduced_motion:
+                results["reduced motion: splash is a still frame"] = moves is False
+            elif not fault:
+                results["splash animates"] = moves is True
+            name = ("a failed unit ends the splash with text on the console" if fault
+                    else "splash exits to a readable console")
+            results[name] = wait_until(Frame.shows_console, guest, EXIT_TIMEOUT, shots, "exit")
             time.sleep(3 * guest.slowdown)
             # "yes" needs no privileges and no special keys; only a real shell
             # scrolls its output down to the bottom of the screen.
@@ -185,6 +212,14 @@ def run(iso, shots, reduced_motion):
         finally:
             guest.kill()
     return results
+
+
+def check_stall(guest, shots, results):
+    """A boot that stops progressing keeps its splash, then yields to text."""
+    time.sleep(STALL_HOLD * guest.slowdown)
+    results["a stalled boot keeps the splash at first"] = guest.screen().shows_splash()
+    results["the watchdog ends the splash with text on the console"] = wait_until(
+        Frame.shows_console, guest, WATCHDOG_TIMEOUT, shots, "watchdog")
 
 
 def find_iso():
@@ -200,11 +235,13 @@ def main():
     parser.add_argument("--shots", type=Path, help="keep screenshots (PPM) in this directory")
     parser.add_argument("--reduced-motion", action="store_true",
                         help="boot with xsphere.motion=reduced and expect a still splash")
+    parser.add_argument("--fault", choices=("fail", "stall"),
+                        help="inject a failed unit or a stalled boot and expect text diagnostics")
     options = parser.parse_args()
     if options.shots:
         options.shots.mkdir(parents=True, exist_ok=True)
 
-    results = run(options.iso or find_iso(), options.shots, options.reduced_motion)
+    results = run(options.iso or find_iso(), options.shots, options.reduced_motion, options.fault)
     for name, passed in results.items():
         print(f"{'PASS' if passed else 'FAIL'}  {name}")
     sys.exit(0 if all(results.values()) else 1)

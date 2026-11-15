@@ -1,0 +1,14 @@
+# Test only: stalls the boot when "xsphere.test.stall" is on the kernel command
+# line, so scripts/boot-test.py can check that a stalled boot ends the splash.
+[Unit]
+Description=XSphereOS boot test: injected stall
+ConditionKernelCommandLine=xsphere.test.stall
+Before=plymouth-quit.service plymouth-quit-wait.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sleep 3600
+TimeoutStartSec=infinity
+
+[Install]
+WantedBy=multi-user.target

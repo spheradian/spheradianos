@@ -119,5 +119,51 @@ class Loop(unittest.TestCase):
         self.assertTrue(math.isfinite(timeline.spin(late)))
 
 
+
+class Readiness(unittest.TestCase):
+    NAMES = [name for name, _ in timeline.MILESTONES]
+
+    def test_nothing_is_awake_before_any_event(self):
+        self.assertEqual(timeline.readiness([]), [False] * len(self.NAMES))
+
+    def test_each_milestone_wakes_exactly_its_own_region(self):
+        for index, name in enumerate(self.NAMES):
+            awake = timeline.readiness([name])
+            self.assertEqual([i for i, on in enumerate(awake) if on], [index])
+
+    def test_unknown_events_are_ignored(self):
+        self.assertEqual(timeline.readiness(["cron.service", "", "splash"]), [False] * len(self.NAMES))
+
+    def test_progress_never_goes_backwards_whatever_the_event_order(self):
+        vocabulary = self.NAMES + ["noise.service", "other.mount"]
+        for _ in range(300):
+            events = [RNG.choice(vocabulary) for _ in range(RNG.randint(0, 30))]
+            previous = [False] * len(self.NAMES)
+            for cut in range(len(events) + 1):
+                awake = timeline.readiness(events[:cut])
+                for was, now in zip(previous, awake):
+                    self.assertTrue(now or not was)
+                previous = awake
+            self.assertEqual(timeline.readiness(events), timeline.readiness(events + events))
+
+    def test_there_is_one_colour_and_one_slice_per_milestone(self):
+        self.assertEqual(len(timeline.REGION_COLOURS), len(timeline.MILESTONES))
+        self.assertEqual(timeline.REGION_SPAN * len(timeline.MILESTONES), 360)
+
+    def test_every_dot_belongs_to_a_region(self):
+        for _, lon in timeline.lattice_dots():
+            self.assertIn(timeline.region_of(math.degrees(lon)), range(len(timeline.MILESTONES)))
+
+    def test_wake_is_smooth_bounded_and_permanent(self):
+        self.assertEqual(timeline.wake_level(5.0, None), 0.0)
+        self.assertEqual(timeline.wake_level(2.0, 2.0), 0.0)
+        self.assertEqual(timeline.wake_level(2.0 + timeline.WAKE_SECONDS, 2.0), 1.0)
+        self.assertEqual(timeline.wake_level(900.0, 2.0), 1.0)
+
+    def test_an_asleep_region_is_dim_but_visible(self):
+        self.assertGreater(timeline.region_glow(0.0), 0.0)
+        self.assertLess(timeline.region_glow(0.0), timeline.region_glow(1.0))
+        self.assertEqual(timeline.region_glow(1.0), 1.0)
+
 if __name__ == "__main__":
     unittest.main()

@@ -47,6 +47,14 @@ def load_generator():
     return module
 
 
+def load_timeline():
+    path = ROOT / "scripts" / "boot_timeline.py"
+    spec = importlib.util.spec_from_file_location("boot_timeline", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def theme_files():
     return [p for name in (ANIMATED, STILL) for p in (THEMES / name).rglob("*") if p.is_file()]
 
@@ -98,6 +106,13 @@ class ThemeScript(unittest.TestCase):
                 script_of(ANIMATED), rf"Window\.{call}\s*\(\s*0\s*,\s*0\s*,\s*0\s*\)"
             )
 
+    def test_scripts_listen_for_every_real_boot_milestone(self):
+        for name in (ANIMATED, STILL):
+            script = script_of(name)
+            self.assertIn("Plymouth.SetUpdateStatusFunction(status_update);", script)
+            for index, (unit, _) in enumerate(load_timeline().MILESTONES):
+                self.assertIn(f'milestone[{index}] = "{unit}";', script)
+
     def test_no_image_is_scaled_while_animating(self):
         # Scaling allocates; the per-frame functions may only move and fade sprites.
         script = script_of(ANIMATED)
@@ -120,8 +135,12 @@ class GeneratedFiles(unittest.TestCase):
     def test_themes_ship_no_binary_audio_and_no_stored_frames(self):
         suffixes = [p.suffix.lower() for p in theme_files()]
         self.assertFalse(AUDIO_SUFFIXES & set(suffixes))
-        # Motion is computed, not stored: two small images, never a frame sequence.
-        self.assertEqual(suffixes.count(".png"), 2)
+        # Motion is computed, not stored: a seed, a dot and one coloured dot per
+        # region, never a frame sequence.
+        self.assertEqual(suffixes.count(".png"), 2 + len(load_timeline().MILESTONES))
+        for path in theme_files():
+            if path.suffix == ".png":
+                self.assertLess(path.stat().st_size, 4096, path.name)
 
 
 class InitramfsIntegration(unittest.TestCase):
