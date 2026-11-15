@@ -515,7 +515,8 @@ def add_reverb(dry, offset, wet=0.28):
 def to_pcm(left, right):
     """Normalise with headroom, fade the tail to silence, pack as 16-bit stereo."""
     peak = max(max(map(abs, left)), max(map(abs, right))) or 1.0
-    gain = 0.45 * 32767 / peak
+    # Peak at -12 dBFS: a boot sound doubles as a volume reference, so it stays modest.
+    gain = 0.25 * 32767 / peak
     fade_from = T_END - 1.0
     frames = []
     for n, (l, r) in enumerate(zip(left, right)):

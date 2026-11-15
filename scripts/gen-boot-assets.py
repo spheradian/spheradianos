@@ -66,17 +66,27 @@ def intensity(u, v):
     return min(1.0, value)
 
 
-def render_sphere():
-    """Return SIZE x SIZE 8-bit RGB pixels, row by row."""
+PALETTE = [
+    tuple(int(channel * level / 255 + 0.5) for channel in SEED_COLOUR)
+    for level in range(256)
+]
+
+
+def render_levels():
+    """Return SIZE x SIZE brightness levels (0-255), one byte per pixel, row by row."""
     half = SIZE / 2
-    pixels = bytearray()
+    levels = bytearray()
     for py in range(SIZE):
         v = (py + 0.5 - half) / (half * SPHERE_RADIUS)
         for px in range(SIZE):
             u = (px + 0.5 - half) / (half * SPHERE_RADIUS)
-            level = intensity(u, v)
-            pixels.extend(int(channel * level + 0.5) for channel in SEED_COLOUR)
-    return bytes(pixels)
+            levels.append(int(255 * intensity(u, v) + 0.5))
+    return bytes(levels)
+
+
+def render_sphere():
+    """Return SIZE x SIZE 8-bit RGB pixels, row by row (levels seen through the palette)."""
+    return b"".join(bytes(PALETTE[level]) for level in render_levels())
 
 
 def png_chunk(kind, body):
@@ -84,15 +94,16 @@ def png_chunk(kind, body):
     return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", checksum)
 
 
-def encode_png_rgb(width, height, pixels):
-    stride = width * 3
+def encode_png_indexed(width, height, levels):
+    """One byte per pixel plus a 256-entry palette: about half the size of RGB."""
     raw = b"".join(
-        b"\x00" + pixels[row * stride : (row + 1) * stride] for row in range(height)
+        b"\x00" + levels[row * width : (row + 1) * width] for row in range(height)
     )
-    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    header = struct.pack(">IIBBBBB", width, height, 8, 3, 0, 0, 0)
     return (
         b"\x89PNG\r\n\x1a\n"
         + png_chunk(b"IHDR", header)
+        + png_chunk(b"PLTE", b"".join(bytes(colour) for colour in PALETTE))
         + png_chunk(b"IDAT", zlib.compress(raw, 9))
         + png_chunk(b"IEND", b"")
     )
@@ -100,7 +111,7 @@ def encode_png_rgb(width, height, pixels):
 
 def main():
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_bytes(encode_png_rgb(SIZE, SIZE, render_sphere()))
+    OUTPUT.write_bytes(encode_png_indexed(SIZE, SIZE, render_levels()))
     print(f"wrote {OUTPUT} ({OUTPUT.stat().st_size} bytes)")
 
 

@@ -129,7 +129,7 @@ Failure handling: if the compositor fails to start, `plymouth quit` runs through
 |---|---|---|
 | Added wall-clock boot time versus splash disabled | at most 150 ms, target 0 | `systemd-analyze` and QEMU boot-time comparison, splash on versus `xsphere.splash=off` |
 | Added initramfs size | at most 1.5 MB compressed | size check in image build |
-| Theme assets in the image | at most 1 MB, no binary audio | size check |
+| Theme assets in the image | at most 64 KiB, no binary audio (section 6.4) | static test |
 | First splash frame | within 1 s of the kernel starting on KVM-accelerated QEMU | timestamped log marker versus kernel start |
 | CPU use of splash during early boot | at most one core partially, no busy-wait; frame rate capped at 30 fps in Plymouth | profiling |
 | Compositor intro | at most 1.2 s, interruptible, renders on the integrated GPU within the low-power profile limits | frame timing in the compositor |
@@ -153,6 +153,49 @@ If a budget is exceeded, the build fails or the effect is cut, not the budget.
 | 3. Full | Compositor starts with a working Vulkan or GL path | Tier 2 plus the compositor "Unfold", the real-renderer sphere and arrival sound |
 
 Tier choice is automatic from probes (KMS present, compositor GPU init result) with manual overrides on the kernel command line. A tier can only ever be downgraded during a boot, never upgraded, so a late failure always lands on a lower, working tier.
+
+### 6.4 Console-grade resource discipline
+
+A PC has memory and storage to spare, and that is exactly why software for it tends to be careless. The boot experience is held to the standard of a console boot ROM instead. The model is the original Xbox boot sound as documented by its author, Brian Schmidt ("Creating the Original Xbox Boot Sound", GameSoundCon, 2021): the whole boot ROM was 256 KiB, about 25 KiB of it was left for audio (barely half a second of 8-bit mono), and the result is an eight-second sequence.
+
+How that was done, and what each technique means here:
+
+| Their constraint or technique | What XSphereOS takes from it |
+|---|---|
+| No room for a recording, so the sound is *generated*: a text note list drives a synthesizer | The boot sound is a score plus a tiny synth, never an audio file. A 12.5 s stereo recording would be about 2.2 MiB; the score is a few hundred bytes |
+| Waveforms made by code (sine, sawtooth, noise) cost almost no storage and are full fidelity | All timbres come from code. No samples at all |
+| A filter that opens puts more energy into the sound without more data | Motion comes from parameters (filter, envelope, pitch), not from more material |
+| Three tiny 6 kHz, 8-bit samples, only the *attacks*; sustained sines at the same pitch extend them | Spend bytes only where the ear needs them. Our bells are already attack-plus-sine and need no sample |
+| One sample reversed in memory becomes a fourth sound | Derive variants by transformation instead of storing them |
+| Full-fidelity noise layered over a poor sample hides its flaws | Layering is a way to *save* resources, not only to add richness |
+| Nine tracks in total | A fixed, small voice budget |
+| The animation exists to hide boot time, and plays while the system boots | Already principle 2 and section 6.2: never delay the boot |
+| Timing taken frame by frame from the finished visuals | Stricter here: light and sound share one timeline |
+| Peak level deliberately modest (about -18 dBFS intended, about -12 dBFS shipped), because the boot sound works as a volume reference | Peak capped at -12 dBFS |
+| Stereo only: negotiating surround would have muted the first seconds | Never wait for an audio device to negotiate. If the default output is not ready, the sound is skipped |
+| A bug in the boot sound code crashed about one boot in a thousand until it was fixed | The sound must not be able to break the boot: isolated from the critical path, and soak-tested over many boots |
+
+**Budgets.** These are hard limits enforced by tests, not targets.
+
+| Item | Budget | Now (measured 2026-11-15) |
+|---|---|---|
+| Everything this feature adds to the image (theme, score, synth) | 256 KiB, the size of that console's entire boot ROM | 52 KiB (theme only; no sound code yet) |
+| Theme files | 64 KiB | 52 KiB. The sphere image went from 106 KiB to 51 KiB by storing one byte per pixel with a palette instead of RGB |
+| Boot sound score (note list and parameters) | 4 KiB, no samples | not built; the concept score is estimated at under 1 KiB |
+| Boot sound synth, compiled | 64 KiB | not built |
+| Synth memory while playing | 256 KiB | not built |
+| Synth CPU | 1% of one core on the slowest supported machine, generated in real time | not built |
+| Simultaneous voices | 32 | concept: not yet counted |
+| Splash-related files in the initramfs, uncompressed | 1.5 MiB | 2.58 MiB in the last build, of which 1.10 MiB was two fonts the theme never uses. A trim hook now removes them; expected about 1.4 MiB, to be confirmed on the next build |
+
+Rules that follow:
+
+1. **Generate, do not store.** If code can produce it, it is not shipped as data.
+2. **Measure before and after.** Every budget row has a number from a real build, and a change that raises one must say why.
+3. **Nothing unused ships.** Anything a packaged hook pulls in that the theme does not use is removed.
+4. **A budget is exceeded by cutting the effect, never by raising the budget** (already the rule of section 6.1).
+
+Findings outside this feature, recorded for the distribution as a whole: the initramfs is 72.7 MiB uncompressed (47 MiB compressed with gzip, since `zstd` is not in the image), of which 37 MiB is kernel modules. That is where the large savings are, and it is a distribution-level decision, not a boot-experience one.
 
 ---
 

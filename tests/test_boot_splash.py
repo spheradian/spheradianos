@@ -6,8 +6,11 @@ Standard library only, no GPU, no network, no root.
 
 import configparser
 import importlib.util
+import os
 import re
 import struct
+import subprocess
+import tempfile
 import unittest
 import zlib
 from pathlib import Path
@@ -17,7 +20,8 @@ CHROOT = ROOT / "config" / "includes.chroot"
 THEME_NAME = "xsphere"
 THEME_DIR_IN_IMAGE = f"/usr/share/plymouth/themes/{THEME_NAME}"
 THEME_DIR = CHROOT / THEME_DIR_IN_IMAGE.lstrip("/")
-ASSET_BUDGET_BYTES = 1024 * 1024
+# Console-grade budget (docs/BOOT-EXPERIENCE.md 6.4): the whole theme, not 1 MiB.
+ASSET_BUDGET_BYTES = 64 * 1024
 AUDIO_SUFFIXES = {".wav", ".ogg", ".mp3", ".flac", ".opus"}
 
 
@@ -37,26 +41,30 @@ def boot_parameters():
 
 
 def decode_png_rgb(data):
-    """Decode the restricted PNG subset the generator writes (8-bit RGB, filter 0)."""
+    """Decode the restricted PNG subset the generator writes (8-bit indexed, filter 0)."""
     if data[:8] != b"\x89PNG\r\n\x1a\n":
         raise ValueError("not a PNG")
-    pos, idat, width, height = 8, b"", 0, 0
+    pos, idat, palette, width, height = 8, b"", b"", 0, 0
     while pos < len(data):
         length, kind = struct.unpack(">I4s", data[pos : pos + 8])
         body = data[pos + 8 : pos + 8 + length]
         if kind == b"IHDR":
             width, height, depth, colour = struct.unpack(">IIBB", body[:10])
-            if (depth, colour) != (8, 2):
-                raise ValueError("expected 8-bit RGB")
+            if (depth, colour) != (8, 3):
+                raise ValueError("expected an 8-bit indexed image")
+        elif kind == b"PLTE":
+            palette = body
         elif kind == b"IDAT":
             idat += body
         pos += 12 + length
     raw = zlib.decompress(idat)
-    stride = width * 3 + 1
+    stride = width + 1
     rows = [raw[i * stride : (i + 1) * stride] for i in range(height)]
     if any(row[0] != 0 for row in rows):
         raise ValueError("expected filter type 0 on every row")
-    return width, height, b"".join(row[1:] for row in rows)
+    return width, height, b"".join(
+        palette[index * 3 : index * 3 + 3] for row in rows for index in row[1:]
+    )
 
 
 def load_generator():
@@ -136,6 +144,30 @@ class ThemeAssets(unittest.TestCase):
             + b"".join(pixels[(y + 1) * row - 3 : (y + 1) * row] for y in range(height))
         )
         self.assertEqual(set(border), {0})
+
+
+class InitramfsFootprint(unittest.TestCase):
+    HOOK = CHROOT / "etc" / "initramfs-tools" / "hooks" / "xsphereos-splash-trim"
+
+    def test_trim_hook_is_executable_and_runs_after_plymouth(self):
+        self.assertTrue(os.access(self.HOOK, os.X_OK))
+        self.assertIn('PREREQ="plymouth"', self.HOOK.read_text())
+
+    def test_trim_hook_refuses_to_run_without_a_destination(self):
+        environment = {k: v for k, v in os.environ.items() if k != "DESTDIR"}
+        result = subprocess.run([str(self.HOOK)], env=environment, capture_output=True)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_trim_hook_removes_fonts_and_keeps_the_theme(self):
+        with tempfile.TemporaryDirectory() as root:
+            font = Path(root, "usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+            theme = Path(root, "usr/share/plymouth/themes/xsphere/sphere.png")
+            for path in (font, theme):
+                path.parent.mkdir(parents=True)
+                path.touch()
+            subprocess.run([str(self.HOOK)], env={**os.environ, "DESTDIR": root}, check=True)
+            self.assertFalse(font.exists())
+            self.assertTrue(theme.exists())
 
 
 class ImageRecipe(unittest.TestCase):
