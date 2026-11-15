@@ -33,16 +33,17 @@ Layout:
 - `config/hooks/` and `config/includes.chroot/` image customization.
 - `scripts/` build, QEMU, and size-report helpers.
 
-## Boot splash (B1 prototype)
+## Boot splash
 
-A static Plymouth theme (`xsphere`) is wired into the recipe; see [docs/BOOT-EXPERIENCE.md](docs/BOOT-EXPERIENCE.md). `scripts/boot-test.py` boots the built ISO in QEMU and checks that the splash is shown, exits to a readable console, and that the session starts.
+The `xsphere` Plymouth theme is wired into the recipe; see [docs/BOOT-EXPERIENCE.md](docs/BOOT-EXPERIENCE.md). A seed of light appears and its glow reveals a lattice of dots on a slowly turning sphere. Nothing is stored as frames: two small images are placed by arithmetic from `scripts/boot_timeline.py`. The whole theme is about 12 KiB.
 
 ```sh
-python3 -m unittest discover -s tests -v   # static checks, no root needed
+python3 -m unittest discover -s tests -v   # static checks and timeline tests, no root needed
+scripts/gen-boot-assets.py                 # regenerate the theme (images and scripts)
 scripts/boot-test.py                       # boots the ISO headless in QEMU and checks the splash contract
-scripts/gen-boot-assets.py                 # regenerate the splash image
+scripts/boot-test.py --reduced-motion      # same, with the still-frame variant
 ```
 
-To boot without the splash, remove `splash` from the kernel command line or add `plymouth.enable=0`. Press Esc during boot for text details.
+Kernel command line switches: `xsphere.motion=reduced` shows one still frame instead of the animation; removing `splash` or adding `plymouth.enable=0` boots in text. Press Esc during boot for text details.
 
 M0 is done when the ISO boots in QEMU to an autologged-in shell and the package count and ISO size are recorded in the design document.

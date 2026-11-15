@@ -2,12 +2,13 @@
 """Boot the live ISO headless in QEMU and check the boot splash contract.
 
 Asserts (docs/BOOT-EXPERIENCE.md, milestone B1):
-  1. the splash is shown: bright sphere centre on a black screen;
+  1. the splash is shown: bright sphere centre on a black screen, and it
+     animates (or, with --reduced-motion, stays a still frame);
   2. the splash exits cleanly: the sphere is gone and console text is visible;
   3. the session starts: a command typed on tty1 is executed by the
      auto-logged-in user (its output fills the screen).
 
-Usage: scripts/boot-test.py [ISO] [--shots DIR]
+Usage: scripts/boot-test.py [ISO] [--shots DIR] [--reduced-motion]
 Standard library only. Uses KVM when /dev/kvm is writable, else emulation.
 """
 
@@ -27,7 +28,8 @@ SPLASH_TIMEOUT = 40.0
 EXIT_TIMEOUT = 60.0
 SESSION_TIMEOUT = 20.0
 POLL = 0.5
-KEYS = {" ": "spc", "\n": "ret"}
+KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal"}
+MOTION_SAMPLES = 6
 
 
 class Guest:
@@ -137,15 +139,41 @@ def wait_until(predicate, guest, timeout, shots, label):
     return False
 
 
-def run(iso, shots):
+def splash_moves(guest):
+    """True if the splash changes between screenshots, False if it stays identical.
+
+    None when the splash ended before two comparable screenshots were taken.
+    """
+    previous, verdict = None, None
+    for _ in range(MOTION_SAMPLES):
+        frame = guest.screen()
+        if not frame.shows_splash():
+            break
+        if previous is not None:
+            if frame.pixels != previous:
+                return True
+            verdict = False
+        previous = frame.pixels
+        time.sleep(0.25)
+    return verdict
+
+
+def run(iso, shots, reduced_motion):
     results = {}
     with tempfile.TemporaryDirectory() as workdir:
         guest = Guest(iso, workdir)
         try:
             time.sleep(MENU_WAIT * guest.slowdown)
-            guest.type_text("\n")
+            # Tab opens the boot entry for editing, so a parameter can be appended.
+            guest.type_text("\t xsphere.motion=reduced\n" if reduced_motion else "\n")
             results["splash is shown"] = wait_until(
                 Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash")
+            if results["splash is shown"]:
+                moves = splash_moves(guest)
+                if reduced_motion:
+                    results["reduced motion: splash is a still frame"] = moves is False
+                else:
+                    results["splash animates"] = moves is True
             results["splash exits to a readable console"] = results["splash is shown"] and wait_until(
                 Frame.shows_console, guest, EXIT_TIMEOUT, shots, "exit")
             time.sleep(3 * guest.slowdown)
@@ -170,11 +198,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("iso", nargs="?", type=Path)
     parser.add_argument("--shots", type=Path, help="keep screenshots (PPM) in this directory")
+    parser.add_argument("--reduced-motion", action="store_true",
+                        help="boot with xsphere.motion=reduced and expect a still splash")
     options = parser.parse_args()
     if options.shots:
         options.shots.mkdir(parents=True, exist_ok=True)
 
-    results = run(options.iso or find_iso(), options.shots)
+    results = run(options.iso or find_iso(), options.shots, options.reduced_motion)
     for name, passed in results.items():
         print(f"{'PASS' if passed else 'FAIL'}  {name}")
     sys.exit(0 if all(results.values()) else 1)

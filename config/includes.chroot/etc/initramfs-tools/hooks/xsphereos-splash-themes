@@ -1,0 +1,26 @@
+#!/bin/sh
+# Debian's plymouth hook copies only the default theme into the initramfs.
+# Add the reduced-motion variant so it can be selected at boot.
+set -eu
+
+PREREQ="plymouth"
+
+prereqs() {
+	echo "$PREREQ"
+}
+
+case "${1:-}" in
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+[ -n "${DESTDIR:-}" ] || {
+	echo "xsphereos-splash-themes: DESTDIR is not set" >&2
+	exit 1
+}
+
+themes="${XSPHERE_THEMES:-/usr/share/plymouth/themes}"
+mkdir -p "${DESTDIR}/usr/share/plymouth/themes"
+cp -r "${themes}/xsphere-still" "${DESTDIR}/usr/share/plymouth/themes/"

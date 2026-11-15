@@ -1,6 +1,6 @@
 [Plymouth Theme]
-Name=XSphere
-Description=XSphereOS boot splash (B1): a still seed of light inside the sphere lattice.
+Name=xsphere
+Description=XSphereOS boot splash: a seed of light reveals the sphere lattice.
 ModuleName=script
 
 [script]

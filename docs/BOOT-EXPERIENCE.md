@@ -179,8 +179,8 @@ How that was done, and what each technique means here:
 
 | Item | Budget | Now (measured 2026-11-15) |
 |---|---|---|
-| Everything this feature adds to the image (theme, score, synth) | 256 KiB, the size of that console's entire boot ROM | 52 KiB (theme only; no sound code yet) |
-| Theme files | 64 KiB | 52 KiB. The sphere image went from 106 KiB to 51 KiB by storing one byte per pixel with a palette instead of RGB |
+| Everything this feature adds to the image (theme, score, synth) | 256 KiB, the size of that console's entire boot ROM | 12 KiB (both themes; no sound code yet) |
+| Theme files | 64 KiB | 12 KiB for the animated theme and its still variant. The B1 still image was 106 KiB, then 51 KiB with a palette; B2 replaced it with two glow images (3.4 KiB and 0.3 KiB) placed by arithmetic |
 | Boot sound score (note list and parameters) | 4 KiB, no samples | not built; the concept score is estimated at under 1 KiB |
 | Boot sound synth, compiled | 64 KiB | not built |
 | Synth memory while playing | 256 KiB | not built |
@@ -321,6 +321,8 @@ Mapped to the distro milestones of DISTRO-DESIGN section 9. Each is done only wh
 | B5 | Procedural audio | Audio synth module, muted-aware playback, tests for the generator output and the gating logic | B4, PipeWire in the image |
 | B6 | Hardening and measurement | Budget measurements on real older hardware; photosensitivity test; manual checklist; password-prompt support | B4 |
 | B7 | First-boot integration | The sequence flows into the first-boot flow inside the sphere | M4 |
+
+Status of B2 (2026-11-15): implemented in the recipe, **not yet booted**. The theme is now animated (Ignite, Gather, endless loop) with a reduced-motion variant selected by `xsphere.motion=reduced`. Deviations from the row above: the timeline is a tested Python module (`scripts/boot_timeline.py`) rather than a Rust crate, because its only consumer today is the theme generator and this repository has no Rust toolchain; it moves to Rust when the compositor needs it (B4, open question 7). The lattice is drawn as dots, not lines, because Plymouth's script plugin can only place images; this keeps the whole theme at about 12 KiB with no stored frames. Frame-golden tests are replaced by a motion check in `scripts/boot-test.py` (frames differ when animated, are identical when reduced), since QEMU timing is not deterministic enough for golden frames.
 
 Status of B1 (2026-11-15): implemented. The `xsphere` Plymouth theme ships in the recipe and `scripts/boot-test.py` passes against a built ISO in QEMU (BIOS boot, KVM): splash shown, clean exit to a readable console, session starts. Not yet done from the B1 row: recording the timing and initramfs budgets, an automated `Esc` check, and a text-fallback boot test. The bootloader menu still shows live-build's default artwork.
 

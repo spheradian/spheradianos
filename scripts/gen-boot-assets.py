@@ -1,92 +1,53 @@
 #!/usr/bin/env python3
-"""Generate the boot splash assets deterministically (standard library only).
+"""Generate the boot splash theme deterministically (standard library only).
 
 Usage: scripts/gen-boot-assets.py
-Writes sphere.png into the Plymouth theme directory. The image is original work:
-a neutral seed of light at the centre of a sphere lattice that it illuminates.
-tests/test_boot_splash.py checks that the committed PNG matches this generator.
+Writes two tiny images and the Plymouth scripts of the animated theme and its
+reduced-motion variant. Everything is original work, and everything that moves
+is computed at boot from scripts/boot_timeline.py, not stored as frames.
+tests/test_boot_splash.py checks that the committed files match this generator.
 """
 
 import math
 import struct
+import sys
 import zlib
 from pathlib import Path
 
-SIZE = 480
-SPHERE_RADIUS = 0.80  # fraction of the half-size; leaves a black margin
-LATTICE_STEP = math.radians(30)
-LINE_WIDTH = 0.014  # radians
-TILT = math.radians(24)
-SPIN = math.radians(18)
-FRONT_LIGHT = 0.55
-BACK_LIGHT = 0.20
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import boot_timeline as timeline  # noqa: E402
+
+THEMES = Path(__file__).resolve().parent.parent / "config/includes.chroot/usr/share/plymouth/themes"
+THEMES_IN_IMAGE = "/usr/share/plymouth/themes"
 SEED_COLOUR = (225, 235, 255)
-
-OUTPUT = (
-    Path(__file__).resolve().parent.parent
-    / "config/includes.chroot/usr/share/plymouth/themes/xsphere/sphere.png"
-)
-
-
-def seed_glow(r2):
-    core = math.exp(-r2 / (2 * 0.07**2))
-    halo = 0.25 * math.exp(-r2 / (2 * 0.22**2))
-    return core + halo
+SEED_PIXELS = 128
+DOT_PIXELS = 16
+SEED_STEPS = 12  # pre-scaled seed sizes; the script never scales while animating
+FRAME_DIVIDER = 2  # Plymouth refreshes at 50 Hz; the lattice moves at 25
+REFRESH_HZ = 50
 
 
-def distance_to_grid(angle):
-    return abs((angle / LATTICE_STEP + 0.5) % 1.0 - 0.5) * LATTICE_STEP
+def seed_alpha(r):
+    """A bright core inside a wide, soft halo; r is 0 at the centre, 1 at the edge."""
+    if r >= 1.0:
+        return 0.0
+    return min(1.0, math.exp(-((r / 0.16) ** 2)) + 0.35 * math.exp(-((r / 0.45) ** 2)))
 
 
-def lattice_line(x, y, z):
-    """Brightness of the latitude/longitude lattice at a point on the unit sphere."""
-    y, z = (
-        y * math.cos(TILT) - z * math.sin(TILT),
-        y * math.sin(TILT) + z * math.cos(TILT),
-    )
-    x, z = (
-        x * math.cos(SPIN) + z * math.sin(SPIN),
-        -x * math.sin(SPIN) + z * math.cos(SPIN),
-    )
-    lat = math.asin(max(-1.0, min(1.0, y)))
-    lon = math.atan2(x, z)
-    d_lat = distance_to_grid(lat)
-    d_lon = distance_to_grid(lon) * math.cos(lat)
-    return math.exp(-((min(d_lat, d_lon) / LINE_WIDTH) ** 2))
+def dot_alpha(r):
+    return 0.0 if r >= 1.0 else math.exp(-((r / 0.5) ** 2))
 
 
-def intensity(u, v):
-    r2 = u * u + v * v
-    value = seed_glow(r2)
-    if r2 < 1.0:
-        z = math.sqrt(1.0 - r2)
-        limb_fade = 1.0 - r2**4
-        value += FRONT_LIGHT * limb_fade * lattice_line(u, v, z)
-        value += BACK_LIGHT * limb_fade * lattice_line(u, v, -z)
-    return min(1.0, value)
-
-
-PALETTE = [
-    tuple(int(channel * level / 255 + 0.5) for channel in SEED_COLOUR)
-    for level in range(256)
-]
-
-
-def render_levels():
-    """Return SIZE x SIZE brightness levels (0-255), one byte per pixel, row by row."""
-    half = SIZE / 2
-    levels = bytearray()
-    for py in range(SIZE):
-        v = (py + 0.5 - half) / (half * SPHERE_RADIUS)
-        for px in range(SIZE):
-            u = (px + 0.5 - half) / (half * SPHERE_RADIUS)
-            levels.append(int(255 * intensity(u, v) + 0.5))
-    return bytes(levels)
-
-
-def render_sphere():
-    """Return SIZE x SIZE 8-bit RGB pixels, row by row (levels seen through the palette)."""
-    return b"".join(bytes(PALETTE[level]) for level in render_levels())
+def render_glow(size, alpha):
+    """Return size x size RGBA pixels: one colour, alpha from a radial falloff."""
+    half = size / 2
+    pixels = bytearray()
+    for py in range(size):
+        for px in range(size):
+            r = math.hypot(px + 0.5 - half, py + 0.5 - half) / half
+            pixels.extend(SEED_COLOUR)
+            pixels.append(int(255 * alpha(r) + 0.5))
+    return bytes(pixels)
 
 
 def png_chunk(kind, body):
@@ -94,25 +55,192 @@ def png_chunk(kind, body):
     return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", checksum)
 
 
-def encode_png_indexed(width, height, levels):
-    """One byte per pixel plus a 256-entry palette: about half the size of RGB."""
-    raw = b"".join(
-        b"\x00" + levels[row * width : (row + 1) * width] for row in range(height)
-    )
-    header = struct.pack(">IIBBBBB", width, height, 8, 3, 0, 0, 0)
+def encode_png_rgba(size, pixels):
+    stride = size * 4
+    raw = b"".join(b"\x00" + pixels[row * stride : (row + 1) * stride] for row in range(size))
+    header = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)
     return (
         b"\x89PNG\r\n\x1a\n"
         + png_chunk(b"IHDR", header)
-        + png_chunk(b"PLTE", b"".join(bytes(colour) for colour in PALETTE))
         + png_chunk(b"IDAT", zlib.compress(raw, 9))
         + png_chunk(b"IEND", b"")
     )
 
 
+def images():
+    return {
+        "seed.png": encode_png_rgba(SEED_PIXELS, render_glow(SEED_PIXELS, seed_alpha)),
+        "dot.png": encode_png_rgba(DOT_PIXELS, render_glow(DOT_PIXELS, dot_alpha)),
+    }
+
+
+def number(value):
+    return f"{value:.6f}".rstrip("0").rstrip(".")
+
+
+def theme_definition(name, description):
+    return f"""[Plymouth Theme]
+Name={name}
+Description={description}
+ModuleName=script
+
+[script]
+ImageDir={THEMES_IN_IMAGE}/xsphere
+ScriptFile={THEMES_IN_IMAGE}/{name}/{name}.script
+"""
+
+
+def theme_script(motion):
+    """The Plymouth script. It repeats the formulas of boot_timeline.py."""
+    t = timeline
+    still = t.still_frame()
+    breath = " + ".join(
+        f"{number(a)} * Math.Sin({number(2 * math.pi * rate)} * t + {number(phase)})"
+        for a, rate, phase in t.BREATH
+    )
+    seed_low = t.SEED_SPECK * (1 - sum(a for a, _, _ in t.BREATH))
+    seed_high = t.SEED_FULL * (1 + sum(a for a, _, _ in t.BREATH))
+    parallels = "\n".join(
+        f"parallel_lat[{i}] = {lat};" for i, lat in enumerate(t.PARALLELS)
+    )
+    inner_steps = t.MERIDIAN_STEP // t.DOT_STEP - 1
+    return f"""# XSphereOS boot splash (docs/BOOT-EXPERIENCE.md, milestone B2).
+# GENERATED by scripts/gen-boot-assets.py from scripts/boot_timeline.py. Do not edit.
+#
+# A seed of light appears, grows and breathes; its light spreads and reveals a
+# lattice of dots on a slowly turning sphere. Nothing is stored as frames: two
+# tiny images are placed by arithmetic. Esc (boot details) is handled by plymouthd.
+
+motion = {1 if motion else 0};
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+side = Window.GetWidth();
+if (Window.GetHeight() < side) {{ side = Window.GetHeight(); }}
+radius = side * 0.24;
+centre_x = Window.GetX() + Window.GetWidth() / 2;
+centre_y = Window.GetY() + Window.GetHeight() / 2;
+degree = {number(math.pi / 180)};
+sin_tilt = {number(math.sin(t.TILT))};
+cos_tilt = {number(math.cos(t.TILT))};
+
+# Seed: pre-scaled once, so animating it only swaps images.
+seed_source = Image("seed.png");
+seed_steps = {SEED_STEPS};
+seed_low = {number(seed_low)};
+seed_high = {number(seed_high)};
+for (i = 0; i < seed_steps; i++) {{
+    fraction = seed_low + (seed_high - seed_low) * i / (seed_steps - 1);
+    seed_width[i] = Math.Int(radius * 1.2 * fraction) + 2;
+    seed_image[i] = seed_source.Scale(seed_width[i], seed_width[i]);
+}}
+seed = Sprite();
+seed.SetOpacity(0);
+
+# Lattice: dots along the meridians, plus the dots between them on the parallels.
+dot_width = Math.Int(radius / 14);
+if (dot_width < 6) {{ dot_width = 6; }}
+dot_source = Image("dot.png");
+dot_image = dot_source.Scale(dot_width, dot_width);
+dot_count = 0;
+for (lon = 0; lon < 360; lon = lon + {t.MERIDIAN_STEP}) {{
+    for (lat = {-90 + t.DOT_STEP}; lat < 90; lat = lat + {t.DOT_STEP}) {{
+        dot_sin_lat[dot_count] = Math.Sin(lat * degree);
+        dot_cos_lat[dot_count] = Math.Cos(lat * degree);
+        dot_lon[dot_count] = lon * degree;
+        dot_count++;
+    }}
+}}
+{parallels}
+for (p = 0; p < {len(t.PARALLELS)}; p++) {{
+    for (lon = 0; lon < 360; lon = lon + {t.MERIDIAN_STEP}) {{
+        for (inner = 1; inner <= {inner_steps}; inner++) {{
+            dot_sin_lat[dot_count] = Math.Sin(parallel_lat[p] * degree);
+            dot_cos_lat[dot_count] = Math.Cos(parallel_lat[p] * degree);
+            dot_lon[dot_count] = (lon + inner * {t.DOT_STEP}) * degree;
+            dot_count++;
+        }}
+    }}
+}}
+for (i = 0; i < dot_count; i++) {{
+    dot[i] = Sprite(dot_image);
+    dot[i].SetOpacity(0);
+}}
+
+fun smooth(start, end, t) {{
+    u = (t - start) / (end - start);
+    if (u < 0) {{ u = 0; }}
+    if (u > 1) {{ u = 1; }}
+    return u * u * (3 - 2 * u);
+}}
+
+fun place(seed_opacity, seed_fraction, reveal, spin) {{
+    step = Math.Int((seed_fraction - seed_low) / (seed_high - seed_low) * (seed_steps - 1) + 0.5);
+    if (step < 0) {{ step = 0; }}
+    if (step > seed_steps - 1) {{ step = seed_steps - 1; }}
+    seed.SetImage(seed_image[step]);
+    seed.SetPosition(centre_x - seed_width[step] / 2, centre_y - seed_width[step] / 2, 0);
+    seed.SetOpacity(seed_opacity);
+
+    for (i = 0; i < dot_count; i++) {{
+        around = dot_lon[i] + spin;
+        x = dot_cos_lat[i] * Math.Sin(around);
+        depth = dot_cos_lat[i] * Math.Cos(around);
+        y = dot_sin_lat[i] * cos_tilt - depth * sin_tilt;
+        z = dot_sin_lat[i] * sin_tilt + depth * cos_tilt;
+        lit = 0;
+        if (reveal > 0) {{ lit = (reveal * reveal - (x * x + y * y)) / ({number(2 * t.REVEAL_EDGE)} * reveal); }}
+        if (lit < 0) {{ lit = 0; }}
+        if (lit > 1) {{ lit = 1; }}
+        dot[i].SetOpacity(lit * ({number(t.DEPTH_BACK)} + {number((t.DEPTH_FRONT - t.DEPTH_BACK) / 2)} * (z + 1)));
+        dot[i].SetPosition(centre_x + x * radius - dot_width / 2, centre_y - y * radius - dot_width / 2, Math.Int(z * 100));
+    }}
+}}
+
+tick = 0;
+pending = 0;
+
+fun refresh() {{
+    global.tick = global.tick + 1;
+    global.pending = global.pending + 1;
+    if (global.pending >= {FRAME_DIVIDER}) {{
+        global.pending = 0;
+        t = global.tick / {REFRESH_HZ};
+        fraction = ({number(t.SEED_SPECK)} + {number(t.SEED_FULL - t.SEED_SPECK)} * smooth(0, {number(t.GATHER_END)}, t)) * (1 + {breath});
+        place(smooth(0, {number(t.IGNITE_END)}, t), fraction, {number(t.REVEAL_FULL)} * smooth({number(t.REVEAL_START)}, {number(t.GATHER_END)}, t), {number(t.SPIN_RATE)} * t);
+    }}
+}}
+
+if (motion) {{
+    Plymouth.SetRefreshFunction(refresh);
+}} else {{
+    # Reduced motion: one still frame of the gathered state.
+    place({number(still["seed_opacity"])}, {number(still["seed_size"])}, {number(still["reveal_radius"])}, {number(still["spin"])});
+}}
+"""
+
+
+def theme_files():
+    """Every generated file, as {path relative to the themes directory: bytes}."""
+    files = {f"xsphere/{name}": data for name, data in images().items()}
+    files["xsphere/xsphere.plymouth"] = theme_definition(
+        "xsphere", "XSphereOS boot splash: a seed of light reveals the sphere lattice."
+    ).encode()
+    files["xsphere/xsphere.script"] = theme_script(motion=True).encode()
+    files["xsphere-still/xsphere-still.plymouth"] = theme_definition(
+        "xsphere-still", "XSphereOS boot splash, reduced motion: one still frame."
+    ).encode()
+    files["xsphere-still/xsphere-still.script"] = theme_script(motion=False).encode()
+    return files
+
+
 def main():
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_bytes(encode_png_indexed(SIZE, SIZE, render_levels()))
-    print(f"wrote {OUTPUT} ({OUTPUT.stat().st_size} bytes)")
+    for relative, data in theme_files().items():
+        path = THEMES / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+        print(f"wrote {relative} ({len(data)} bytes)")
 
 
 if __name__ == "__main__":
