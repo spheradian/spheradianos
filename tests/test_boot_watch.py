@@ -117,6 +117,30 @@ class BootWatch(unittest.TestCase):
         self.assertFalse(ended)
 
 
+class LoginReport(unittest.TestCase):
+    SNIPPET = CHROOT / "etc" / "profile.d" / "xsphereos-boot-report.sh"
+
+    def login(self, report_text):
+        with tempfile.TemporaryDirectory() as directory:
+            report = Path(directory, "boot-report")
+            if report_text is not None:
+                report.write_text(report_text)
+            result = subprocess.run(
+                ["sh", "-eu", "-c", f". {self.SNIPPET}; echo prompt"],
+                env={**os.environ, "XSPHERE_REPORT": str(report)},
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout
+
+    def test_a_boot_problem_is_shown_at_login(self):
+        self.assertEqual(self.login("XSphereOS: a unit failed\n"), "XSphereOS: a unit failed\nprompt\n")
+
+    def test_a_healthy_boot_shows_nothing_extra_at_login(self):
+        self.assertEqual(self.login(None), "prompt\n")
+
+
 class Units(unittest.TestCase):
     def test_watch_runs_early_and_only_with_a_splash(self):
         unit = (UNITS / "xsphereos-boot-watch.service").read_text()
