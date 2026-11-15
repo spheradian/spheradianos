@@ -186,7 +186,7 @@ How that was done, and what each technique means here:
 | Synth memory while playing | 256 KiB | not built |
 | Synth CPU | 1% of one core on the slowest supported machine, generated in real time | not built |
 | Simultaneous voices | 32 | concept: not yet counted |
-| Splash-related files in the initramfs, uncompressed | 1.5 MiB | 2.58 MiB in the last build, of which 1.10 MiB was two fonts the theme never uses. A trim hook now removes them; expected about 1.4 MiB, to be confirmed on the next build |
+| Splash-related files in the initramfs, uncompressed | 1.5 MiB | 2.58 MiB in the last build, of which 1.10 MiB was two fonts the theme never uses. A trim hook now removes them: 1.46 MiB in the following build, with the boot test still passing |
 
 Rules that follow:
 
