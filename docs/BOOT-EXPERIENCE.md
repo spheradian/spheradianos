@@ -6,7 +6,7 @@ Status: **draft for review, pre-implementation**. Nothing described here exists 
 
 > Originality note: this is an original work inspired by a *feeling*: a short, cinematic, sound-and-light-driven moment at power-on that makes the machine feel alive, as in the startup intro of the original Xbox console. It uses **no** Microsoft or Xbox assets, logo, sounds, shapes, colours or trade dress, and it must not be made to resemble them. Every visual and audio element is generated from XSphereOS's own sphere motif and its own code.
 
-> Reference note: the reference video was analysed visually, frame by frame, and the findings are in Appendix A. Its **audio was not analysed** (the analysis had no way to listen to it), so nothing here describes or derives from its sound. The appendix extracts *principles*; it is not a shot list to reproduce.
+> Reference note: the reference video was analysed visually, frame by frame, and the findings are in Appendix A. Its audio was not analysed. A second reference video was later analysed for sound by **spectral measurement** (level and frequency content over time, not by listening); the findings are in Appendix B. Both appendices extract *principles*; neither is a shot list or a score to reproduce.
 
 ---
 
@@ -356,3 +356,59 @@ Constraints the reference did not have and this design does: it must never delay
 ### A.4 What must not be carried over
 
 A glowing green mass on black, an X-shaped emblem or any mark emerging from a burst in that arrangement, the mechanical chamber imagery, the wordmark style, and any element of the sound. The palette recommendation in section 13 exists to keep clear distance from the reference's look.
+
+---
+
+## Appendix B. Reference sound analysis
+
+Source: a second reference video from the user, a capture of the original Xbox console booting and its menu being navigated. Method: the audio was routed through a spectrum analyser while the video played (4096-point FFT at 48 kHz, one reading every 50 ms), recording level, spectral centroid, energy in five bands and the strongest peaks. **This is measurement, not listening**: it describes loudness and frequency content accurately, but says nothing certain about how the sound *feels*. Only the first 71 s were analysed (boot, menu ambience, first navigation sounds); the rest of the video, including a section of menu music, was not. None of these sounds, pitches or timbres may be reproduced; the appendix exists to extract principles.
+
+### B.1 The boot sound (about 8 s)
+
+| Time in video | Measured | Reading |
+|---|---|---|
+| before 4.15 s | Digital silence (below -65 dBFS) | Nothing before the hit |
+| 4.25 s | From silence to about -9 dBFS RMS in under 100 ms; almost all energy below 80 Hz (strongest peak near 59 Hz); centroid 54 Hz | A sudden, deep sub-bass impact |
+| 4.4 to 5.0 s | Centroid climbs 60 to 700 Hz; strongest peaks step upward from about 100 Hz to above 1 kHz | A fast upward sweep growing out of the impact |
+| 5.05 s | Level back to -11 dBFS; the 4 to 12 kHz band jumps by almost 30 dB | A second, broadband layer enters (air or noise) |
+| 5.5 to 9.0 s | Level almost flat at -11 to -12 dBFS; centroid 100 to 250 Hz; many low peaks (35 to 300 Hz) that keep shifting and are not harmonically related | A dense, restless low texture, held at constant loudness |
+| 9.0 to 10.3 s | Centroid rises 240 to nearly 1000 Hz; high band up about 15 dB; level unchanged | The climax is a rise in *brightness*, not in volume |
+| 10.4 to 11.6 s | Level falls to about -20 dBFS; centroid falls back under 200 Hz | Release and fall |
+| 11.65 to 12.05 s | Two low hits (near 150 Hz, then near 105 Hz, the second back at -13 dBFS) with a faint tone near 1.8 kHz | A closing punctuation |
+| 12.15 s | Silence within about 150 ms | A clean, abrupt end |
+
+### B.2 The menu ambience and navigation sounds
+
+- **A continuous very low drone** (strongest peak near 35 Hz in every reading) sits under everything at about -15 to -17 dBFS.
+- **Recurring textured events** roughly every 1.0 to 1.25 s, not on a strict grid, with mid-range content and brief high-frequency bursts.
+- **Navigation sounds are almost pure mid-range tones**: about half a second long, at two pitches roughly a third apart, with essentially no energy above 1 kHz, and clearly louder than the bed.
+- **Transitions use noise sweeps**: short broadband bursts whose centroid rises quickly from a few hundred Hz to several kHz.
+
+### B.3 Principles for impact
+
+1. **Silence first, then an instant onset.** The hit lands from nothing in under a tenth of a second. Contrast, not loudness, creates impact.
+2. **Weight comes from the bottom.** The foundation is sub-bass. (Small speakers cannot reproduce it, so a design relying on it needs a layer an octave or two higher that carries the same gesture.)
+3. **Layer distinct roles.** A low hit, a rising sweep, a noisy "air" layer and a tonal ending, each entering at its own moment.
+4. **Move the spectrum, hold the level.** Loudness stays almost constant; the drama is the brightness opening up and closing again.
+5. **Keep it restless.** Shifting, non-harmonic low partials read as something alive rather than a steady machine tone.
+6. **Peak with the picture.** The brightest moment is placed on the visual climax.
+7. **End with punctuation and a clean stop.** A short low figure, then silence, gives finality.
+8. **One sonic world.** The boot sound and the menu ambience share the same low register, so the boot flows into the environment.
+9. **Interface tones stay soft.** Pure, mid-range, short, a consonant interval apart: informative without fatigue.
+
+### B.4 Using this in XSphereOS
+
+The approved sound (section 3) is deliberately gentle: bells, a pad and a chord. These principles can add impact *around* it without changing its character:
+
+| Principle | Proposal for XSphereOS |
+|---|---|
+| 1, 6 | Keep the silence before the first note; place the strongest moment exactly on the Unfold release |
+| 2 | A soft, round low "bloom" under the release chord, with a doubling an octave up so it survives small speakers; never a harsh thump |
+| 3 | During Resolve, add a short breath-like rising sweep under the bell run; at release, a brief shimmer of air |
+| 4 | Let brightness, not volume, carry the build; respect the loudness cap of section 8 |
+| 5 | Already present: irregular bell timing and the breathing pad |
+| 7 | Keep our own ending: a gentle decay into silence, not an abrupt cut. This is a deliberate difference from the reference |
+| 8 | The pad's register can continue as a very quiet desktop ambience, if ambience is ever wanted (open question) |
+| 9 | Reuse the bell timbre and the pentatonic scale for future interface sounds, so boot and desktop sound like one system |
+
+Constraints the reference did not have still apply: sound is off unless enabled, capped in level, skipped when muted, and never delays the session (section 8). A sudden loud low hit at power-on is exactly what those rules exist to prevent, so "impact" here means clarity and timing, not loudness.
