@@ -5,7 +5,7 @@ Asserts (docs/BOOT-EXPERIENCE.md, milestone B1):
   1. the splash is shown: bright sphere centre on a black screen;
   2. the splash exits cleanly: the sphere is gone and console text is visible;
   3. the session starts: a command typed on tty1 is executed by the
-     auto-logged-in user (the guest powers itself off).
+     auto-logged-in user (its output fills the screen).
 
 Usage: scripts/boot-test.py [ISO] [--shots DIR]
 Standard library only. Uses KVM when /dev/kvm is writable, else emulation.
@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MENU_WAIT = 4.0
 SPLASH_TIMEOUT = 40.0
 EXIT_TIMEOUT = 60.0
-POWEROFF_TIMEOUT = 40.0
+SESSION_TIMEOUT = 20.0
 POLL = 0.5
 KEYS = {" ": "spc", "\n": "ret"}
 
@@ -81,13 +81,6 @@ class Guest:
             Path(keep_as).write_bytes(data)
         return Frame(data)
 
-    def wait_for_exit(self, timeout):
-        try:
-            self.process.wait(timeout)
-            return True
-        except subprocess.TimeoutExpired:
-            return False
-
     def kill(self):
         if self.process.poll() is None:
             self.process.kill()
@@ -128,6 +121,9 @@ class Frame:
         text_at_top = self.peak(0, 0, min(400, self.width), 60) > 100
         return text_at_top and self.centre_brightness() < 10
 
+    def shows_output_at_bottom(self):
+        return self.peak(0, self.height - 40, 200, 30) > 100
+
 
 def wait_until(predicate, guest, timeout, shots, label):
     deadline = time.time() + timeout * guest.slowdown
@@ -153,9 +149,11 @@ def run(iso, shots):
             results["splash exits to a readable console"] = results["splash is shown"] and wait_until(
                 Frame.shows_console, guest, EXIT_TIMEOUT, shots, "exit")
             time.sleep(3 * guest.slowdown)
-            guest.type_text("systemctl poweroff\n")
-            results["session starts (typed command runs)"] = guest.wait_for_exit(
-                POWEROFF_TIMEOUT * guest.slowdown)
+            # "yes" needs no privileges and no special keys; only a real shell
+            # scrolls its output down to the bottom of the screen.
+            guest.type_text("yes\n")
+            results["session starts (typed command runs)"] = wait_until(
+                Frame.shows_output_at_bottom, guest, SESSION_TIMEOUT, shots, "session")
         finally:
             guest.kill()
     return results

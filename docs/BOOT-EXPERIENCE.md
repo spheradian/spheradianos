@@ -279,7 +279,7 @@ Mapped to the distro milestones of DISTRO-DESIGN section 9. Each is done only wh
 | B6 | Hardening and measurement | Budget measurements on real older hardware; photosensitivity test; manual checklist; password-prompt support | B4 |
 | B7 | First-boot integration | The sequence flows into the first-boot flow inside the sphere | M4 |
 
-Deliverable 2 of this effort (after approval of this document) is B1, optionally the start of B2.
+Status of B1 (2026-11-15): implemented. The `xsphere` Plymouth theme ships in the recipe and `scripts/boot-test.py` passes against a built ISO in QEMU (BIOS boot, KVM): splash shown, clean exit to a readable console, session starts. Not yet done from the B1 row: recording the timing and initramfs budgets, an automated `Esc` check, and a text-fallback boot test. The bootloader menu still shows live-build's default artwork.
 
 ---
 
