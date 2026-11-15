@@ -8,7 +8,7 @@ no external assets are used.
 
 Usage: scripts/render-boot-preview.py [--signature N] [--out-dir DIR]
 Needs Pillow (development tool only; nothing here ships in the image).
-Output: an AVI (MJPEG video + PCM audio) and a contact sheet PNG.
+Output: an AVI (MJPEG video + PCM audio), the sound alone as WAV, and a contact sheet PNG.
 """
 
 import argparse
@@ -346,55 +346,114 @@ def seed_phases(signature):
 # ------------------------------------------------------------------- sound
 
 
+# D major pentatonic, ascending: one soft bell per region that wakes.
+MILESTONE_NOTES = (293.66, 369.99, 440.00, 493.88, 587.33, 659.25)
+# Quickening run during Resolve, then the chord that the release lands on.
+RESOLVE_RUN = ((8.05, 739.99), (8.27, 880.00), (8.45, 987.77), (8.59, 1174.66), (8.70, 1318.51))
+RELEASE_CHORD = (146.83, 220.00, 293.66, 369.99, 440.00, 659.25)  # D major, added ninth
+
+
 def render_audio(signature):
-    """Bright, organic, rising swell that resolves into a gentle chord."""
+    """Soft bells that climb as regions wake, over a warm pad, resolving into a chord.
+
+    Only sine partials with gentle envelopes are used: no sawtooth-like stacks
+    and no pitch glides, which are what make a synthetic swell sound harsh.
+    """
     rng = random.Random(signature)
     total = int(T_END * SAMPLE_RATE)
     left, right = [0.0] * total, [0.0] * total
-    add_swell(left, right, rng)
-    add_chord(left, right)
-    peak = max(max(map(abs, left)), max(map(abs, right))) or 1.0
-    gain = 0.5 * 32767 / peak
-    return b"".join(
-        struct.pack("<hh", int(l * gain), int(r * gain)) for l, r in zip(left, right)
-    )
+    add_pad(left, right)
+    for i, (when, freq) in enumerate(zip(MILESTONES, MILESTONE_NOTES)):
+        add_bell(left, right, when + rng.uniform(0.0, 0.03), freq, 0.20 + 0.03 * i, 0.3 + 0.4 * (i % 2))
+    for i, (when, freq) in enumerate(RESOLVE_RUN):
+        add_bell(left, right, when + rng.uniform(-0.01, 0.01), freq, 0.14 + 0.02 * i, 0.7 - 0.4 * (i % 2), decay=0.35)
+    add_release_chord(left, right)
+    add_bell(left, right, T_UNFOLD + 0.06, 1174.66, 0.16, 0.5, decay=1.1)
+    left, right = add_reverb(left, 0), add_reverb(right, 23)
+    return to_pcm(left, right)
 
 
-def add_swell(left, right, rng):
-    start, end = 6.4, T_UNFOLD + 0.25
-    breath = [(rng.uniform(0.6, 2.3), rng.uniform(0, 6.283)) for _ in range(3)]
-    phase = [0.0] * 8
-    for n in range(int(start * SAMPLE_RATE), int(end * SAMPLE_RATE)):
+def add_bell(left, right, onset, freq, level, pan, decay=0.55):
+    """A glassy, mellow note: a sine with two quiet, faster-fading overtones."""
+    partials = ((1.0, 1.0, 1.0), (2.0, 0.22, 0.5), (3.0, 0.06, 0.3))
+    start = int(onset * SAMPLE_RATE)
+    for n in range(start, min(len(left), start + int(decay * 7 * SAMPLE_RATE))):
+        age = (n - start) / SAMPLE_RATE
+        attack = smooth(0.0, 0.012, age)
+        tone = sum(
+            weight * math.exp(-age / (decay * fade)) * math.sin(2 * math.pi * freq * ratio * age)
+            for ratio, weight, fade in partials
+        )
+        left[n] += level * attack * tone * (1 - pan)
+        right[n] += level * attack * tone * pan
+
+
+def add_pad(left, right):
+    """A quiet, slowly breathing bed under the bells; it hands over to the chord."""
+    voices = ((146.83, 0.0), (220.00, 1.3), (293.66, 2.1))
+    for n in range(int(T_WAKE * SAMPLE_RATE), int((T_UNFOLD + 1.0) * SAMPLE_RATE)):
         t = n / SAMPLE_RATE
-        u = clamp((t - start) / (T_UNFOLD - start))
-        base = 146.83 * 2 ** (u * u)  # glides up one octave, to D4
-        level = (u**2.2) * smooth(end, T_UNFOLD - 0.05, t)
-        organic = 1 + 0.18 * sum(math.sin(2 * math.pi * f * t + p) for f, p in breath) / 3
-        brightness = 0.25 + 0.75 * u  # upper partials open as it rises
-        sample_l = sample_r = 0.0
-        for k in range(8):
-            phase[k] += 2 * math.pi * base * (k + 1) / SAMPLE_RATE
-            weight = (brightness ** k) / (k + 1) ** 0.5
-            sample_l += weight * math.sin(phase[k])
-            sample_r += weight * math.sin(phase[k] * 1.0015 + 0.4 * k)
-        left[n] += 0.22 * level * organic * sample_l
-        right[n] += 0.22 * level * organic * sample_r
+        level = 0.07 * smooth(T_WAKE, T_UNFOLD, t) ** 2 * (1 - smooth(T_UNFOLD, T_UNFOLD + 1.0, t))
+        breath = 1 + 0.15 * math.sin(2 * math.pi * 0.31 * t) + 0.08 * math.sin(2 * math.pi * 0.83 * t + 1.0)
+        for freq, phase in voices:
+            left[n] += level * breath * math.sin(2 * math.pi * freq * 0.9985 * t + phase)
+            right[n] += level * breath * math.sin(2 * math.pi * freq * 1.0015 * t + phase)
 
 
-def add_chord(left, right):
-    notes = (293.66, 440.0, 587.33, 739.99, 1318.51)  # D major with an added ninth
-    for i, freq in enumerate(notes):
-        onset = T_UNFOLD + 0.04 * i
-        decay = 1.5 - 0.15 * i
-        pan = 0.5 + 0.35 * math.sin(i * 2.1)
+def add_release_chord(left, right):
+    for i, freq in enumerate(RELEASE_CHORD):
+        onset = T_UNFOLD + 0.025 * i
+        pan = 0.5 + 0.3 * math.sin(i * 2.1)
+        level = 0.13 / (1 + 0.25 * i)
         for n in range(int(onset * SAMPLE_RATE), len(left)):
             age = n / SAMPLE_RATE - onset
-            envelope = smooth(0, 0.07, age) * math.exp(-age / decay)
-            tone = sum(
-                math.sin(2 * math.pi * freq * h * age) / h**2 for h in (1, 2, 3)
-            )
-            left[n] += 0.16 * envelope * tone * (1 - pan)
-            right[n] += 0.16 * envelope * tone * pan
+            envelope = smooth(0.0, 0.14, age) * math.exp(-age / 2.0)
+            tone = math.sin(2 * math.pi * freq * age) + 0.18 * math.sin(4 * math.pi * freq * age)
+            left[n] += level * envelope * tone * (1 - pan)
+            right[n] += level * envelope * tone * pan
+
+
+def add_reverb(dry, offset, wet=0.28):
+    """Small Schroeder reverb (four damped combs, two all-passes) for a sense of space."""
+    combs = [[0.0] * (length + offset) for length in (1557, 1617, 1491, 1422)]
+    passes = [[0.0] * (length + offset) for length in (556, 225)]
+    damp = [0.0] * len(combs)
+    positions = [0] * (len(combs) + len(passes))
+    out = [0.0] * len(dry)
+    for n, sample in enumerate(dry):
+        mixed = 0.0
+        for i, line in enumerate(combs):
+            delayed = line[positions[i]]
+            damp[i] = delayed * 0.6 + damp[i] * 0.4
+            line[positions[i]] = sample + damp[i] * 0.80
+            positions[i] = (positions[i] + 1) % len(line)
+            mixed += delayed
+        mixed *= 0.25
+        for j, line in enumerate(passes, start=len(combs)):
+            delayed = line[positions[j]]
+            line[positions[j]] = mixed + delayed * 0.5
+            positions[j] = (positions[j] + 1) % len(line)
+            mixed = delayed - mixed * 0.5
+        out[n] = sample + wet * mixed
+    return out
+
+
+def to_pcm(left, right):
+    """Normalise with headroom, fade the tail to silence, pack as 16-bit stereo."""
+    peak = max(max(map(abs, left)), max(map(abs, right))) or 1.0
+    gain = 0.45 * 32767 / peak
+    fade_from = T_END - 1.0
+    frames = []
+    for n, (l, r) in enumerate(zip(left, right)):
+        tail = 1 - smooth(fade_from, T_END - 0.05, n / SAMPLE_RATE)
+        frames.append(struct.pack("<hh", int(l * gain * tail), int(r * gain * tail)))
+    return b"".join(frames)
+
+
+def write_wav(path, pcm):
+    header = struct.pack("<4sI4s4sIHHIIHH4sI", b"RIFF", 36 + len(pcm), b"WAVE", b"fmt ", 16,
+                         1, 2, SAMPLE_RATE, SAMPLE_RATE * 4, 4, 16, b"data", len(pcm))
+    path.write_bytes(header + pcm)
 
 
 # --------------------------------------------------------------------- AVI
@@ -472,6 +531,7 @@ def main():
     video = options.out_dir / "xsphereos-boot-concept.avi"
     sheet = options.out_dir / "xsphereos-boot-concept-frames.png"
     write_avi(video, frames, pcm)
+    write_wav(options.out_dir / "xsphereos-boot-concept.wav", pcm)
     write_contact_sheet(sheet, frames)
     print(f"wrote {video} ({video.stat().st_size // 1024} KiB, {count} frames)")
     print(f"wrote {sheet}")
