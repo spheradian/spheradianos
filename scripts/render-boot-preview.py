@@ -363,6 +363,12 @@ def render_audio(signature):
     total = int(T_END * SAMPLE_RATE)
     left, right = [0.0] * total, [0.0] * total
     add_pad(left, right)
+    # The seed is audible from its first frame: a high glint as the speck appears,
+    # then two low notes as it gains body, leading into the climb of the regions.
+    add_bell(left, right, T_IGNITE + 0.05, 1174.66, 0.12, 0.5, decay=0.9)
+    add_bell(left, right, T_GATHER, 146.83, 0.16, 0.45, decay=0.9)
+    add_bell(left, right, T_GATHER + 1.0, 220.00, 0.16, 0.55, decay=0.8)
+    add_seed_breath(left, right, rng)
     for i, (when, freq) in enumerate(zip(MILESTONES, MILESTONE_NOTES)):
         add_bell(left, right, when + rng.uniform(0.0, 0.03), freq, 0.20 + 0.03 * i, 0.3 + 0.4 * (i % 2))
     for i, (when, freq) in enumerate(RESOLVE_RUN):
@@ -395,9 +401,11 @@ def add_bell(left, right, onset, freq, level, pan, decay=0.55):
 def add_pad(left, right):
     """A quiet, slowly breathing bed under the bells; it hands over to the chord."""
     voices = ((146.83, 0.0), (220.00, 1.3), (293.66, 2.1))
-    for n in range(int(T_WAKE * SAMPLE_RATE), int((T_UNFOLD + 1.0) * SAMPLE_RATE)):
+    for n in range(int(T_IGNITE * SAMPLE_RATE), int((T_UNFOLD + 1.0) * SAMPLE_RATE)):
         t = n / SAMPLE_RATE
-        level = 0.07 * smooth(T_WAKE, T_UNFOLD, t) ** 2 * (1 - smooth(T_UNFOLD, T_UNFOLD + 1.0, t))
+        # Present from the first speck of light, then swelling as the lattice wakes.
+        build = 0.35 * smooth(T_IGNITE, T_IGNITE + 1.0, t) + 0.65 * smooth(T_WAKE, T_UNFOLD, t) ** 2
+        level = 0.09 * build * (1 - smooth(T_UNFOLD, T_UNFOLD + 1.0, t))
         breath = 1 + 0.15 * math.sin(2 * math.pi * 0.31 * t) + 0.08 * math.sin(2 * math.pi * 0.83 * t + 1.0)
         for freq, phase in voices:
             left[n] += level * breath * math.sin(2 * math.pi * freq * 0.9985 * t + phase)
@@ -424,6 +432,19 @@ def filtered_noise(rng, cutoff, state, highpass=False):
     high = rng.uniform(-1, 1) - state[0] - 0.7 * state[1]
     state[1] += f * high
     return high if highpass else state[1]
+
+
+def add_seed_breath(left, right, rng):
+    """A faint, slow breathing of air while the seed gathers: it sounds alive."""
+    states = ([0.0, 0.0], [0.0, 0.0])
+    start, end = T_IGNITE + 0.4, T_WAKE + 0.5
+    for n in range(int(start * SAMPLE_RATE), int(end * SAMPLE_RATE)):
+        t = n / SAMPLE_RATE
+        swell = 0.6 + 0.4 * math.sin(2 * math.pi * 0.45 * t)
+        level = 0.03 * smooth(start, start + 1.4, t) * (1 - smooth(end - 0.8, end, t)) * swell
+        cutoff = 700 + 300 * math.sin(2 * math.pi * 0.2 * t)
+        left[n] += level * filtered_noise(rng, cutoff, states[0])
+        right[n] += level * filtered_noise(rng, cutoff, states[1])
 
 
 def add_breath_sweep(left, right, rng):
