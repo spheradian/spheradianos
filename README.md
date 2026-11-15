@@ -35,13 +35,15 @@ Layout:
 
 ## Boot splash
 
-The `xsphere` Plymouth theme is wired into the recipe; see [docs/BOOT-EXPERIENCE.md](docs/BOOT-EXPERIENCE.md). A seed of light appears and its glow reveals a lattice of dots on a slowly turning sphere. Nothing is stored as frames: two small images are placed by arithmetic from `scripts/boot_timeline.py`. The whole theme is about 12 KiB.
+The `xsphere` Plymouth theme is wired into the recipe; see [docs/BOOT-EXPERIENCE.md](docs/BOOT-EXPERIENCE.md). A seed of light appears and its glow reveals a lattice of dots on a slowly turning sphere. Regions of the lattice wake, each in its colour, as systemd reports real boot milestones. Nothing is stored as frames: tiny images are placed by arithmetic from `scripts/boot_timeline.py`. Both theme variants total about 18 KiB. If a unit fails or the boot stalls for 20 s, the splash ends and the cause is printed in plain text.
 
 ```sh
 python3 -m unittest discover -s tests -v   # static checks and timeline tests, no root needed
 scripts/gen-boot-assets.py                 # regenerate the theme (images and scripts)
 scripts/boot-test.py                       # boots the ISO headless in QEMU and checks the splash contract
 scripts/boot-test.py --reduced-motion      # same, with the still-frame variant
+scripts/boot-test.py --fault fail          # injects a failed unit: expects a plain-text report
+scripts/boot-test.py --fault stall         # injects a stalled boot: expects the watchdog's text at 20 s
 ```
 
 Kernel command line switches: `xsphere.motion=reduced` shows one still frame instead of the animation; removing `splash` or adding `plymouth.enable=0` boots in text. Press Esc during boot for text details.
