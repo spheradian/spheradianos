@@ -20,6 +20,12 @@ scripts/run-qemu.sh        # BIOS boot in QEMU
 scripts/run-qemu.sh --uefi # UEFI boot (needs OVMF)
 ```
 
+On a non-Debian host (for example Ubuntu, whose `live-build` is an old fork that rejects the options in `auto/config`), build inside a Debian container instead; only `podman` is needed on the host:
+
+```sh
+sudo scripts/build-in-container.sh
+```
+
 Layout:
 
 - `auto/` live-build entry points; `auto/config` holds all image options (Debian `trixie`, `minbase`, no recommends).
