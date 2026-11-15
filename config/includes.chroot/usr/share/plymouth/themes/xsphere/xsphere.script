@@ -1,0 +1,17 @@
+# XSphereOS boot splash, milestone B1 (docs/BOOT-EXPERIENCE.md).
+# One still frame on true black: no animation, so it is reduced-motion safe.
+# Esc switches to boot details; that is handled by plymouthd, not by this script.
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+sphere_source = Image("sphere.png");
+
+# Fit the sphere to 60% of the shorter screen side.
+screen_side = Math.Min(Window.GetWidth(), Window.GetHeight());
+sphere_side = Math.Int(screen_side * 0.6);
+sphere_image = sphere_source.Scale(sphere_side, sphere_side);
+
+sphere = Sprite(sphere_image);
+sphere.SetX(Window.GetX() + (Window.GetWidth() - sphere_side) / 2);
+sphere.SetY(Window.GetY() + (Window.GetHeight() - sphere_side) / 2);

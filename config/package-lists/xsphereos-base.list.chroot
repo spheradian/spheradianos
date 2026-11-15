@@ -12,3 +12,4 @@ iputils-ping      # basic connectivity check
 ca-certificates   # TLS trust store for later network use
 less              # pager for logs
 nano              # minimal editor for on-device debugging
+plymouth          # boot splash daemon and script plugin (docs/BOOT-EXPERIENCE.md, B1)

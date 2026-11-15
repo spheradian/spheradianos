@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=XSphere
+Description=XSphereOS boot splash (B1): a still seed of light inside the sphere lattice.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/xsphere
+ScriptFile=/usr/share/plymouth/themes/xsphere/xsphere.script
