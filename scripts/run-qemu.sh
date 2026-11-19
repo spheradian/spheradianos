@@ -3,7 +3,13 @@
 # UEFI needs OVMF (package 'ovmf'); default is BIOS boot.
 set -eu
 cd "$(dirname "$0")/.."
-iso=$(ls -1 ./*.iso 2>/dev/null | head -n1 || true)
+iso=""
+for f in ./*.iso; do
+	[ -e "$f" ] && {
+		iso="$f"
+		break
+	}
+done
 [ -n "$iso" ] || { echo "no ISO found; build first" >&2; exit 1; }
 
 fw=""
