@@ -9,7 +9,10 @@ for f in ./*.iso; do
 		break
 	}
 done
-[ -n "$iso" ] || { echo "no ISO found; build first" >&2; exit 1; }
+[ -n "$iso" ] || {
+	echo "no ISO found; build first" >&2
+	exit 1
+}
 echo "ISO:      $iso"
 echo "ISO size: $(du -h "$iso" | cut -f1)"
 if [ -f live-image-amd64.packages ]; then

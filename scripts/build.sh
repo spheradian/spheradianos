@@ -9,7 +9,10 @@ for tool in lb debootstrap mksquashfs xorriso; do
 		exit 1
 	}
 done
-[ "$(id -u)" -eq 0 ] || { echo "error: run as root (sudo scripts/build.sh)" >&2; exit 1; }
+[ "$(id -u)" -eq 0 ] || {
+	echo "error: run as root (sudo scripts/build.sh)" >&2
+	exit 1
+}
 
 lb clean --purge >/dev/null 2>&1 || true
 lb config

@@ -10,12 +10,18 @@ for f in ./*.iso; do
 		break
 	}
 done
-[ -n "$iso" ] || { echo "no ISO found; build first" >&2; exit 1; }
+[ -n "$iso" ] || {
+	echo "no ISO found; build first" >&2
+	exit 1
+}
 
 fw=""
 if [ "${1:-}" = "--uefi" ]; then
 	code=/usr/share/OVMF/OVMF_CODE_4M.fd
-	[ -f "$code" ] || { echo "OVMF not found at $code" >&2; exit 1; }
+	[ -f "$code" ] || {
+		echo "OVMF not found at $code" >&2
+		exit 1
+	}
 	fw="-drive if=pflash,format=raw,readonly=on,file=$code"
 fi
 
