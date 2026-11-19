@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XSphereOS — Architecture &amp; System Design</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #161b22;
+      --card-inner: #0d1117;
+      --border: #30363d;
+      --fg: #e6edf3;
+      --muted: #8b949e;
+      --primary: #3b82f6;
+      --primary-fg: #ffffff;
+      --success: #3fb950;
+      --warning: #d29922;
+    }
+    :root.light {
+      --bg: #f6f8fa;
+      --card: #ffffff;
+      --card-inner: #f6f8fa;
+      --border: #d0d7de;
+      --fg: #1f2328;
+      --muted: #656d76;
+      --primary: #0969da;
+      --primary-fg: #ffffff;
+      --success: #1a7f37;
+      --warning: #9a6700;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .container { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+    .header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+    .badge { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border); color: var(--muted); }
+    .badge.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-fg); }
+    .badge.success { color: var(--success); }
+    .badge.warning { color: var(--warning); }
+    h1 { margin: 0; font-size: 20px; font-weight: 600; }
+    h2 { margin: 0; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .sub { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .control-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .ms-group { display: flex; flex-wrap: wrap; gap: 4px; }
+    .btn {
+      cursor: pointer;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-inner);
+      color: var(--fg);
+    }
+    .btn:hover { border-color: var(--primary); }
+    .btn.active { background: var(--primary); border-color: var(--primary); color: var(--primary-fg); }
+    select {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-inner);
+      color: var(--fg);
+      font-size: 12px;
+    }
+    .banner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 10px 16px; font-size: 12px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; }
+    @media (min-width: 980px) { .grid { grid-template-columns: 8fr 4fr; } }
+    .layers { display: flex; flex-direction: column; gap: 12px; }
+    .layer-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .nodes { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+    .node {
+      text-align: left;
+      cursor: pointer;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-inner);
+      color: var(--fg);
+      transition: border-color 0.15s, opacity 0.15s;
+    }
+    .node:hover { border-color: var(--primary); }
+    .node.selected { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+    .node-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; }
+    .node-ms { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 400; color: var(--muted); }
+    .node p { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+    .arrow { text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); }
+    .inspector { position: sticky; top: 18px; }
+    .insp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; }
+    .insp-head h3 { margin: 2px 0 0; font-size: 16px; }
+    .insp-sec { margin-bottom: 12px; font-size: 12px; }
+    .insp-lbl { font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .refs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="card header">
+      <div>
+        <div class="badges">
+          <span class="badge primary">XSphereOS</span>
+          <span class="badge">Debian trixie · minbase · amd64</span>
+          <span class="badge">Wayland-only (No X11/Xwayland)</span>
+        </div>
+        <h1>XSphereOS — System Architecture &amp; Design</h1>
+        <p class="sub">Offline standalone explorer. Click any component to inspect responsibilities, contracts, milestones (M0–M5), and ADRs.</p>
+      </div>
+
+      <div class="controls">
+        <div>
+          <div class="control-label">Milestone Focus</div>
+          <div id="ms-filters" class="ms-group">
+            <button data-ms="ALL" class="btn ms-btn active">ALL</button>
+            <button data-ms="M0" class="btn ms-btn">M0</button>
+            <button data-ms="M1" class="btn ms-btn">M1</button>
+            <button data-ms="M2" class="btn ms-btn">M2</button>
+            <button data-ms="M3" class="btn ms-btn">M3</button>
+            <button data-ms="M4" class="btn ms-btn">M4</button>
+            <button data-ms="M5" class="btn ms-btn">M5</button>
+          </div>
+        </div>
+        <div>
+          <div class="control-label">Hardware / Session Profile</div>
+          <select id="profile-select">
+            <option value="normal">Normal GPU (Vulkan / wgpu Full)</option>
+            <option value="lowpower">Low-Power Profile (Modest Hardware)</option>
+            <option value="fallback">Fallback Session (No Vulkan/GL)</option>
+          </select>
+        </div>
+        <button id="theme-toggle" class="btn" title="Toggle Light/Dark Theme">Theme</button>
+      </div>
+    </header>
+
+    <div class="card banner">
+      <span id="profile-desc"></span>
+      <span class="mono" style="color: var(--muted);">xspherede (MIT Public) · xsphereos (Private) · xspherede-security (Private)</span>
+    </div>
+
+    <div class="grid">
+      <div class="layers">
+        <section class="card">
+          <div class="layer-head">
+            <h2>Layer 4 · Wayland Clients &amp; Trust Domains</h2>
+            <span class="badge warning">Sandbox enforced in M5</span>
+          </div>
+          <div class="nodes">
+            <button data-id="domain-trusted" class="node">
+              <div class="node-top"><span>Trusted Shell UI</span><span class="node-ms">M2–M3</span></div>
+              <p>Mini-Globe, Polar Docks, Launcher, First-Boot &amp; native Settings.</p>
+            </button>
+            <button data-id="domain-apps" class="node">
+              <div class="node-top"><span>Wayland Clients</span><span class="node-ms">M2–M3</span></div>
+              <p>Terminal, Wayland-native Browser, File Manager (DMA-BUF textures).</p>
+            </button>
+            <button data-id="domain-sandbox" class="node">
+              <div class="node-top"><span>Per-Domain Sandbox</span><span class="node-ms">M5</span></div>
+              <p>Namespaces, seccomp, cgroups &amp; cross-domain clipboard vault.</p>
+            </button>
+          </div>
+        </section>
+
+        <div class="arrow">▲ Wayland Protocol · DMA-BUF Live Capture · Trusted Input Routing ▲</div>
+
+        <section class="card">
+          <div class="layer-head">
+            <h2>Layer 3 · Compositor &amp; Session (mendsec/xspherede · Public MIT)</h2>
+            <span class="badge">Rust · unsafe forbidden</span>
+          </div>
+          <div class="nodes">
+            <button data-id="compositor-smithay" class="node">
+              <div class="node-top"><span>xspherede (Smithay + wgpu)</span><span class="node-ms">M1–M2</span></div>
+              <p>Spherical 3D rendering, raycasting, camera, and window mesh.</p>
+            </button>
+            <button data-id="compositor-core" class="node">
+              <div class="node-top"><span>Pure Core &amp; Policy</span><span class="node-ms">M1–M2</span></div>
+              <p>GPU-free testable modules: input, state, commands, WindowSurfaceProvider.</p>
+            </button>
+            <button data-id="compositor-fallback" class="node">
+              <div class="node-top"><span>Fallback Flat Session</span><span class="node-ms">M1</span></div>
+              <p>Minimal flat Wayland session when Vulkan/GL is unavailable.</p>
+            </button>
+          </div>
+        </section>
+
+        <div class="arrow">▲ DRM/KMS Master Hand-off · seatd/logind · libinput · PipeWire ▲</div>
+
+        <section class="card">
+          <div class="layer-head">
+            <h2>Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Private)</h2>
+            <span class="badge">APT::Install-Recommends "false"</span>
+          </div>
+          <div class="nodes">
+            <button data-id="base-system" class="node">
+              <div class="node-top"><span>systemd · dbus · udev</span><span class="node-ms">M0</span></div>
+              <p>Init system, system bus, device management, and session control.</p>
+            </button>
+            <button data-id="base-media" class="node">
+              <div class="node-top"><span>Mesa · PipeWire · Net</span><span class="node-ms">M1–M3</span></div>
+              <p>Vulkan/GL, PipeWire/WirePlumber audio, and NetworkManager vs iwd.</p>
+            </button>
+            <button data-id="base-packaging" class="node">
+              <div class="node-top"><span>Signed APT &amp; Installer</span><span class="node-ms">M4</span></div>
+              <p>xsphereos-base metapackage, signed APT repo, and disk installer.</p>
+            </button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="layer-head">
+            <h2>Layer 1 · Boot Chain &amp; Early Experience</h2>
+            <span class="badge success">ADR-002 Zero-Prompt</span>
+          </div>
+          <div class="nodes">
+            <button data-id="boot-loader" class="node">
+              <div class="node-top"><span>GRUB-EFI &amp; ISOLINUX</span><span class="node-ms">M0</span></div>
+              <p>Hidden menu (timeout=0, Shift for fail-safe), black screen, no beep.</p>
+            </button>
+            <button data-id="boot-kernel" class="node">
+              <div class="node-top"><span>Linux Kernel + simpledrm</span><span class="node-ms">M0</span></div>
+              <p>linux-image-amd64, quiet loglevel=3, native KMS handover.</p>
+            </button>
+            <button data-id="boot-plymouth" class="node">
+              <div class="node-top"><span>Plymouth xsphere (~18 KiB)</span><span class="node-ms">M0 / M2</span></div>
+              <p>Arithmetic splash, 20s watchdog, flicker-free hand-off (B4).</p>
+            </button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="layer-head">
+            <h2>Cross-Cutting · DevSecOps, Testing &amp; Governance</h2>
+            <span class="badge">3 Accepted ADRs</span>
+          </div>
+          <div class="nodes">
+            <button data-id="ci-static" class="node">
+              <div class="node-top"><span>Static &amp; Policy Gates</span><span class="node-ms">M0</span></div>
+              <p>shellcheck, shfmt, unittest, cargo audit/deny, gitleaks, zizmor.</p>
+            </button>
+            <button data-id="ci-qemu" class="node">
+              <div class="node-top"><span>QEMU Headless &amp; Budget</span><span class="node-ms">M0–M1</span></div>
+              <p>boot-test.py (normal, reduced, fail, stall) and ISO size gate.</p>
+            </button>
+            <button data-id="ci-supply" class="node">
+              <div class="node-top"><span>SBOM &amp; Reproducibility</span><span class="node-ms">M4</span></div>
+              <p>Pinned Debian snapshots, CycloneDX SBOM, signing, build diff.</p>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <aside class="card inspector">
+        <div class="insp-head">
+          <div>
+            <div class="mono" style="font-size: 11px; color: var(--muted);">COMPONENT INSPECTOR</div>
+            <h3 id="insp-title">Select a component</h3>
+          </div>
+          <span id="insp-ms" class="badge primary">M0–M5</span>
+        </div>
+
+        <div class="insp-sec">
+          <div class="insp-lbl">Repository</div>
+          <div id="insp-repo" class="mono">—</div>
+        </div>
+        <div class="insp-sec">
+          <div class="insp-lbl">Responsibility</div>
+          <div id="insp-resp">—</div>
+        </div>
+        <div class="insp-sec">
+          <div class="insp-lbl">Contracts &amp; Interfaces</div>
+          <div id="insp-contracts">—</div>
+        </div>
+        <div class="insp-sec">
+          <div class="insp-lbl">Security &amp; Resilience</div>
+          <div id="insp-security">—</div>
+        </div>
+        <div class="insp-sec">
+          <div class="insp-lbl">Related Issues &amp; ADRs</div>
+          <div id="insp-refs" class="refs"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const NODES = {
+      "domain-trusted": {
+        title: "Trusted Shell UI",
+        ms: "M2–M3",
+        repo: "mendsec/xspherede + mendsec/xsphereos",
+        resp: "Privileged shell UI: Mini-Globe, Polar Docks, Launcher mapping apps to trust domains, First-Boot flow, and native Settings tool.",
+        contracts: "Runs inside the trusted compositor process or over an authenticated privileged channel.",
+        security: "Visually and logically separated from untrusted clients.",
+        refs: ["Issue #5", "Issue #9", "Issue #10"]
+      },
+      "domain-apps": {
+        title: "Wayland Clients",
+        ms: "M2–M3",
+        repo: "mendsec/xsphereos (manifest) + mendsec/xspherede",
+        resp: "User applications: one Wayland-native terminal (M2), one Wayland-native browser, and one file manager (M3) under strict size budgets.",
+        contracts: "Pure Wayland protocol (no X11/Xwayland); live window capture via DMA-BUF textures on curved surfaces.",
+        security: "Browser and network stack selection governed by formal ADR (Issue #8).",
+        refs: ["Issue #8", "Issue #9"]
+      },
+      "domain-sandbox": {
+        title: "Per-Domain Sandbox & Vault",
+        ms: "M5",
+        repo: "mendsec/xspherede + mendsec/xsphereos + xspherede-security",
+        resp: "OS-level process isolation per trust domain (namespaces, seccomp, cgroups, Wayland security-context) and clipboard vault.",
+        contracts: "Declarative domain policy verified by property tests (proptest) and boot-time self-audit.",
+        security: "Turns the trust-domain model into an enforced boundary. Until M5, docs/UI state it is unverified.",
+        refs: ["Issue #13", "DISTRO-DESIGN §2"]
+      },
+      "compositor-smithay": {
+        title: "xspherede (Smithay + wgpu)",
+        ms: "M1–M2",
+        repo: "mendsec/xspherede (Public MIT)",
+        resp: "Sole display server and desktop shell. Runs as prototype in M1 kiosk session; becomes native Smithay + wgpu compositor in M2.",
+        contracts: "Receives DRM master from Plymouth (B4) and manages Wayland surfaces and trusted input routing.",
+        security: "Safe Rust (unsafe forbidden, panic='abort' in release, zero X11/Xwayland).",
+        refs: ["Issue #5", "Issue #9", "ADR-003"]
+      },
+      "compositor-core": {
+        title: "Pure Core & Policy Engine",
+        ms: "M1–M2",
+        repo: "mendsec/xspherede (Public MIT)",
+        resp: "Pure logic extracted from main.rs (app, input, render, state, commands, security): spherical math, raycasting, drag/focus, surface validation.",
+        contracts: "Injectable boundary traits: WindowSurfaceProvider, Clock, HostInfo (testable without GPU).",
+        security: "Unit + property tests required; strict clippy lints in security-sensitive modules.",
+        refs: ["ENGINEERING-PLAN §3.3", "ADR-003"]
+      },
+      "compositor-fallback": {
+        title: "Fallback Flat Wayland Session",
+        ms: "M1",
+        repo: "mendsec/xsphereos",
+        resp: "Minimal flat Wayland session launched automatically when hardware lacks usable Vulkan/GL or if the primary compositor fails.",
+        contracts: "Graceful degradation path wired into systemd/seatd session startup.",
+        security: "Ensures the machine never boots to an unusable screen.",
+        refs: ["Issue #5", "DISTRO-DESIGN §5"]
+      },
+      "base-system": {
+        title: "Debian minbase Core (systemd · dbus · udev)",
+        ms: "M0",
+        repo: "mendsec/xsphereos (Private)",
+        resp: "Minimal substrate built with debootstrap --variant=minbase (Debian trixie), no task-* or implicit Recommends. Every package has a 1-line justification.",
+        contracts: "auto/config defines image options; config/package-lists/xsphereos-base.list.chroot defines the manifest.",
+        security: "Minimal attack surface; unjustified packages are rejected by CI.",
+        refs: ["Issue #1", "Issue #2"]
+      },
+      "base-media": {
+        title: "Graphics, Audio & Network Stack",
+        ms: "M1–M3",
+        repo: "mendsec/xsphereos (Private)",
+        resp: "Mesa (Vulkan/GL), libdrm, libinput, seatd/libseat (M1–M2), PipeWire/WirePlumber (M3), and Wi-Fi/Ethernet stack (NetworkManager vs iwd).",
+        contracts: "First-boot GPU probe automatically selects normal vs low-power rendering profile.",
+        security: "Network stack decided via ADR (#8); non-free firmware policy via ADR (#11).",
+        refs: ["Issue #8", "Issue #10", "Issue #11"]
+      },
+      "base-packaging": {
+        title: "Signed APT Repo & Installer",
+        ms: "M4",
+        repo: "mendsec/xsphereos (Private)",
+        resp: "Signed APT repository with xsphereos-base metapackage, nightly/testing/stable channels, first-boot flow, and disk installer.",
+        contracts: "System updates delivered as standard apt upgrades.",
+        security: "Installer strategy (Calamares vs Debian Installer vs custom) governed by ADR (#11).",
+        refs: ["Issue #11", "Issue #12"]
+      },
+      "boot-loader": {
+        title: "GRUB-EFI & ISOLINUX (Zero-Prompt)",
+        ms: "M0",
+        repo: "mendsec/xsphereos (config/bootloaders/)",
+        resp: "Immediate kernel boot without waiting for keypresses on UEFI (GRUB) and BIOS (ISOLINUX), black background, no Debian beep.",
+        contracts: "Hidden menu (timeout=0) revealed on demand via Shift/Esc for fail-safe and checksum verification.",
+        security: "Keeps Debian-signable grub-efi binaries for future Secure Boot compatibility.",
+        refs: ["ADR-002", "Issue #14"]
+      },
+      "boot-kernel": {
+        title: "Linux Kernel + simpledrm / KMS",
+        ms: "M0",
+        repo: "mendsec/xsphereos",
+        resp: "linux-image-amd64 with quiet loglevel=3 vt.global_cursor_default=0, providing initial framebuffer via simpledrm before native GPU driver load.",
+        contracts: "Seamless simpledrm-to-native-DRM handover on dark background to avoid flashes.",
+        security: "Full kernel logs preserved in journal and serial console for QEMU assertions.",
+        refs: ["BOOT-EXPERIENCE §2", "Issue #1"]
+      },
+      "boot-plymouth": {
+        title: "Plymouth xsphere (~18 KiB)",
+        ms: "M0 / M2",
+        repo: "mendsec/xsphereos",
+        resp: "Arithmetic splash generated by scripts/gen-boot-assets.py with reduced-motion variant and real systemd milestone lighting.",
+        contracts: "20s watchdog drops to plain text on stall/unit failure. Hands off DRM master cleanly to xspherede in M2 (B4).",
+        security: "Never extends boot duration; readable diagnostics guaranteed on failure.",
+        refs: ["Issue #1", "Issue #7", "BOOT-EXPERIENCE"]
+      },
+      "ci-static": {
+        title: "Static & Policy Gates",
+        ms: "M0",
+        repo: "mendsec/xsphereos + mendsec/xspherede",
+        resp: "Fast PR checks: shellcheck, shfmt, Python unit tests, manifest/auto/config assertions, cargo fmt/clippy/audit/deny, gitleaks, zizmor.",
+        contracts: "Nothing merges red on main; GitHub Actions pinned by commit SHA with least privilege.",
+        security: "Branch protection, secret scanning, and push protection enabled on main.",
+        refs: ["Issue #2", "Issue #3", "Issue #4"]
+      },
+      "ci-qemu": {
+        title: "QEMU Headless Boot & Budget",
+        ms: "M0–M1",
+        repo: "mendsec/xsphereos (Private)",
+        resp: "Containerized Debian build and headless QEMU boot assertions (scripts/boot-test.py) plus ISO size & package budget enforcement.",
+        contracts: "Build fails if ISO size or package count exceeds the recorded margin.",
+        security: "Serial console checks include no unexpected listening ports and boot-time self-audit.",
+        refs: ["Issue #1", "Issue #6", "Issue #14"]
+      },
+      "ci-supply": {
+        title: "SBOM, Signing & Reproducibility",
+        ms: "M4",
+        repo: "mendsec/xsphereos + mendsec/xspherede",
+        resp: "CI-only release builds using pinned Debian snapshots, CycloneDX SBOM, checksums, detached signatures, and two-build reproducibility diff.",
+        contracts: "Artifacts promoted from testing to stable after soak period and smoke check.",
+        security: "Verifiable provenance and documented rollback path per channel.",
+        refs: ["Issue #12", "ENGINEERING-PLAN §5.2"]
+      }
+    };
+
+    const PROFILES = {
+      normal: "Normal GPU Profile: full volumetric effects, high-subdivision sphere mesh, full-res Mini-Globe, and wgpu rendering.",
+      lowpower: "Low-Power Profile (Modest Hardware): volumetric effects off/reduced, lower mesh subdivision, capped FPS, no idle redraw.",
+      fallback: "Fallback Session (No Vulkan/GL): automatic Layer 3 switch to minimal flat Wayland session so the machine remains usable."
+    };
+
+    const nodes = document.querySelectorAll(".node");
+    const msBtns = document.querySelectorAll(".ms-btn");
+    const profileSelect = document.getElementById("profile-select");
+    const profileDesc = document.getElementById("profile-desc");
+
+    function selectNode(id) {
+      const n = NODES[id];
+      if (!n) return;
+      nodes.forEach(el => el.classList.remove("selected"));
+      const active = document.querySelector(`.node[data-id="${id}"]`);
+      if (active) active.classList.add("selected");
+
+      document.getElementById("insp-title").textContent = n.title;
+      document.getElementById("insp-ms").textContent = n.ms;
+      document.getElementById("insp-repo").textContent = n.repo;
+      document.getElementById("insp-resp").textContent = n.resp;
+      document.getElementById("insp-contracts").textContent = n.contracts;
+      document.getElementById("insp-security").textContent = n.security;
+
+      const refsEl = document.getElementById("insp-refs");
+      refsEl.innerHTML = "";
+      n.refs.forEach(r => {
+        const span = document.createElement("span");
+        span.className = "badge";
+        span.textContent = r;
+        refsEl.appendChild(span);
+      });
+    }
+
+    function filterMilestone(ms) {
+      msBtns.forEach(b => b.classList.toggle("active", b.dataset.ms === ms));
+      nodes.forEach(btn => {
+        const n = NODES[btn.dataset.id];
+        if (!n) return;
+        btn.style.opacity = (ms === "ALL" || n.ms.includes(ms)) ? "1" : "0.35";
+      });
+    }
+
+    function updateProfile() {
+      const val = profileSelect.value;
+      profileDesc.textContent = PROFILES[val];
+      const fb = document.querySelector('.node[data-id="compositor-fallback"]');
+      const sm = document.querySelector('.node[data-id="compositor-smithay"]');
+      if (val === "fallback") {
+        fb.style.borderColor = "var(--warning)";
+        sm.style.opacity = "0.45";
+        selectNode("compositor-fallback");
+      } else {
+        fb.style.borderColor = "";
+        sm.style.opacity = "1";
+      }
+    }
+
+    nodes.forEach(b => b.addEventListener("click", () => selectNode(b.dataset.id)));
+    msBtns.forEach(b => b.addEventListener("click", () => filterMilestone(b.dataset.ms)));
+    profileSelect.addEventListener("change", updateProfile);
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+      document.documentElement.classList.toggle("light");
+    });
+
+    updateProfile();
+    selectNode("boot-loader");
+  </script>
+</body>
+</html>

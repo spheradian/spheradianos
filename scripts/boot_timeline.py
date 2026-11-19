@@ -12,8 +12,8 @@ below. tests/ checks that the committed script matches the generator.
 import math
 
 # Phases (seconds).
-IGNITE_END = 1.5  # the speck has become a lit seed
-GATHER_END = 4.0  # the seed's light has reached the whole lattice
+IGNITE_END = 0.6  # the speck has become a lit seed
+GATHER_END = 2.5  # the seed's light has reached the whole lattice
 
 # Seed size, as a fraction of its largest size, and its slow, irregular breathing:
 # (amplitude, cycles per second, phase). Two unrelated rates never line up.

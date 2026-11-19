@@ -41,3 +41,6 @@ fontconfig
 
 # live-config creates the live user only when this package is installed
 user-setup
+
+# fast initramfs compression/decompression for quicker early boot (ADR-004)
+zstd

@@ -1,6 +1,6 @@
 # XSphereOS: Distribution Design
 
-Status: **draft, pre-implementation**. Nothing described here exists yet except the XSphereDE prototype itself.
+Status: **M0 complete** (2026-11-18). The minimal `trixie` `minbase` live ISO builds reproducibly via `live-build`, boots zero-prompt in QEMU (BIOS and UEFI) into an autologged-in shell with the `xsphere` Plymouth splash, and passes static and boot-splash contract tests. M1–M5 remain planned.
 
 XSphereOS is the planned first (and initially only) target for XSphereDE: a small, easy-to-use Linux distribution built from a deliberately minimal Debian base, in the spirit of Kurumin Linux. It boots straight into the spherical desktop, works out of the box, and requires no configuration from a first-time user.
 
@@ -137,6 +137,15 @@ Keeping the distro recipe separate prevents distribution concerns from leaking i
 | M5 | Isolation | Per-domain sandboxing makes trust domains enforceable |
 
 M1 is the earliest point at which the distro is demonstrable, and it does not depend on the Wayland compositor work.
+
+### 9.1 M0 Measured Baseline (2026-11-18)
+
+| Metric | Measured value | Notes |
+|---|---|---|
+| Hybrid ISO size | 268 MiB (281,018,368 bytes) | `live-image-amd64.hybrid.iso` (`xz` squashfs) |
+| SquashFS rootfs size | 196 MiB | `binary/live/filesystem.squashfs` |
+| Installed package count | 190 packages | `live-image-amd64.packages` (`trixie`, `minbase`, no recommends) |
+| Boot behavior | Zero-prompt (BIOS & UEFI) | `config/bootloaders/` (`ADR-002`); `scripts/boot-test.py` & QEMU UEFI verified |
 
 ## 10. Open questions
 
