@@ -189,12 +189,15 @@ def run(iso, shots, reduced_motion=False, fault=None):
         guest = Guest(iso, workdir)
         try:
             if parameters:
-                # Send spaces during BIOS POST -> ISOLINUX window so the first space
-                # received at "boot:" cancels the 0.5s timeout regardless of CPU speed.
-                deadline = time.monotonic() + MENU_WAIT * guest.slowdown
+                # Send space + backspace during BIOS POST -> ISOLINUX window so the
+                # 0.5s timeout is cancelled at "boot:" without filling the input buffer.
+                wait_secs = 8.0 if guest.slowdown > 1 else MENU_WAIT
+                deadline = time.monotonic() + wait_secs
                 while time.monotonic() < deadline:
                     guest.command("send-key", keys=[{"type": "qcode", "data": "spc"}])
-                    time.sleep(0.25)
+                    time.sleep(0.05)
+                    guest.command("send-key", keys=[{"type": "qcode", "data": "backspace"}])
+                    time.sleep(0.20)
                 guest.type_text("live-amd64 " + " ".join(parameters) + "\n")
             results["splash is shown"] = wait_until(
                 Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash")
