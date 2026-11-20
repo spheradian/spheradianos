@@ -188,9 +188,17 @@ def run(iso, shots, reduced_motion=False, fault=None):
     with tempfile.TemporaryDirectory() as workdir:
         guest = Guest(iso, workdir)
         try:
-            time.sleep(MENU_WAIT * guest.slowdown)
-            # Tab opens the boot entry for editing, so parameters can be appended.
-            guest.type_text("\t " + " ".join(parameters) + "\n" if parameters else "\n")
+            if parameters:
+                # Send space + backspace during BIOS POST -> ISOLINUX window so the
+                # 0.5s timeout is cancelled at "boot:" without filling the input buffer.
+                wait_secs = 8.0 if guest.slowdown > 1 else MENU_WAIT
+                deadline = time.monotonic() + wait_secs
+                while time.monotonic() < deadline:
+                    guest.command("send-key", keys=[{"type": "qcode", "data": "spc"}])
+                    time.sleep(0.05)
+                    guest.command("send-key", keys=[{"type": "qcode", "data": "backspace"}])
+                    time.sleep(0.20)
+                guest.type_text("live-amd64 " + " ".join(parameters) + "\n")
             results["splash is shown"] = wait_until(
                 Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash")
             if not results["splash is shown"]:

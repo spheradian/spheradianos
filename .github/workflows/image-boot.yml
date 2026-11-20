@@ -1,0 +1,59 @@
+name: Image Build & QEMU Boot Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "auto/**"
+      - "config/**"
+      - "scripts/**"
+      - ".github/workflows/image-boot.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "auto/**"
+      - "config/**"
+      - "scripts/**"
+      - ".github/workflows/image-boot.yml"
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-boot:
+    name: Build ISO & QEMU Boot Assertions
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install host dependencies (podman & QEMU)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends podman qemu-system-x86 ovmf python3
+
+      - name: Build ISO in Debian trixie container
+        run: |
+          sudo scripts/build-in-container.sh
+
+      - name: Enforce ISO size & package budget
+        run: |
+          scripts/size-report.sh
+          iso_bytes=$(stat -c '%s' live-image-amd64.hybrid.iso)
+          pkg_count=$(grep -c . live-image-amd64.packages)
+          echo "ISO bytes: $iso_bytes | Packages: $pkg_count"
+          [ "$iso_bytes" -le 471859200 ] || { echo "ISO exceeds 450 MiB M1 budget" >&2; exit 1; }
+          [ "$pkg_count" -le 260 ] || { echo "Package count exceeds 260 M1 budget" >&2; exit 1; }
+
+      - name: Run QEMU headless boot tests
+        run: |
+          scripts/boot-test.py
+          scripts/boot-test.py --reduced-motion
+          scripts/boot-test.py --fault fail
+          scripts/boot-test.py --fault stall
