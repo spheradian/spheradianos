@@ -16,6 +16,7 @@ Standard library only. Uses KVM when /dev/kvm is writable, else emulation.
 import argparse
 import json
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -43,12 +44,33 @@ class Guest:
     def __init__(self, iso, workdir):
         self.workdir = workdir
         sock = os.path.join(workdir, "qmp.sock")
+        qemu = shutil.which("qemu-system-x86_64")
+        if not qemu:
+            raise RuntimeError("qemu-system-x86_64 not found in PATH")
         accel = ["-enable-kvm", "-cpu", "host"] if os.access("/dev/kvm", os.W_OK) else []
         self.slowdown = 1 if accel else 8
-        self.process = subprocess.Popen(
-            ["qemu-system-x86_64", "-m", "2048", "-smp", "2", *accel,
-             "-display", "none", "-device", "virtio-vga", "-nic", "none",
-             "-cdrom", str(iso), "-boot", "d", "-qmp", f"unix:{sock},server,nowait"]
+        # Fixed executable resolved via PATH and explicit argv list without a shell.
+        self.process = subprocess.Popen(  # noqa: S603
+            [
+                qemu,
+                "-m",
+                "2048",
+                "-smp",
+                "2",
+                *accel,
+                "-display",
+                "none",
+                "-device",
+                "virtio-vga",
+                "-nic",
+                "none",
+                "-cdrom",
+                str(iso),
+                "-boot",
+                "d",
+                "-qmp",
+                f"unix:{sock},server,nowait",
+            ]
         )
         self.channel = self._connect(sock)
         self.channel.readline()
@@ -128,10 +150,12 @@ class Frame:
         """
         half = min(self.width, self.height) // 40
         left, top = self.width // 2 - half, self.height // 2 - half
-        return b"".join(
-            self.pixels[((top + row) * self.width + left) * 3 : ((top + row) * self.width + left + 2 * half) * 3]
-            for row in range(2 * half)
-        )
+        span = 2 * half * 3
+        rows = []
+        for row in range(2 * half):
+            start = ((top + row) * self.width + left) * 3
+            rows.append(self.pixels[start : start + span])
+        return b"".join(rows)
 
     def shows_splash(self):
         corner_is_black = self.mean(0, 0, 120, 120) < 3
@@ -200,7 +224,8 @@ def run(iso, shots, reduced_motion=False, fault=None):
                     time.sleep(0.20)
                 guest.type_text("live-amd64 " + " ".join(parameters) + "\n")
             results["splash is shown"] = wait_until(
-                Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash")
+                Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash"
+            )
             if not results["splash is shown"]:
                 return results
             if fault == "stall":
@@ -211,8 +236,11 @@ def run(iso, shots, reduced_motion=False, fault=None):
                 results["reduced motion: splash is a still frame"] = moves is False
             elif not fault:
                 results["splash animates"] = moves is True
-            name = ("a failed unit ends the splash with text on the console" if fault
-                    else "splash exits to a readable console")
+            name = (
+                "a failed unit ends the splash with text on the console"
+                if fault
+                else "splash exits to a readable console"
+            )
             results[name] = wait_until(Frame.shows_console, guest, EXIT_TIMEOUT, shots, "exit")
             time.sleep(3 * guest.slowdown)
             # Only a real shell runs this, and "yes" fills the screen only when
@@ -224,8 +252,7 @@ def run(iso, shots, reduced_motion=False, fault=None):
             else:
                 guest.type_text(f"test -e {REPORT} || yes\n")
                 name = "session starts and a healthy boot reports no failure"
-            results[name] = wait_until(
-                Frame.shows_output_at_bottom, guest, SESSION_TIMEOUT, shots, "session")
+            results[name] = wait_until(Frame.shows_output_at_bottom, guest, SESSION_TIMEOUT, shots, "session")
         finally:
             guest.kill()
     return results
@@ -236,7 +263,8 @@ def check_stall(guest, shots, results):
     time.sleep(STALL_HOLD * guest.slowdown)
     results["a stalled boot keeps the splash at first"] = guest.screen().shows_splash()
     results["the watchdog ends the splash with text on the console"] = wait_until(
-        Frame.shows_console, guest, WATCHDOG_TIMEOUT, shots, "watchdog")
+        Frame.shows_console, guest, WATCHDOG_TIMEOUT, shots, "watchdog"
+    )
 
 
 def find_iso():
@@ -250,10 +278,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("iso", nargs="?", type=Path)
     parser.add_argument("--shots", type=Path, help="keep screenshots (PPM) in this directory")
-    parser.add_argument("--reduced-motion", action="store_true",
-                        help="boot with xsphere.motion=reduced and expect a still splash")
-    parser.add_argument("--fault", choices=("fail", "stall"),
-                        help="inject a failed unit or a stalled boot and expect text diagnostics")
+    parser.add_argument(
+        "--reduced-motion",
+        action="store_true",
+        help="boot with xsphere.motion=reduced and expect a still splash",
+    )
+    parser.add_argument(
+        "--fault",
+        choices=("fail", "stall"),
+        help="inject a failed unit or a stalled boot and expect text diagnostics",
+    )
     options = parser.parse_args()
     if options.shots:
         options.shots.mkdir(parents=True, exist_ok=True)

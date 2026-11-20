@@ -69,9 +69,7 @@ class ThemeDefinition(unittest.TestCase):
             theme = read_ini(THEMES / name / f"{name}.plymouth")
             self.assertEqual(theme["Plymouth Theme"]["ModuleName"], "script")
             self.assertTrue(theme["Plymouth Theme"]["Description"].strip())
-            self.assertEqual(
-                theme["script"]["ScriptFile"], f"{THEMES_IN_IMAGE}/{name}/{name}.script"
-            )
+            self.assertEqual(theme["script"]["ScriptFile"], f"{THEMES_IN_IMAGE}/{name}/{name}.script")
 
     def test_both_themes_share_one_image_directory(self):
         for name in (ANIMATED, STILL):
@@ -102,9 +100,7 @@ class ThemeScript(unittest.TestCase):
 
     def test_background_is_true_black(self):
         for call in ("SetBackgroundTopColor", "SetBackgroundBottomColor"):
-            self.assertRegex(
-                script_of(ANIMATED), rf"Window\.{call}\s*\(\s*0\s*,\s*0\s*,\s*0\s*\)"
-            )
+            self.assertRegex(script_of(ANIMATED), rf"Window\.{call}\s*\(\s*0\s*,\s*0\s*,\s*0\s*\)")
 
     def test_scripts_listen_for_every_real_boot_milestone(self):
         for name in (ANIMATED, STILL):

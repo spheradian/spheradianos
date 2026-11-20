@@ -26,7 +26,7 @@ XSphereOS is in active **M0 / Boot Experience (B1–B3)** development:
   - **B1–B3 boot experience:** Ignite → Gather → Wake animation driven by real `systemd` milestones, `xsphere.motion=reduced` still-frame mode, 20 s stall watchdog, and plain-text failure reporting at login.
   - Headless QEMU boot verification ([`scripts/boot-test.py`](scripts/boot-test.py)) with normal, reduced-motion, failed-unit, and stalled-boot fault injection.
   - Concept audio/visual preview generator ([`scripts/render-boot-preview.py`](scripts/render-boot-preview.py), outputs in `preview/`).
-  - GitHub Actions static & config CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)): `shellcheck`, `shfmt -d`, and `unittest`.
+  - GitHub Actions static & security CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) and PR review ([`.github/workflows/claude-review.yml`](.github/workflows/claude-review.yml)): `shellcheck`, `shfmt -d`, `ruff` (lint, Bandit `S` rules, format), `unittest` (including `systemd` unit checks), `actionlint`, `zizmor`, `opengrep`, `gitleaks`, and Claude Code PR & security review.
 - **In progress / planned:**
   - **M0:** Zero-prompt GRUB-EFI & ISOLINUX bootloaders ([ADR-002](docs/adr/ADR-002-zero-prompt-bootloaders.md)), recorded ISO/package budgets, and CI boot-test gate.
   - **M1–M5:** Prototype & fallback flat Wayland session, console-grade fluidity (`zstd` squashfs, `cgroups v2` QoS, `zram`, `DMA-BUF` per [ADR-004](docs/adr/ADR-004-console-grade-fluidity.md)), real Smithay compositor hand-off (**B4**), procedural boot audio (**B5**, [ADR-005](docs/adr/ADR-005-boot-procedural-audio.md)), signed APT repo & installer, and per-domain sandboxing (**M5**).
@@ -80,13 +80,28 @@ sudo scripts/build-in-container.sh
 
 ## Testing & Boot Splash Verification
 
-### Static & Unit Checks (no root required)
+### Static & Security Checks (no root required)
 
 ```sh
-python3 -m unittest discover -s tests -v   # config assertions, timeline math, and splash checks
-shellcheck auto/config auto/build auto/clean scripts/*.sh
-shfmt -d scripts/*.sh
+python3 -m unittest discover -s tests -v   # config, systemd unit, timeline math, and splash checks
+ruff check scripts tests                   # Python linting, import sorting, and Bandit security rules
+ruff format --check scripts tests          # Python formatting check
+shellcheck auto/config auto/build auto/clean scripts/*.sh \
+  config/hooks/live/9000-xsphereos-trim.hook.chroot \
+  config/includes.chroot/usr/lib/xsphereos/boot-watch \
+  config/includes.chroot/etc/initramfs-tools/hooks/* \
+  config/includes.chroot/etc/initramfs-tools/scripts/init-top/* \
+  config/includes.chroot/etc/profile.d/*.sh
+shfmt -d auto/config auto/build auto/clean scripts/*.sh \
+  config/hooks/live/9000-xsphereos-trim.hook.chroot \
+  config/includes.chroot/usr/lib/xsphereos/boot-watch \
+  config/includes.chroot/etc/initramfs-tools/hooks/* \
+  config/includes.chroot/etc/initramfs-tools/scripts/init-top/* \
+  config/includes.chroot/etc/profile.d/*.sh
+pre-commit run --all-files                 # local mirror via .pre-commit-config.yaml
 ```
+
+Automated PR code and security reviews run via [`.github/workflows/claude-review.yml`](.github/workflows/claude-review.yml) (using [`.github/claude-review-guidelines.md`](.github/claude-review-guidelines.md)), requiring the Claude GitHub App (`https://github.com/apps/claude`) installed on `mendsec/xsphereos` and `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` configured in repository Secrets.
 
 ### Boot Splash & Headless QEMU Tests
 
