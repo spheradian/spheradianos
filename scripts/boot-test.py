@@ -188,9 +188,13 @@ def run(iso, shots, reduced_motion=False, fault=None):
     with tempfile.TemporaryDirectory() as workdir:
         guest = Guest(iso, workdir)
         try:
-            time.sleep(MENU_WAIT * guest.slowdown)
-            # Tab opens the boot entry for editing, so parameters can be appended.
-            guest.type_text("\t " + " ".join(parameters) + "\n" if parameters else "\n")
+            if parameters:
+                # Toggle Caps Lock during BIOS POST so zero-prompt ISOLINUX
+                # stops at the "boot:" prompt regardless of CPU emulation speed.
+                guest.command("send-key", keys=[{"type": "qcode", "data": "caps_lock"}])
+                time.sleep(MENU_WAIT * guest.slowdown)
+                guest.command("send-key", keys=[{"type": "qcode", "data": "caps_lock"}])
+                guest.type_text("live-amd64 " + " ".join(parameters) + "\n")
             results["splash is shown"] = wait_until(
                 Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash")
             if not results["splash is shown"]:
