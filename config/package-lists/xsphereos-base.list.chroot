@@ -44,3 +44,6 @@ user-setup
 
 # fast initramfs compression/decompression for quicker early boot (ADR-004)
 zstd
+
+# compressed RAM swap via systemd to absorb memory spikes without disk thrashing (ADR-004)
+systemd-zram-generator

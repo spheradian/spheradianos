@@ -15,6 +15,30 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("--variant=minbase", auto_config)
         self.assertIn("--apt-recommends false", auto_config)
         self.assertIn("--debian-installer none", auto_config)
+        self.assertIn("--chroot-squashfs-compression-type zstd", auto_config)
+
+    def test_console_grade_fluidity_config_exists(self) -> None:
+        zram_cfg = (
+            REPO_ROOT
+            / "config"
+            / "includes.chroot"
+            / "etc"
+            / "systemd"
+            / "zram-generator.conf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("compression-algorithm = zstd", zram_cfg)
+
+        slice_cfg = (
+            REPO_ROOT
+            / "config"
+            / "includes.chroot"
+            / "etc"
+            / "systemd"
+            / "system"
+            / "xsphere-session.slice"
+        ).read_text(encoding="utf-8")
+        self.assertIn("CPUWeight=500", slice_cfg)
+        self.assertIn("MemoryLow=", slice_cfg)
 
     def test_package_lists_have_justifications_and_no_forbidden_packages(self) -> None:
         lists_dir = REPO_ROOT / "config" / "package-lists"
