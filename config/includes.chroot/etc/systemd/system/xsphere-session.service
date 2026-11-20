@@ -1,0 +1,22 @@
+[Unit]
+Description=XSphereOS M1 Prototype Session (Wayland Kiosk + Fallback)
+After=systemd-user-sessions.service seatd.service plymouth-quit-wait.service
+Conflicts=getty@tty1.service
+ConditionKernelCommandLine=!xsphere.session=console
+
+[Service]
+Slice=xsphere-session.slice
+User=xsphere
+Group=xsphere
+SupplementaryGroups=video render input
+PAMName=login
+TTYPath=/dev/tty1
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+ExecStart=/usr/lib/xsphereos/xsphere-session
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

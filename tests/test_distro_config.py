@@ -1,22 +1,46 @@
 """Static assertions for XSphereOS live-build configuration and package manifests."""
 
+import contextlib
+import importlib.util
+import io
 import os
 import shlex
+import tempfile
 import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-FORBIDDEN_PREFIXES = ("task-", "gnome-", "kde-", "xorg", "xwayland")
+
+
+def load_audit_packages():
+    path = REPO_ROOT / "scripts" / "audit_packages.py"
+    spec = importlib.util.spec_from_file_location("audit_packages", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+audit_packages = load_audit_packages()
 
 
 class DistroConfigTests(unittest.TestCase):
     def test_auto_config_enforces_minimal_debian_trixie(self) -> None:
         auto_config = (REPO_ROOT / "auto" / "config").read_text(encoding="utf-8")
         self.assertIn("--distribution trixie", auto_config)
+        self.assertIn("--architectures amd64", auto_config)
         self.assertIn("--variant=minbase", auto_config)
         self.assertIn("--apt-recommends false", auto_config)
+        self.assertIn("--apt-indices false", auto_config)
+        self.assertIn("--updates true", auto_config)
+        self.assertIn("--security true", auto_config)
         self.assertIn("--debian-installer none", auto_config)
+        self.assertIn("--firmware-binary false", auto_config)
+        self.assertIn("--firmware-chroot false", auto_config)
         self.assertIn("--chroot-squashfs-compression-type zstd", auto_config)
+        self.assertIn("username=xsphere", auto_config)
+        self.assertNotIn("username=root", auto_config)
 
     def test_console_grade_fluidity_config_exists(self) -> None:
         zram_cfg = (
@@ -29,6 +53,41 @@ class DistroConfigTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("CPUWeight=500", slice_cfg)
         self.assertIn("MemoryLow=", slice_cfg)
+
+    def test_m1_kiosk_session_and_fallback_configured(self) -> None:
+        manifest = (
+            REPO_ROOT
+            / "config"
+            / "package-lists"
+            / "xsphereos-base.list.chroot"
+        ).read_text(encoding="utf-8")
+        for pkg in ("seatd", "cage", "mesa-vulkan-drivers", "libegl-mesa0", "foot"):
+            self.assertIn(pkg, manifest)
+
+        service = (
+            REPO_ROOT
+            / "config"
+            / "includes.chroot"
+            / "etc"
+            / "systemd"
+            / "system"
+            / "xsphere-session.service"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Slice=xsphere-session.slice", service)
+        self.assertIn("ConditionKernelCommandLine=!xsphere.session=console", service)
+        self.assertIn("User=xsphere", service)
+
+        launcher = (
+            REPO_ROOT
+            / "config"
+            / "includes.chroot"
+            / "usr"
+            / "lib"
+            / "xsphereos"
+            / "xsphere-session"
+        ).read_text(encoding="utf-8")
+        self.assertIn("cage -s -- /usr/bin/xspherede", launcher)
+        self.assertIn("exec cage -s -- /usr/bin/foot", launcher)
 
     def test_package_lists_have_justifications_and_no_forbidden_packages(self) -> None:
         lists_dir = REPO_ROOT / "config" / "package-lists"
@@ -53,11 +112,10 @@ class DistroConfigTests(unittest.TestCase):
                     f"{path.name}:{lineno} package '{stripped}' must have a "
                     "justification comment directly above it",
                 )
-                for prefix in FORBIDDEN_PREFIXES:
-                    self.assertFalse(
-                        stripped.startswith(prefix),
-                        f"{path.name}:{lineno} forbidden package '{stripped}'",
-                    )
+                self.assertFalse(
+                    audit_packages.is_forbidden_package(stripped),
+                    f"{path.name}:{lineno} forbidden package '{stripped}'",
+                )
                 prev_line = stripped
 
     def test_bootloaders_enforce_zero_prompt_direct_boot(self) -> None:
@@ -157,6 +215,105 @@ class DistroConfigTests(unittest.TestCase):
                     target.is_relative_to(systemd_resolved),
                     f"Systemd symlink points outside systemd unit tree: {link} -> {target}",
                 )
+
+    def test_privacy_security_and_old_hardware_baseline(self) -> None:
+        chroot_etc = REPO_ROOT / "config" / "includes.chroot" / "etc"
+        apt_cfg = (chroot_etc / "apt" / "apt.conf.d" / "90xsphereos").read_text(encoding="utf-8")
+        self.assertIn('APT::Install-Recommends "false";', apt_cfg)
+        self.assertIn('APT::Install-Suggests "false";', apt_cfg)
+
+        base_list_path = REPO_ROOT / "config" / "package-lists" / "xsphereos-base.list.chroot"
+        base_packages = {line.strip() for line in base_list_path.read_text(encoding="utf-8").splitlines()}
+        self.assertIn("firmware-linux-free", base_packages)
+
+        autologin_path = chroot_etc / "systemd" / "system" / "getty@tty1.service.d" / "autologin.conf"
+        autologin_cfg = autologin_path.read_text(encoding="utf-8")
+        self.assertIn("--autologin xsphere", autologin_cfg)
+        self.assertNotIn("--autologin root", autologin_cfg)
+
+        sudoers_dir = chroot_etc / "sudoers.d"
+        if sudoers_dir.is_dir():
+            for path in sorted(sudoers_dir.rglob("*")):
+                if path.is_file():
+                    self.assertNotIn(
+                        "NOPASSWD",
+                        path.read_text(encoding="utf-8"),
+                        f"Passwordless sudo rule is forbidden: {path.name}",
+                    )
+
+        systemd_dir = chroot_etc / "systemd" / "system"
+        remote_units = {"ssh.service", "sshd.service", "telnet.socket", "telnetd.service"}
+        for path in sorted(systemd_dir.rglob("*")):
+            self.assertNotIn(path.name, remote_units, f"Forbidden remote service unit: {path}")
+
+    def test_audit_packages_flags_forbidden_and_accepts_clean_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            clean = tmp / "clean.packages"
+            clean_lines = (
+                "base-files\t13.8",
+                "firmware-linux-free\t20241210-2",
+                "libx11-6:amd64\t2:1.8.12-1",
+                "plymouth\t24.004.60-5",
+                "zstd\t1.5.7+dfsg-1",
+            )
+            clean.write_text("\n".join(clean_lines) + "\n", encoding="utf-8")
+            self.assertEqual(audit_packages.audit_manifest_file(clean), (5, []))
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                self.assertEqual(audit_packages.main([str(clean)]), 0)
+
+            tainted = tmp / "tainted.packages"
+            tainted_lines = (
+                "indi-dsi\t0.4",
+                "libindidriver1:amd64\t1.9.9",
+                "xwayland\t2:24.1",
+                "openssh-server\t1:9.9",
+                "popularity-contest\t1.76",
+                "proxychains4\t4.17",
+                "kali-linux-core\t2025.1",
+                "plasma-desktop\t4:6.3",
+                "xfce4\t4.20",
+                "lxqt-core\t33",
+                "lxde\t13",
+                "mate-desktop\t1.26",
+                "cinnamon\t6.4",
+                "budgie-desktop\t10.9",
+                "enlightenment\t0.27",
+                "gdm3\t48.0",
+                "sddm\t0.21",
+                "lightdm\t1.32",
+                "lxdm\t0.5.3",
+                "xdm\t1:1.1.11",
+            )
+            tainted.write_text("\n".join(tainted_lines) + "\n", encoding="utf-8")
+            expected = [
+                "budgie-desktop",
+                "cinnamon",
+                "enlightenment",
+                "gdm3",
+                "indi-dsi",
+                "kali-linux-core",
+                "libindidriver1",
+                "lightdm",
+                "lxde",
+                "lxdm",
+                "lxqt-core",
+                "mate-desktop",
+                "openssh-server",
+                "plasma-desktop",
+                "popularity-contest",
+                "proxychains4",
+                "sddm",
+                "xdm",
+                "xfce4",
+                "xwayland",
+            ]
+            self.assertEqual(audit_packages.audit_manifest_file(tainted), (20, expected))
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                self.assertEqual(audit_packages.main([str(tainted)]), 1)
+                self.assertEqual(audit_packages.main([str(tmp / "missing.packages")]), 2)
 
 
 if __name__ == "__main__":

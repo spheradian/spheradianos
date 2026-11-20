@@ -239,13 +239,28 @@ def splash_moves(guest):
     return verdict
 
 
-def run(iso, shots, reduced_motion=False, fault=None, uefi=False):
+def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False):
     """Boot once and return {assertion: passed}."""
     parameters = []
+    if console:
+        parameters.append("xsphere.session=console")
     if reduced_motion:
         parameters.append("xsphere.motion=reduced")
     if fault:
         parameters.append(f"xsphere.test.{fault}")
+    graphical_m1 = (
+        not console
+        and not fault
+        and (
+            ROOT
+            / "config"
+            / "includes.chroot"
+            / "etc"
+            / "systemd"
+            / "system"
+            / "xsphere-session.service"
+        ).exists()
+    )
     results = {}
     with tempfile.TemporaryDirectory() as workdir:
         guest = Guest(iso, workdir, uefi)
@@ -285,6 +300,8 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False):
                 else "splash exits to a readable console"
             )
             results[name] = wait_until(Frame.shows_console, guest, EXIT_TIMEOUT, shots, "exit")
+            if graphical_m1:
+                return results
             time.sleep(3 * guest.slowdown)
             # Only a real shell runs this, and "yes" fills the screen only when
             # the failure report is where it should be: present after an injected
@@ -372,12 +389,22 @@ def main():
         help="inject a failed unit or a stalled boot and expect text diagnostics",
     )
     parser.add_argument("--uefi", action="store_true", help="boot OVMF and GRUB instead of BIOS and ISOLINUX")
+    parser.add_argument(
+        "--console",
+        action="store_true",
+        help="boot with xsphere.session=console to test the tty1 shell path",
+    )
     options = parser.parse_args()
     if options.shots:
         options.shots.mkdir(parents=True, exist_ok=True)
 
     results = run(
-        options.iso or find_iso(), options.shots, options.reduced_motion, options.fault, options.uefi
+        options.iso or find_iso(),
+        options.shots,
+        options.reduced_motion,
+        options.fault,
+        uefi=options.uefi,
+        console=options.console,
     )
     for name, passed in results.items():
         print(f"{'PASS' if passed else 'FAIL'}  {name}")
