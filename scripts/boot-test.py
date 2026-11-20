@@ -189,11 +189,12 @@ def run(iso, shots, reduced_motion=False, fault=None):
         guest = Guest(iso, workdir)
         try:
             if parameters:
-                # Toggle Caps Lock during BIOS POST so zero-prompt ISOLINUX
-                # stops at the "boot:" prompt regardless of CPU emulation speed.
-                guest.command("send-key", keys=[{"type": "qcode", "data": "caps_lock"}])
-                time.sleep(MENU_WAIT * guest.slowdown)
-                guest.command("send-key", keys=[{"type": "qcode", "data": "caps_lock"}])
+                # Send spaces during BIOS POST -> ISOLINUX window so the first space
+                # received at "boot:" cancels the 0.5s timeout regardless of CPU speed.
+                deadline = time.monotonic() + MENU_WAIT * guest.slowdown
+                while time.monotonic() < deadline:
+                    guest.command("send-key", keys=[{"type": "qcode", "data": "spc"}])
+                    time.sleep(0.25)
                 guest.type_text("live-amd64 " + " ".join(parameters) + "\n")
             results["splash is shown"] = wait_until(
                 Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash")
