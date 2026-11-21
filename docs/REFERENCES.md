@@ -42,6 +42,14 @@ This document records foundational operating-systems, graphics, and performance 
 - **Source:** [https://github.com/FreeBSDKernel9-0/PS4OSSCode](https://github.com/FreeBSDKernel9-0/PS4OSSCode)
 - **Relevance:** Shows how a commercial console OS builds on a mature POSIX substrate (`freebsd-9.0`) paired with a small, curated set of open-source libraries (`WebKit`, `sqlite`, `zlib`, `sf_ffmpeg`, `lua-5.2.4`), while isolating games and web/UI processes from the system shell. Reinforces XSphereOS's Debian `minbase` substrate, `cgroups v2` compositor QoS (ADR-004), and M5 per-domain sandboxing (Issue `#13`).
 
+### 2.4 Procedural WebGPU Scene with Adaptive Quality (`abyssal-garden`)
+- **Source:** [https://github.com/Noniv/abyssal-garden](https://github.com/Noniv/abyssal-garden) (MIT). A browser demo, not an OS: WebGPU + WGSL shaders and Web Audio synthesis, with no image, model or sound files.
+- **Relevance:**
+  - Device-based quality levels (Low/Medium/High), and after a tab or GPU-driver crash the page restarts one level lower and remembers the settled level.
+  - The scene renders blurred behind the start menu, so performance tuning finishes before the user enters.
+  - WGSL is also the native shader language of `wgpu`, which `xspherede` uses.
+- **How XSphereOS applies it:** ideas only, no code. Render levels with a persisted crash downgrade, and pipeline warm-up behind the Plymouth splash ([ADR-007](adr/ADR-007-gpu-render-levels-and-warmup.md)). It also confirms the procedural-asset approach of the boot theme and ADR-005.
+
 ---
 
 ## 3. Live Image Compression & Boot Latency
