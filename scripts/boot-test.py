@@ -260,7 +260,11 @@ def run(iso, shots, reduced_motion=False, fault=None):
 
 def check_stall(guest, shots, results):
     """A boot that stops progressing keeps its splash, then yields to text."""
-    time.sleep(STALL_HOLD * guest.slowdown)
+    # boot-watch counts its stall limit with guest `sleep 1`, which tracks wall-clock
+    # time even under TCG emulation, so scaling STALL_HOLD by the slowdown (64 s)
+    # overshoots the 20 s watchdog. Stay safely inside the stall window instead.
+    hold_secs = 16.0 if guest.slowdown > 1 else STALL_HOLD
+    time.sleep(hold_secs)
     results["a stalled boot keeps the splash at first"] = guest.screen().shows_splash()
     results["the watchdog ends the splash with text on the console"] = wait_until(
         Frame.shows_console, guest, WATCHDOG_TIMEOUT, shots, "watchdog"
