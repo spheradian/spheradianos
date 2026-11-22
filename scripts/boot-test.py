@@ -311,7 +311,10 @@ def append_grub_parameters(guest, parameters):
 
 def check_stall(guest, shots, results):
     """A boot that stops progressing keeps its splash, then yields to text."""
-    time.sleep(STALL_HOLD * guest.slowdown)
+    # Not scaled by the slowdown: boot-watch counts its 20 s limit with the guest's
+    # `sleep 1`, which follows wall-clock time even without KVM, so 8 s x 8 would
+    # wait past the watchdog.
+    time.sleep(STALL_HOLD)
     results["a stalled boot keeps the splash at first"] = guest.screen().shows_splash()
     results["the watchdog ends the splash with text on the console"] = wait_until(
         Frame.shows_console, guest, WATCHDOG_TIMEOUT, shots, "watchdog")
