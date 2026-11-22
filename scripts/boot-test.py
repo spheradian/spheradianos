@@ -29,6 +29,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MENU_WAIT = 4.0
+ISOLINUX_MENU_TIMEOUT = 15.0
+# QEMU's screendump of VGA text mode (80x25 cells of 9x16 pixels).
+TEXT_MODE_SIZE = (720, 400)
+# The kernel's display (virtio-gpu in QEMU) is at least this wide; the
+# bootloader's graphics screen (vesamenu, 640x480) is narrower.
+KERNEL_MIN_WIDTH = 1024
+TEXT_MODE_MARGIN = 1.0
 SPLASH_TIMEOUT = 40.0
 EXIT_TIMEOUT = 60.0
 SESSION_TIMEOUT = 20.0
@@ -188,6 +195,15 @@ class Frame:
         that reaches 28 px above the centre, where the splash's glow has faded."""
         return self.mean(self.width // 2 - 90, self.height // 2 - 28, 180, 4) > 128
 
+    def is_text_mode(self):
+        return (self.width, self.height) == TEXT_MODE_SIZE
+
+    def shows_isolinux_menu(self):
+        """vesamenu's graphics screen with menu text on it."""
+        if self.width >= KERNEL_MIN_WIDTH or self.is_text_mode():
+            return False
+        return self.peak(0, 0, self.width, self.height) > 100
+
     def shows_grub_menu(self):
         """GRUB's text menu: dark centre, help text in the band above the bottom edge."""
         band_top = self.height * 85 // 100
@@ -256,16 +272,13 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False):
                     return results
                 append_grub_parameters(guest, parameters)
             elif parameters:
-                # Send space + backspace during BIOS POST -> ISOLINUX window so the
-                # 0.5s timeout is cancelled at "boot:" without filling the input buffer.
-                wait_secs = 8.0 if guest.slowdown > 1 else MENU_WAIT
-                deadline = time.monotonic() + wait_secs
-                while time.monotonic() < deadline:
-                    guest.command("send-key", keys=[{"type": "qcode", "data": "spc"}])
-                    time.sleep(0.05)
-                    guest.command("send-key", keys=[{"type": "qcode", "data": "backspace"}])
-                    time.sleep(0.20)
-                guest.type_text("live-amd64 " + " ".join(parameters) + "\n")
+                results["a key opens the hidden ISOLINUX menu"] = open_isolinux_menu(guest, shots)
+                if not results["a key opens the hidden ISOLINUX menu"]:
+                    return results
+                # Tab edits the default entry's command line; append and boot it.
+                guest.type_text("\t " + " ".join(parameters) + "\n")
+            else:
+                results["no text-mode screen while the kernel loads"] = no_text_before_kernel(guest)
             results["splash is shown"] = wait_until(
                 Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash"
             )
@@ -299,6 +312,46 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False):
         finally:
             guest.kill()
     return results
+
+
+def open_isolinux_menu(guest, shots):
+    """Press space until ISOLINUX shows its menu (ADR-002: hidden, 0.5 s timeout).
+
+    One key at a time: the BIOS keyboard buffer is small, and any key both
+    cancels the timeout and reveals the hidden menu.
+    """
+    deadline = time.time() + ISOLINUX_MENU_TIMEOUT * guest.slowdown
+    count = 0
+    while time.time() < deadline:
+        guest.press("spc")
+        time.sleep(0.25)
+        keep = shots / f"menu-{count:03d}.ppm" if shots else None
+        if guest.screen(keep).shows_isolinux_menu():
+            return True
+        count += 1
+    return False
+
+
+def no_text_before_kernel(guest):
+    """True if the screen is never in text mode during the last second before
+    the kernel takes over the display.
+
+    Firmware and the ISOLINUX banner may use text mode for a moment at power-on;
+    that is outside our control. But if the bootloader leaves the screen in text
+    mode while the kernel loads, a blinking cursor sits there for seconds
+    (BOOT-EXPERIENCE.md section 2, stage 2), and that is what this catches.
+    """
+    deadline = time.time() + SPLASH_TIMEOUT * guest.slowdown
+    last_text_mode = None
+    while time.time() < deadline:
+        frame = guest.screen()
+        now = time.time()
+        if frame.is_text_mode():
+            last_text_mode = now
+        elif frame.width >= KERNEL_MIN_WIDTH:
+            return last_text_mode is None or now - last_text_mode > TEXT_MODE_MARGIN
+        time.sleep(0.03)
+    return False
 
 
 def open_grub_menu(guest, shots):

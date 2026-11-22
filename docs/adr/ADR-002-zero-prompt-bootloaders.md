@@ -44,7 +44,22 @@ Adopt **Option A**:
 
 No new attack surface. Preserves `Verify integrity of the boot medium` and fail-safe boot entries inside the hidden menu.
 
-## 8. Related
+## 8. Amendment (2026-11-22): ISOLINUX keeps a graphics screen
+
+The plain `boot:` prompt left the BIOS screen in VGA text mode while ISOLINUX loaded the kernel and initramfs, so a blinking text cursor sat under the ISOLINUX banner for 1 to 8 s in QEMU, depending on how fast the medium reads. `BOOT-EXPERIENCE.md` section 2 requires no text before the splash.
+
+The ISOLINUX decision becomes:
+
+- `ui vesamenu.c32` with `menu hidden`, a black `menu background`, and `timeout 5` (0.5 s): still zero-prompt, never blocking. Any key reveals the menu, which is also how `scripts/boot-test.py` appends kernel parameters (Tab edits the default entry).
+- The timeout message is drawn black on black (`stdmenu.cfg`), so nothing is shown.
+- The default entry adds `vga=current`, so the kernel inherits vesamenu's graphics mode. Without it, syslinux switches back to text mode before starting the kernel, and the cursor returns for the whole load (measured: about 1 s).
+- The fail-safe entry is unchanged.
+
+Measured in QEMU (SeaBIOS) with KVM: the screen is black in graphics mode from vesamenu until the kernel's display takes over, and `scripts/boot-test.py` checks this on every default boot ("no text-mode screen while the kernel loads"). The firmware's own text and the ISOLINUX version banner still appear for a fraction of a second at power-on, before vesamenu loads; ISOLINUX prints that banner unconditionally, so removing it would mean patching syslinux.
+
+Not yet verified on real BIOS hardware: that `vga=current` hands the kernel a usable framebuffer everywhere. The fail-safe entry (`vga=788`, `nosplash`) remains the fallback.
+
+## 9. Related
 
 - Note (2026-11-21): under UEFI in QEMU (OVMF), `Shift` does not reveal the GRUB menu, because `keystatus --shift` does not see it; tapping `Esc` does, and `scripts/boot-test.py --uefi` relies on it. Real UEFI firmware is untested; until it is, document `Esc` as the key to press.
 - GitHub Issue `#14`: `[M0][Boot] Configure zero-prompt direct boot in config/bootloaders/ (GRUB & ISOLINUX)`
