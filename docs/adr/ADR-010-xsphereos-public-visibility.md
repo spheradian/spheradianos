@@ -63,11 +63,13 @@ All items must be done before the visibility switch.
 
 **History and metadata audit**
 
-- [ ] **Secret scan across all history.** Run `gitleaks` over every branch and every commit, not only the PR diff. Any finding means the secret is rotated, and the history is rewritten *before* publication.
+- [x] **Secret scan across all history.** Run `gitleaks` over every branch and every commit, not only the PR diff. Any finding means the secret is rotated, and the history is rewritten *before* publication.
+  - 2026-11-22: `gitleaks git --log-opts=--all` scanned 67 commits on all remote branches. No leaks found. Run it again immediately before the switch to cover later commits.
 - [ ] **Issues, PRs, comments, and Actions logs.** Review them all. They become public along with the code. Anything that belongs in `xspherede-security` is moved there, and the original is edited or deleted.
 - [ ] **Project `#5`.** Decide whether `XSphereOS — Roadmap` becomes public along with the repository, or stays private.
 - [ ] **Commit author identity.** Accept that commit author names and e-mail addresses become public, or rewrite them to a noreply address before publication.
 - [ ] **Stale branches.** Delete remote branches that should not be published (for example `backup/*`, abandoned experiments).
+  - 2026-11-22: `backup/*` exists only locally and was never pushed. Remote branches whose PRs are already merged: `ci/code-security-reviewers` (`#18`), `claude/adr-009-renumber-accepted` (`#21`), `claude/planning-progress-66bfed` (`#22`), `claude/project-progress-review-2c45ab` (`#20`). Delete them, and enable *Automatically delete head branches* in the repository settings.
 
 **Repository hygiene**
 
@@ -75,6 +77,8 @@ All items must be done before the visibility switch.
 - [ ] **Private vulnerability reporting.** Enable it in the repository settings right after the visibility switch. GitHub does not offer it on this private repository, so the button that `SECURITY.md` links to does not work until then.
 - [ ] **GitHub protections.** Enable secret scanning and push protection, and protect `main` as in `ENGINEERING-PLAN.md` §5.3 and rollout step 1.
 - [ ] **Workflow review for public triggers.** Confirm no workflow runs untrusted fork code with secrets or write permissions (`pull_request_target`, self-hosted runners, `secrets.*` on fork PRs). Confirm third-party actions stay pinned by SHA. This includes the PR reviewers proposed in PR `#18`.
+  - 2026-11-22 review of `ci.yml`, `claude-review.yml`, and `image-boot.yml` on `main`. No workflow uses `pull_request_target` or self-hosted runners. Default permissions are empty or read-only, every checkout sets `persist-credentials: false`, actions are pinned by SHA, and downloaded binaries (`actionlint`, `opengrep`) are checked by SHA-256. The Claude jobs run only for same-repository PRs or for `@claude` mentions from owners, members, and collaborators, with `allow_fork_prs: false`, and fork PRs do not receive secrets. `image-boot.yml` builds fork code with `sudo` only on ephemeral GitHub-hosted runners, with no secrets.
+  - Remaining: drop `id-token: write` from both Claude jobs, since no OIDC provider is configured. After the switch, set *Require approval for all external contributors* for fork PR workflow runs, so that the 45-minute boot job does not run unreviewed.
 - [ ] **Wording.** Update text that says the repository is private (`README.md`, `docs/ARCHITECTURE.md`, ADR-001, ADR-003, `ENGINEERING-PLAN.md` §5.3). Re-verify the claims about other distributions in `docs/BOOT-EXPERIENCE.md` §10, which that section itself flags for re-checking "before any public statement".
 - [x] **`CONTRIBUTING.md`** (short): how to build, how to run the tests, the PR template, and the security-impact rule.
 
