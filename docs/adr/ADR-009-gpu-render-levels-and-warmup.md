@@ -1,7 +1,7 @@
-# ADR-007: GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4)
+# ADR-009: GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4)
 
 **Date:** 2026-11-21  
-**Status:** Proposed  
+**Status:** Accepted  
 **Author:** Senior Software Architect  
 **Approver:** Fábio Mendes (`mendsec`)  
 **Confidence:** Medium  
