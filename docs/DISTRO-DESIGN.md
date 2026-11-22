@@ -145,7 +145,13 @@ M1 is the earliest point at which the distro is demonstrable, and it does not de
 | Hybrid ISO size | 268 MiB (281,018,368 bytes) | `live-image-amd64.hybrid.iso` (`xz` squashfs) |
 | SquashFS rootfs size | 196 MiB | `binary/live/filesystem.squashfs` |
 | Installed package count | 190 packages | `live-image-amd64.packages` (`trixie`, `minbase`, no recommends) |
-| Boot behavior | Zero-prompt (BIOS & UEFI) | `config/bootloaders/` (`ADR-002`); `scripts/boot-test.py` & QEMU UEFI verified |
+| Boot behavior | Zero-prompt (BIOS & UEFI) | `config/bootloaders/` (`ADR-002`); `scripts/boot-test.py` covers both, UEFI with `--uefi` (2026-11-21) |
+
+UEFI notes (2026-11-21, QEMU with OVMF, KVM):
+
+- From a disk, as a USB stick boots, the hidden GRUB menu reaches the autologged-in shell in about 6.5 s. From QEMU's emulated CD drive, OVMF reads so slowly that GRUB needs about 45 s to load the kernel and initramfs; the boot completes, but `--uefi` therefore attaches the ISO as a disk. A real optical drive has not been measured.
+- Tapping `Esc` opens the hidden GRUB menu. Holding or tapping `Shift` does not: GRUB's `keystatus --shift` does not see it under OVMF. Whether `Shift` works on real UEFI firmware is untested (see ADR-002).
+- Not yet covered: real hardware and Secure Boot.
 
 ## 10. Open questions
 
