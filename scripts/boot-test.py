@@ -36,6 +36,7 @@ TEXT_MODE_SIZE = (720, 400)
 # bootloader's graphics screen (vesamenu, 640x480) is narrower.
 KERNEL_MIN_WIDTH = 1024
 TEXT_MODE_MARGIN = 1.0
+SELECTED_TEAL = (0x3A, 0xD6, 0xC5)  # the GRUB theme's selected entry
 SPLASH_TIMEOUT = 40.0
 EXIT_TIMEOUT = 60.0
 SESSION_TIMEOUT = 20.0
@@ -205,10 +206,26 @@ class Frame:
         return self.peak(0, 0, self.width, self.height) > 100
 
     def shows_grub_menu(self):
-        """GRUB's text menu: dark centre, help text in the band above the bottom edge."""
+        """The themed GRUB menu: help text near the bottom edge, and the selected
+        entry in the theme's teal (config/bootloaders/grub-pc/xsphere/theme.txt)
+        in the band where the menu sits. A plain, unthemed menu does not match."""
         band_top = self.height * 85 // 100
         help_text = self.peak(0, band_top, self.width, self.height * 95 // 100 - band_top) > 100
-        return help_text and self.centre_brightness() < 10
+        return help_text and self.has_colour(self.height * 55 // 100, self.height * 85 // 100, SELECTED_TEAL)
+
+    def has_colour(self, top, bottom, colour, tolerance=40):
+        """True if some pixel between two rows is close to an RGB colour."""
+        red, green, blue = colour
+        for y in range(top, bottom):
+            row = self.pixels[y * self.width * 3 : (y + 1) * self.width * 3]
+            for x in range(0, len(row), 3):
+                if (
+                    abs(row[x] - red) < tolerance
+                    and abs(row[x + 1] - green) < tolerance
+                    and abs(row[x + 2] - blue) < tolerance
+                ):
+                    return True
+        return False
 
     def shows_console(self):
         text_at_top = self.peak(0, 0, min(400, self.width), 60) > 100

@@ -1,0 +1,13 @@
+#!/bin/sh
+# Make the small ASCII font that the GRUB menu theme loads on every boot
+# (config/bootloaders/grub-pc/config.cfg). The full unicode.pf2 is about 2.3 MB
+# and delays every UEFI boot by about 0.8 s; the subset is about 3 KB.
+# live-build runs binary hooks from inside binary/, after GRUB is installed.
+set -eu
+
+source_font=boot/grub/unicode.pf2
+if [ ! -e "$source_font" ]; then
+	echo "9100-xsphereos-grub-font: no $source_font (no GRUB in this image), skipping"
+	exit 0
+fi
+python3 ../scripts/subset-grub-font.py "$source_font" boot/grub/xsphere/ascii.pf2
