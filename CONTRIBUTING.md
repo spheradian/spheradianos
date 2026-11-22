@@ -8,7 +8,7 @@ XSphereOS is in early development and has a single maintainer. Small, focused ch
 
 - **Security issues:** do not open a public issue. Follow [SECURITY.md](SECURITY.md).
 - **Bugs:** open an issue with the *Bug report* template. Include the commit SHA, the boot mode (BIOS or UEFI), and what the boot test or console showed.
-- **Larger changes:** open an issue first so the approach can be agreed before you write code. This includes a new package, a new boot behavior, or a change to `auto/config`. Decisions that are hard to reverse need an ADR: use the *ADR proposal* template and see [docs/adr/](docs/adr/README.md).
+- **Larger changes:** open an issue first so the approach can be agreed before you write code. This includes a new package, a new boot behavior, or a change to `auto/config`. Decisions that are hard to reverse need an ADR: use the *ADR Proposal* template and see [docs/adr/](docs/adr/README.md).
 - **Roadmap:** the milestones (`M0`–`M5`, `B0`–`B7`) are in the [README](README.md#roadmap). Work that jumps ahead of an open milestone gate may be asked to wait.
 
 ## Building and Testing
