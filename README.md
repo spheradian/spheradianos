@@ -96,6 +96,7 @@ scripts/boot-test.py                       # boot the ISO headless in QEMU and v
 scripts/boot-test.py --reduced-motion      # verify the still-frame variant (xsphere.motion=reduced)
 scripts/boot-test.py --fault fail          # inject a failed systemd unit: expects a plain-text report
 scripts/boot-test.py --fault stall         # inject a stalled boot: expects the 20 s watchdog report
+scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF and GRUB), ISO attached as a disk
 ```
 
 ### Kernel Command-Line Switches

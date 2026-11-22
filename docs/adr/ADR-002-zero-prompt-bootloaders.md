@@ -46,5 +46,6 @@ No new attack surface. Preserves `Verify integrity of the boot medium` and fail-
 
 ## 8. Related
 
+- Note (2026-11-21): under UEFI in QEMU (OVMF), `Shift` does not reveal the GRUB menu, because `keystatus --shift` does not see it; tapping `Esc` does, and `scripts/boot-test.py --uefi` relies on it. Real UEFI firmware is untested; until it is, document `Esc` as the key to press.
 - GitHub Issue `#14`: `[M0][Boot] Configure zero-prompt direct boot in config/bootloaders/ (GRUB & ISOLINUX)`
 - `docs/BOOT-EXPERIENCE.md` §2
