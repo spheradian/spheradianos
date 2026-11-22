@@ -57,7 +57,7 @@ All items must be done before the visibility switch.
 
 **Decisions that cannot be changed after publication**
 
-- [ ] **Licence.** Commit an MIT `LICENSE` at the repository root, as decided in §4 item 5.
+- [x] **Licence.** MIT `LICENSE` committed at the repository root, as decided in §4 item 5.
 - [ ] **Name and branding.** Check that "XSphereOS" and its boot theme do not conflict with an existing mark or project. Resolve the branding part of open question 6.
 - [ ] **Third-party material.** Confirm every file in the repository is original or carries its licence notice. Confirm that `docs/REFERENCES.md` describes external projects without copying their content.
 
