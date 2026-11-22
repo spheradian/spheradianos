@@ -22,7 +22,7 @@ sleep 60
 		-u plymouth-quit.service -u plymouth-quit-wait.service
 	echo "=== xsphereos-test-journal: unit states ==="
 	systemctl --no-pager --failed
-	systemctl --no-pager status xsphere-session.service
+	systemctl --no-pager status --full xsphere-session.service
 	echo "=== xsphereos-test-journal: kernel graphics ==="
 	journalctl -b --no-pager -o short-monotonic -k --grep 'drm|fb|virtio|simpledrm'
 	echo "=== xsphereos-test-journal: end ==="

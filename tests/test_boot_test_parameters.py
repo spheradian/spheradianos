@@ -143,5 +143,49 @@ class SerialLogTests(unittest.TestCase):
         self.assertIn("end", stderr)
 
 
+RUNNING_KIOSK = """=== xsphereos-test-journal: session units ===
+[   73.5] xsphereos (-session)[918]: pam_unix(login:session): session opened for user xsphere
+=== xsphereos-test-journal: unit states ===
+\u25cf xsphere-session.service - XSphereOS M1 Prototype Session (Wayland Kiosk + Fallback)
+     Active: active (running) since Sun 2026-11-22 19:50:30 UTC; 58s ago
+     CGroup: /xsphere-session.slice/xsphere-session.service
+             \u251c\u2500920 /bin/sh /usr/lib/xsphereos/xsphere-session
+             \u251c\u2500925 cage -s -- /usr/bin/xspherede
+             \u2514\u2500930 /usr/bin/xspherede
+=== xsphereos-test-journal: kernel graphics ===
+=== xsphereos-test-journal: end ===
+"""
+
+
+class SessionStateTests(unittest.TestCase):
+    """The graphical boot passes only if the kiosk session really runs."""
+
+    def test_a_running_kiosk_with_xspherede(self) -> None:
+        self.assertEqual(boot_test.session_state(RUNNING_KIOSK), (True, "xspherede"))
+
+    def test_a_running_kiosk_on_the_fallback_terminal(self) -> None:
+        journal = RUNNING_KIOSK.replace("cage -s -- /usr/bin/xspherede", "cage -s -- /usr/bin/foot")
+        journal = journal.replace("930 /usr/bin/xspherede", "930 /usr/bin/foot")
+        self.assertEqual(boot_test.session_state(journal), (True, "foot (fallback)"))
+
+    def test_a_restart_loop_is_not_running(self) -> None:
+        journal = RUNNING_KIOSK.replace(
+            "session opened for user xsphere\n",
+            "session opened for user xsphere\n"
+            "[   73.6] xsphereos systemd[1]: xsphere-session.service: Main process exited, "
+            "code=exited, status=1/FAILURE\n",
+        )
+        self.assertEqual(boot_test.session_state(journal)[0], False)
+
+    def test_a_session_waiting_to_restart_is_not_running(self) -> None:
+        journal = RUNNING_KIOSK.replace(
+            "Active: active (running)", "Active: activating (auto-restart) (Result: exit-code)"
+        )
+        self.assertEqual(boot_test.session_state(journal), (False, None))
+
+    def test_no_journal_is_not_running(self) -> None:
+        self.assertEqual(boot_test.session_state(""), (False, None))
+
+
 if __name__ == "__main__":
     unittest.main()

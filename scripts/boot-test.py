@@ -35,6 +35,8 @@ SESSION_TIMEOUT = 20.0
 STALL_HOLD = 8.0  # well past a normal boot, well before the watchdog
 WATCHDOG_TIMEOUT = 40.0  # the watchdog fires after 20 s without progress
 POLL = 0.5
+JOURNAL_TIMEOUT = 120.0  # the guest copies its journal 60 s after reaching multi-user
+JOURNAL_END = "=== xsphereos-test-journal: end ==="
 KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal", "-": "minus", "/": "slash"}
 SHIFTED = {"&": "7", "|": "backslash"}  # US layout, the live image default
 REPORT = "/run/xsphereos/boot-report"
@@ -335,14 +337,21 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
                 results["reduced motion: splash is a still frame"] = moves is False
             elif not fault:
                 results["splash animates"] = moves is True
+            if graphical_m1:
+                # The kiosk owns tty1, so the screen cannot prove the session runs (a
+                # restart loop left it black, and early boot text once passed for it).
+                # Ask the guest's journal instead (config/.../xsphereos/test-journal).
+                running, client = session_state(wait_for_journal(guest, JOURNAL_TIMEOUT))
+                if client:
+                    print(f"graphical session shows: {client}", file=sys.stderr)
+                results["the graphical session is running"] = running
+                return results
             name = (
                 "a failed unit ends the splash with text on the console"
                 if fault
                 else "splash exits to a readable console"
             )
             results[name] = wait_until(Frame.shows_console, guest, EXIT_TIMEOUT, shots, "exit")
-            if graphical_m1:
-                return results
             time.sleep(3 * guest.slowdown)
             # Only a real shell runs this, and "yes" fills the screen only when
             # the failure report is where it should be: present after an injected
@@ -358,6 +367,38 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
             guest.kill()
             report_serial_log(results, guest.serial_log)
     return results
+
+
+def wait_for_journal(guest, timeout):
+    """Return the guest serial log once the journal copy is complete, or what there is."""
+    deadline = time.time() + timeout * guest.slowdown
+    while True:
+        text = (
+            guest.serial_log.read_bytes().decode("utf-8", errors="replace")
+            if guest.serial_log.exists()
+            else ""
+        )
+        if JOURNAL_END in text or time.time() >= deadline:
+            return text
+        time.sleep(POLL)
+
+
+def session_state(journal):
+    """Return (running, client) for xsphere-session from the guest journal copy.
+
+    Running means systemd reports it active and it never exited, so a restart
+    loop caught between two attempts does not pass. The client is what cage shows.
+    """
+    if "xsphere-session.service: Main process exited" in journal:
+        return False, None
+    status = journal.split("=== xsphereos-test-journal: unit states ===", 1)[-1]
+    if "Active: active (running)" not in status:
+        return False, None
+    if "cage -s -- /usr/bin/foot" in status:
+        return True, "foot (fallback)"
+    if "/usr/bin/xspherede" in status:
+        return True, "xspherede"
+    return True, None
 
 
 def report_serial_log(results, path):

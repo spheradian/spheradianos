@@ -60,6 +60,10 @@ class DistroConfigTests(unittest.TestCase):
         )
         for pkg in ("seatd", "cage", "mesa-vulkan-drivers", "libegl-mesa0", "foot"):
             self.assertIn(pkg, manifest)
+        # Without pam_systemd the session gets no logind session and no
+        # /run/user/<uid>, and the kiosk restarts in a loop (minbase installs
+        # no Recommends, so it must be listed).
+        self.assertIn("\nlibpam-systemd\n", manifest)
 
         service = (
             REPO_ROOT
@@ -114,6 +118,7 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn('[ -e "$flag" ] || exit 0', script)
         self.assertIn("-u xsphere-session.service", script)
         self.assertIn(">/dev/ttyS0", script)
+        self.assertIn("status --full xsphere-session.service", script)
 
     def test_package_lists_have_justifications_and_no_forbidden_packages(self) -> None:
         lists_dir = REPO_ROOT / "config" / "package-lists"

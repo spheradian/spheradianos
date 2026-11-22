@@ -15,6 +15,9 @@ udev
 # login and getty tooling
 login
 
+# pam_systemd: registers the kiosk session with logind and creates /run/user/<uid> (M1, ADR-007)
+libpam-systemd
+
 # interactive shell for the M0 console
 bash
 
