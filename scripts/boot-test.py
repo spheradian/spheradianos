@@ -192,19 +192,24 @@ def splash_moves(guest):
     """True if the seed changes between screenshots, False if it stays identical.
 
     None when the splash ended before two comparable screenshots were taken.
+    Without KVM the guest draws far fewer frames per second, so the gap between
+    screenshots grows with the slowdown.
     """
-    previous, verdict = None, None
+    previous, verdict, taken = None, None, 0
     for _ in range(MOTION_SAMPLES):
         frame = guest.screen()
         if not frame.shows_splash():
             break
+        taken += 1
         seed = frame.seed_area()
         if previous is not None:
             if seed != previous:
                 return True
             verdict = False
         previous = seed
-        time.sleep(0.25)
+        time.sleep(0.25 * guest.slowdown)
+    reason = "the splash ended" if verdict is None else "the seed did not change"
+    print(f"motion check: {reason} after {taken} splash screenshot(s)", file=sys.stderr)
     return verdict
 
 
