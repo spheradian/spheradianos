@@ -76,7 +76,7 @@ All items must be done before the visibility switch.
 - [ ] **GitHub protections.** Enable secret scanning and push protection, and protect `main` as in `ENGINEERING-PLAN.md` §5.3 and rollout step 1.
 - [ ] **Workflow review for public triggers.** Confirm no workflow runs untrusted fork code with secrets or write permissions (`pull_request_target`, self-hosted runners, `secrets.*` on fork PRs). Confirm third-party actions stay pinned by SHA. This includes the PR reviewers proposed in PR `#18`.
 - [ ] **Wording.** Update text that says the repository is private (`README.md`, `docs/ARCHITECTURE.md`, ADR-001, ADR-003, `ENGINEERING-PLAN.md` §5.3). Re-verify the claims about other distributions in `docs/BOOT-EXPERIENCE.md` §10, which that section itself flags for re-checking "before any public statement".
-- [ ] **`CONTRIBUTING.md`** (short): how to build, how to run the tests, the PR template, and the security-impact rule.
+- [x] **`CONTRIBUTING.md`** (short): how to build, how to run the tests, the PR template, and the security-impact rule.
 
 ## 6. Consequences and Trade-offs
 
