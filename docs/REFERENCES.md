@@ -48,7 +48,7 @@ This document records foundational operating-systems, graphics, and performance 
   - Device-based quality levels (Low/Medium/High), and after a tab or GPU-driver crash the page restarts one level lower and remembers the settled level.
   - The scene renders blurred behind the start menu, so performance tuning finishes before the user enters.
   - WGSL is also the native shader language of `wgpu`, which `xspherede` uses.
-- **How XSphereOS applies it:** ideas only, no code. Render levels with a persisted crash downgrade, and pipeline warm-up behind the Plymouth splash ([ADR-007](adr/ADR-007-gpu-render-levels-and-warmup.md)). It also confirms the procedural-asset approach of the boot theme and ADR-005.
+- **How XSphereOS applies it:** ideas only, no code. Render levels with a persisted crash downgrade, and pipeline warm-up behind the Plymouth splash ([ADR-009](adr/ADR-009-gpu-render-levels-and-warmup.md)). It also confirms the procedural-asset approach of the boot theme and ADR-005.
 
 ---
 
