@@ -105,9 +105,7 @@ def theme_script(motion):
     )
     seed_low = t.SEED_SPECK * (1 - sum(a for a, _, _ in t.BREATH))
     seed_high = t.SEED_FULL * (1 + sum(a for a, _, _ in t.BREATH))
-    parallels = "\n".join(
-        f"parallel_lat[{i}] = {lat};" for i, lat in enumerate(t.PARALLELS)
-    )
+    parallels = "\n".join(f"parallel_lat[{i}] = {lat};" for i, lat in enumerate(t.PARALLELS))
     inner_steps = t.MERIDIAN_STEP // t.DOT_STEP - 1
     regions = "\n".join(
         f'milestone[{i}] = "{name}";  # {meaning}\n'
@@ -123,7 +121,8 @@ def theme_script(motion):
 #
 # A seed of light appears, grows and breathes; its light spreads and reveals a
 # lattice of dots on a slowly turning sphere, whose regions wake as the system
-# really comes up. Nothing is stored as frames: tiny images placed by arithmetic. Esc (boot details) is handled by plymouthd.
+# really comes up. Nothing is stored as frames: tiny images placed by arithmetic. \
+Esc (boot details) is handled by plymouthd.
 
 motion = {1 if motion else 0};
 
@@ -205,7 +204,8 @@ fun place(seed_opacity, seed_fraction, reveal, spin, now) {{
         level = 0;
         if (region_awake[r]) {{
             level = 1;
-            if (motion) {{ level = smooth(region_woke_at[r], region_woke_at[r] + {number(t.WAKE_SECONDS)}, now); }}
+            if (motion) {{ level = smooth(region_woke_at[r], \
+region_woke_at[r] + {number(t.WAKE_SECONDS)}, now); }}
         }}
         region_glow[r] = {number(t.ASLEEP_GLOW)} + {number(1 - t.ASLEEP_GLOW)} * level;
     }}
@@ -224,13 +224,16 @@ fun place(seed_opacity, seed_fraction, reveal, spin, now) {{
         y = dot_sin_lat[i] * cos_tilt - depth * sin_tilt;
         z = dot_sin_lat[i] * sin_tilt + depth * cos_tilt;
         lit = 0;
-        if (reveal > 0) {{ lit = (reveal * reveal - (x * x + y * y)) / ({number(2 * t.REVEAL_EDGE)} * reveal); }}
+        if (reveal > 0) {{ lit = (reveal * reveal - (x * x + y * y)) / \
+({number(2 * t.REVEAL_EDGE)} * reveal); }}
         if (lit < 0) {{ lit = 0; }}
         if (lit > 1) {{ lit = 1; }}
         r = dot_region[i];
         if (region_awake[r]) {{ dot[i].SetImage(region_image[r]); }}
-        dot[i].SetOpacity(lit * region_glow[r] * ({number(t.DEPTH_BACK)} + {number((t.DEPTH_FRONT - t.DEPTH_BACK) / 2)} * (z + 1)));
-        dot[i].SetPosition(centre_x + x * radius - dot_width / 2, centre_y - y * radius - dot_width / 2, Math.Int(z * 100));
+        dot[i].SetOpacity(lit * region_glow[r] * ({number(t.DEPTH_BACK)} + \
+{number((t.DEPTH_FRONT - t.DEPTH_BACK) / 2)} * (z + 1)));
+        dot[i].SetPosition(centre_x + x * radius - dot_width / 2, \
+centre_y - y * radius - dot_width / 2, Math.Int(z * 100));
     }}
 }}
 
@@ -243,8 +246,11 @@ fun refresh() {{
     if (global.pending >= {FRAME_DIVIDER}) {{
         global.pending = 0;
         t = global.tick / {REFRESH_HZ};
-        fraction = ({number(t.SEED_SPECK)} + {number(t.SEED_FULL - t.SEED_SPECK)} * smooth(0, {number(t.GATHER_END)}, t)) * (1 + {breath});
-        place(smooth(0, {number(t.IGNITE_END)}, t), fraction, {number(t.REVEAL_FULL)} * smooth({number(t.REVEAL_START)}, {number(t.GATHER_END)}, t), {number(t.SPIN_RATE)} * t, t);
+        fraction = ({number(t.SEED_SPECK)} + {number(t.SEED_FULL - t.SEED_SPECK)} * \
+smooth(0, {number(t.GATHER_END)}, t)) * (1 + {breath});
+        place(smooth(0, {number(t.IGNITE_END)}, t), fraction, \
+{number(t.REVEAL_FULL)} * smooth({number(t.REVEAL_START)}, {number(t.GATHER_END)}, t), \
+{number(t.SPIN_RATE)} * t, t);
     }}
 }}
 
