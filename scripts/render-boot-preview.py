@@ -26,7 +26,13 @@ SAMPLE_RATE = 44100
 
 # Timeline (seconds). The real boot is elastic; this is one typical run.
 T_IGNITE, T_GATHER, T_WAKE, T_RESOLVE, T_UNFOLD, T_SETTLE, T_END = (
-    1.0, 2.5, 4.5, 8.0, 8.8, 10.3, 12.5,
+    1.0,
+    2.5,
+    4.5,
+    8.0,
+    8.8,
+    10.3,
+    12.5,
 )
 # Irregular on purpose: each region wakes when its (simulated) milestone completes.
 MILESTONES = (4.7, 5.3, 5.8, 6.5, 7.0, 7.5)
@@ -35,11 +41,11 @@ MILESTONES = (4.7, 5.3, 5.8, 6.5, 7.0, 7.5)
 SEED_COOL = (225, 235, 255)
 SEED_HOT = (255, 238, 205)
 DOMAIN_COLOURS = (
-    (58, 214, 197),   # teal
-    (74, 163, 255),   # azure
+    (58, 214, 197),  # teal
+    (74, 163, 255),  # azure
     (155, 123, 255),  # violet
     (255, 111, 168),  # rose
-    (255, 179, 71),   # amber
+    (255, 179, 71),  # amber
     (226, 234, 250),  # ice
 )
 
@@ -146,7 +152,9 @@ def lattice_segments(t):
                 inside_cue = clamp(11.0 / depth, 0.6, 1.2)
                 gain = 0.85 * wake[point[3]] * lerp(outside_cue, inside_cue, inside) * release_flash
                 width = round(SUPERSAMPLE * clamp(2.0 * CAMERA_DISTANCE / depth, 2.0, 5.0))
-                segments.append((depth, previous[:2], screen[:2], scaled(DOMAIN_COLOURS[point[3]], gain), width))
+                segments.append(
+                    (depth, previous[:2], screen[:2], scaled(DOMAIN_COLOURS[point[3]], gain), width)
+                )
             previous = screen
     segments.sort(key=lambda s: -s[0])
     return segments
@@ -244,11 +252,15 @@ def build_halo(size=384):
     """Smooth radial falloff, computed once, so halos have no banding or edges."""
     halo = Image.new("L", (size, size))
     half = size / 2
-    halo.putdata([
-        int(255 * math.exp(-(((x + 0.5 - half) ** 2 + (y + 0.5 - half) ** 2) / (half * 0.42) ** 2)))
-        if (x + 0.5 - half) ** 2 + (y + 0.5 - half) ** 2 < half * half else 0
-        for y in range(size) for x in range(size)
-    ])
+    halo.putdata(
+        [
+            int(255 * math.exp(-(((x + 0.5 - half) ** 2 + (y + 0.5 - half) ** 2) / (half * 0.42) ** 2)))
+            if (x + 0.5 - half) ** 2 + (y + 0.5 - half) ** 2 < half * half
+            else 0
+            for y in range(size)
+            for x in range(size)
+        ]
+    )
     return halo
 
 
@@ -285,14 +297,12 @@ def render_seed(t, phases):
         outline.append((centre + r * math.cos(angle), centre + r * math.sin(angle)))
     brightness = opacity * (1 + 0.5 * heat)
     ImageDraw.Draw(mask).polygon(outline, fill=int(min(255, 255 * brightness)))
-    body = mask.resize((tile, tile), Image.LANCZOS).filter(
-        ImageFilter.GaussianBlur(max(0.6, radius * 0.18))
-    )
+    body = mask.resize((tile, tile), Image.LANCZOS).filter(ImageFilter.GaussianBlur(max(0.6, radius * 0.18)))
     light = Image.new("L", (WIDTH, HEIGHT))
     light.paste(body, ((WIDTH - tile) // 2, (HEIGHT - tile) // 2))
     light = paste_halo(light, radius * 5, 0.55 * brightness)
     light = paste_halo(light, radius * 14, 0.22 * brightness)
-    colour = tuple(lerp(c, h, heat) for c, h in zip(SEED_COOL, SEED_HOT))
+    colour = tuple(lerp(c, h, heat) for c, h in zip(SEED_COOL, SEED_HOT, strict=True))
     return Image.merge("RGB", [light.point(lambda v, c=c: int(v * c / 255)) for c in colour])
 
 
@@ -315,7 +325,7 @@ def draw_wordmark(frame, t):
     text, spacing = "XSPHEREOS", 9
     widths = [draw.textlength(ch, font=font) for ch in text]
     x = (WIDTH - sum(widths) - spacing * (len(text) - 1)) / 2
-    for ch, width in zip(text, widths):
+    for ch, width in zip(text, widths, strict=True):
         draw.text((x, HEIGHT - 78), ch, font=font, fill=scaled(DOMAIN_COLOURS[5], 0.75 * shown))
         x += width + spacing
 
@@ -369,10 +379,18 @@ def render_audio(signature):
     add_bell(left, right, T_GATHER, 146.83, 0.16, 0.45, decay=0.9)
     add_bell(left, right, T_GATHER + 1.0, 220.00, 0.16, 0.55, decay=0.8)
     add_seed_breath(left, right, rng)
-    for i, (when, freq) in enumerate(zip(MILESTONES, MILESTONE_NOTES)):
+    for i, (when, freq) in enumerate(zip(MILESTONES, MILESTONE_NOTES, strict=True)):
         add_bell(left, right, when + rng.uniform(0.0, 0.03), freq, 0.20 + 0.03 * i, 0.3 + 0.4 * (i % 2))
     for i, (when, freq) in enumerate(RESOLVE_RUN):
-        add_bell(left, right, when + rng.uniform(-0.01, 0.01), freq, 0.14 + 0.02 * i, 0.7 - 0.4 * (i % 2), decay=0.35)
+        add_bell(
+            left,
+            right,
+            when + rng.uniform(-0.01, 0.01),
+            freq,
+            0.14 + 0.02 * i,
+            0.7 - 0.4 * (i % 2),
+            decay=0.35,
+        )
     add_release_chord(left, right)
     add_bell(left, right, T_UNFOLD + 0.06, 1174.66, 0.16, 0.5, decay=1.1)
     # Impact layers (docs/BOOT-EXPERIENCE.md, Appendix B): spectrum moves, level stays modest.
@@ -519,15 +537,29 @@ def to_pcm(left, right):
     gain = 0.25 * 32767 / peak
     fade_from = T_END - 1.0
     frames = []
-    for n, (l, r) in enumerate(zip(left, right)):
+    for n, (left_sample, right_sample) in enumerate(zip(left, right, strict=True)):
         tail = 1 - smooth(fade_from, T_END - 0.05, n / SAMPLE_RATE)
-        frames.append(struct.pack("<hh", int(l * gain * tail), int(r * gain * tail)))
+        frames.append(struct.pack("<hh", int(left_sample * gain * tail), int(right_sample * gain * tail)))
     return b"".join(frames)
 
 
 def write_wav(path, pcm):
-    header = struct.pack("<4sI4s4sIHHIIHH4sI", b"RIFF", 36 + len(pcm), b"WAVE", b"fmt ", 16,
-                         1, 2, SAMPLE_RATE, SAMPLE_RATE * 4, 4, 16, b"data", len(pcm))
+    header = struct.pack(
+        "<4sI4s4sIHHIIHH4sI",
+        b"RIFF",
+        36 + len(pcm),
+        b"WAVE",
+        b"fmt ",
+        16,
+        1,
+        2,
+        SAMPLE_RATE,
+        SAMPLE_RATE * 4,
+        4,
+        16,
+        b"data",
+        len(pcm),
+    )
     path.write_bytes(header + pcm)
 
 
@@ -557,21 +589,103 @@ def write_avi(path, frames, pcm):
             offset += len(data)
     biggest = max(len(f) for f in frames)
     main_header = struct.pack(
-        "<14I", 1_000_000 // FPS, biggest * FPS, 0, 0x110, len(frames), 0, 2, biggest,
-        WIDTH, HEIGHT, 0, 0, 0, 0,
+        "<14I",
+        1_000_000 // FPS,
+        biggest * FPS,
+        0,
+        0x110,
+        len(frames),
+        0,
+        2,
+        biggest,
+        WIDTH,
+        HEIGHT,
+        0,
+        0,
+        0,
+        0,
     )
-    video = riff_list(b"strl", chunk(b"strh", struct.pack(
-        "<4s4sIHHIIIIIIII4H", b"vids", b"MJPG", 0, 0, 0, 0, 1, FPS, 0, len(frames),
-        biggest, 10000, 0, 0, 0, WIDTH, HEIGHT,
-    )) + chunk(b"strf", struct.pack(
-        "<IiiHH4sIiiII", 40, WIDTH, HEIGHT, 1, 24, b"MJPG", WIDTH * HEIGHT * 3, 0, 0, 0, 0,
-    )))
-    audio = riff_list(b"strl", chunk(b"strh", struct.pack(
-        "<4s4sIHHIIIIIIII4H", b"auds", b"\x00" * 4, 0, 0, 0, 0, 1, SAMPLE_RATE, 0,
-        len(pcm) // block, per_frame, 0, block, 0, 0, 0, 0,
-    )) + chunk(b"strf", struct.pack(
-        "<HHIIHH", 1, 2, SAMPLE_RATE, SAMPLE_RATE * block, block, 16,
-    )))
+    video = riff_list(
+        b"strl",
+        chunk(
+            b"strh",
+            struct.pack(
+                "<4s4sIHHIIIIIIII4H",
+                b"vids",
+                b"MJPG",
+                0,
+                0,
+                0,
+                0,
+                1,
+                FPS,
+                0,
+                len(frames),
+                biggest,
+                10000,
+                0,
+                0,
+                0,
+                WIDTH,
+                HEIGHT,
+            ),
+        )
+        + chunk(
+            b"strf",
+            struct.pack(
+                "<IiiHH4sIiiII",
+                40,
+                WIDTH,
+                HEIGHT,
+                1,
+                24,
+                b"MJPG",
+                WIDTH * HEIGHT * 3,
+                0,
+                0,
+                0,
+                0,
+            ),
+        ),
+    )
+    audio = riff_list(
+        b"strl",
+        chunk(
+            b"strh",
+            struct.pack(
+                "<4s4sIHHIIIIIIII4H",
+                b"auds",
+                b"\x00" * 4,
+                0,
+                0,
+                0,
+                0,
+                1,
+                SAMPLE_RATE,
+                0,
+                len(pcm) // block,
+                per_frame,
+                0,
+                block,
+                0,
+                0,
+                0,
+                0,
+            ),
+        )
+        + chunk(
+            b"strf",
+            struct.pack(
+                "<HHIIHH",
+                1,
+                2,
+                SAMPLE_RATE,
+                SAMPLE_RATE * block,
+                block,
+                16,
+            ),
+        ),
+    )
     body = (
         b"AVI "
         + riff_list(b"hdrl", chunk(b"avih", main_header) + video + audio)

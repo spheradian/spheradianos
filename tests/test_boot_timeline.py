@@ -68,7 +68,7 @@ class Lattice(unittest.TestCase):
 
     def test_spin_never_runs_backwards(self):
         ordered = sorted(TIMES)
-        for earlier, later in zip(ordered, ordered[1:]):
+        for earlier, later in zip(ordered, ordered[1:], strict=False):
             self.assertLessEqual(timeline.spin(earlier), timeline.spin(later))
 
 
@@ -119,7 +119,6 @@ class Loop(unittest.TestCase):
         self.assertTrue(math.isfinite(timeline.spin(late)))
 
 
-
 class Readiness(unittest.TestCase):
     NAMES = [name for name, _ in timeline.MILESTONES]
 
@@ -141,7 +140,7 @@ class Readiness(unittest.TestCase):
             previous = [False] * len(self.NAMES)
             for cut in range(len(events) + 1):
                 awake = timeline.readiness(events[:cut])
-                for was, now in zip(previous, awake):
+                for was, now in zip(previous, awake, strict=True):
                     self.assertTrue(now or not was)
                 previous = awake
             self.assertEqual(timeline.readiness(events), timeline.readiness(events + events))
@@ -164,6 +163,7 @@ class Readiness(unittest.TestCase):
         self.assertGreater(timeline.region_glow(0.0), 0.0)
         self.assertLess(timeline.region_glow(0.0), timeline.region_glow(1.0))
         self.assertEqual(timeline.region_glow(1.0), 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()
