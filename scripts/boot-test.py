@@ -9,7 +9,10 @@ Asserts (docs/BOOT-EXPERIENCE.md, milestone B1):
      auto-logged-in user, and a failure report exists only if a failure was
      injected (--fault fail); with --fault stall, the watchdog ends the splash.
 
-Usage: scripts/boot-test.py [ISO] [--shots DIR] [--reduced-motion] [--fault fail|stall]
+With --uefi the guest boots OVMF and GRUB instead of BIOS and ISOLINUX, with the
+ISO attached as a disk, as a USB stick would be.
+
+Usage: scripts/boot-test.py [ISO] [--shots DIR] [--reduced-motion] [--fault fail|stall] [--uefi]
 Standard library only. Uses KVM when /dev/kvm is writable, else emulation.
 """
 
@@ -36,19 +39,38 @@ KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal", "-": "mi
 SHIFTED = {"&": "7", "|": "backslash"}  # US layout, the live image default
 REPORT = "/run/xsphereos/boot-report"
 MOTION_SAMPLES = 6
+OVMF_CODE = Path("/usr/share/OVMF/OVMF_CODE_4M.fd")
+OVMF_VARS = Path("/usr/share/OVMF/OVMF_VARS_4M.fd")
+GRUB_MENU_TIMEOUT = 15.0
 
 
 class Guest:
     """A QEMU guest driven over QMP."""
 
-    def __init__(self, iso, workdir):
+    def __init__(self, iso, workdir, uefi=False):
         self.workdir = workdir
+        self.uefi = uefi
         sock = os.path.join(workdir, "qmp.sock")
         qemu = shutil.which("qemu-system-x86_64")
         if not qemu:
             raise RuntimeError("qemu-system-x86_64 not found in PATH")
         accel = ["-enable-kvm", "-cpu", "host"] if os.access("/dev/kvm", os.W_OK) else []
         self.slowdown = 1 if accel else 8
+        medium = ["-cdrom", str(iso), "-boot", "d"]
+        if uefi:
+            # The firmware writes its variable store, so each boot gets a fresh copy.
+            variables = os.path.join(workdir, "OVMF_VARS.fd")
+            Path(variables).write_bytes(OVMF_VARS.read_bytes())
+            # A disk, not QEMU's emulated CD drive: OVMF reads that so slowly that
+            # GRUB needs about 45 s to load the kernel from it.
+            medium = [
+                "-drive",
+                f"if=pflash,format=raw,readonly=on,file={OVMF_CODE}",
+                "-drive",
+                f"if=pflash,format=raw,file={variables}",
+                "-drive",
+                f"file={iso},if=virtio,format=raw,readonly=on",
+            ]
         # Fixed executable resolved via PATH and explicit argv list without a shell.
         self.process = subprocess.Popen(  # noqa: S603
             [
@@ -64,10 +86,7 @@ class Guest:
                 "virtio-vga",
                 "-nic",
                 "none",
-                "-cdrom",
-                str(iso),
-                "-boot",
-                "d",
+                *medium,
                 "-qmp",
                 f"unix:{sock},server,nowait",
             ]
@@ -94,6 +113,9 @@ class Guest:
             reply = json.loads(self.channel.readline())
             if "return" in reply or "error" in reply:
                 return reply
+
+    def press(self, *names):
+        self.command("send-key", keys=[{"type": "qcode", "data": name} for name in names])
 
     def type_text(self, text):
         for char in text:
@@ -159,7 +181,18 @@ class Frame:
 
     def shows_splash(self):
         corner_is_black = self.mean(0, 0, 120, 120) < 3
-        return corner_is_black and self.centre_brightness() > 120
+        return corner_is_black and self.centre_brightness() > 120 and not self.shows_firmware_logo()
+
+    def shows_firmware_logo(self):
+        """OVMF's logo is also bright at the centre, but it is a solid white box
+        that reaches 28 px above the centre, where the splash's glow has faded."""
+        return self.mean(self.width // 2 - 90, self.height // 2 - 28, 180, 4) > 128
+
+    def shows_grub_menu(self):
+        """GRUB's text menu: dark centre, help text in the band above the bottom edge."""
+        band_top = self.height * 85 // 100
+        help_text = self.peak(0, band_top, self.width, self.height * 95 // 100 - band_top) > 100
+        return help_text and self.centre_brightness() < 10
 
     def shows_console(self):
         text_at_top = self.peak(0, 0, min(400, self.width), 60) > 100
@@ -185,23 +218,28 @@ def splash_moves(guest):
     """True if the seed changes between screenshots, False if it stays identical.
 
     None when the splash ended before two comparable screenshots were taken.
+    Without KVM the guest draws far fewer frames per second, so the gap between
+    screenshots grows with the slowdown.
     """
-    previous, verdict = None, None
+    previous, verdict, taken = None, None, 0
     for _ in range(MOTION_SAMPLES):
         frame = guest.screen()
         if not frame.shows_splash():
             break
+        taken += 1
         seed = frame.seed_area()
         if previous is not None:
             if seed != previous:
                 return True
             verdict = False
         previous = seed
-        time.sleep(0.25)
+        time.sleep(0.25 * guest.slowdown)
+    reason = "the splash ended" if verdict is None else "the seed did not change"
+    print(f"motion check: {reason} after {taken} splash screenshot(s)", file=sys.stderr)
     return verdict
 
 
-def run(iso, shots, reduced_motion=False, fault=None):
+def run(iso, shots, reduced_motion=False, fault=None, uefi=False):
     """Boot once and return {assertion: passed}."""
     parameters = []
     if reduced_motion:
@@ -210,9 +248,14 @@ def run(iso, shots, reduced_motion=False, fault=None):
         parameters.append(f"xsphere.test.{fault}")
     results = {}
     with tempfile.TemporaryDirectory() as workdir:
-        guest = Guest(iso, workdir)
+        guest = Guest(iso, workdir, uefi)
         try:
-            if parameters:
+            if parameters and uefi:
+                results["Esc opens the hidden GRUB menu"] = open_grub_menu(guest, shots)
+                if not results["Esc opens the hidden GRUB menu"]:
+                    return results
+                append_grub_parameters(guest, parameters)
+            elif parameters:
                 # Send space + backspace during BIOS POST -> ISOLINUX window so the
                 # 0.5s timeout is cancelled at "boot:" without filling the input buffer.
                 wait_secs = 8.0 if guest.slowdown > 1 else MENU_WAIT
@@ -258,13 +301,49 @@ def run(iso, shots, reduced_motion=False, fault=None):
     return results
 
 
+def open_grub_menu(guest, shots):
+    """Tap Esc until GRUB shows its menu (ADR-002: the menu is hidden, timeout 0).
+
+    Shift, which GRUB reads with keystatus, is not seen under OVMF in QEMU, so
+    Esc is what works here.
+    """
+    deadline = time.time() + GRUB_MENU_TIMEOUT * guest.slowdown
+    count = 0
+    while time.time() < deadline:
+        # GRUB looks for a key at one instant only, so keep taps close together
+        # and take a screenshot only between bursts.
+        for _ in range(10):
+            guest.press("esc")
+            time.sleep(0.02)
+        keep = shots / f"menu-{count:03d}.ppm" if shots else None
+        if guest.screen(keep).shows_grub_menu():
+            return True
+        count += 1
+    return False
+
+
+def append_grub_parameters(guest, parameters):
+    """Edit the default entry and boot it with extra kernel parameters.
+
+    "e" opens the entry on its first line, "setparams"; the kernel line is two
+    lines down, after a blank one. F10 boots the edited entry.
+    """
+    time.sleep(0.5)  # let any Esc still queued reach the menu, where it does nothing
+    guest.type_text("e")
+    time.sleep(0.5)
+    for key in ("down", "down", "end"):
+        guest.press(key)
+        time.sleep(0.05)
+    guest.type_text(" " + " ".join(parameters))
+    guest.press("f10")
+
+
 def check_stall(guest, shots, results):
     """A boot that stops progressing keeps its splash, then yields to text."""
-    # boot-watch counts its stall limit with guest `sleep 1`, which tracks wall-clock
-    # time even under TCG emulation, so scaling STALL_HOLD by the slowdown (64 s)
-    # overshoots the 20 s watchdog. Stay safely inside the stall window instead.
-    hold_secs = 16.0 if guest.slowdown > 1 else STALL_HOLD
-    time.sleep(hold_secs)
+    # Not scaled by the slowdown: boot-watch counts its 20 s limit with the guest's
+    # `sleep 1`, which follows wall-clock time even without KVM, so 8 s x 8 would
+    # wait past the watchdog.
+    time.sleep(STALL_HOLD)
     results["a stalled boot keeps the splash at first"] = guest.screen().shows_splash()
     results["the watchdog ends the splash with text on the console"] = wait_until(
         Frame.shows_console, guest, WATCHDOG_TIMEOUT, shots, "watchdog"
@@ -292,11 +371,14 @@ def main():
         choices=("fail", "stall"),
         help="inject a failed unit or a stalled boot and expect text diagnostics",
     )
+    parser.add_argument("--uefi", action="store_true", help="boot OVMF and GRUB instead of BIOS and ISOLINUX")
     options = parser.parse_args()
     if options.shots:
         options.shots.mkdir(parents=True, exist_ok=True)
 
-    results = run(options.iso or find_iso(), options.shots, options.reduced_motion, options.fault)
+    results = run(
+        options.iso or find_iso(), options.shots, options.reduced_motion, options.fault, options.uefi
+    )
     for name, passed in results.items():
         print(f"{'PASS' if passed else 'FAIL'}  {name}")
     sys.exit(0 if all(results.values()) else 1)

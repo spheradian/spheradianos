@@ -111,6 +111,7 @@ scripts/boot-test.py                       # boot the ISO headless in QEMU and v
 scripts/boot-test.py --reduced-motion      # verify the still-frame variant (xsphere.motion=reduced)
 scripts/boot-test.py --fault fail          # inject a failed systemd unit: expects a plain-text report
 scripts/boot-test.py --fault stall         # inject a stalled boot: expects the 20 s watchdog report
+scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF and GRUB), ISO attached as a disk
 ```
 
 ### Kernel Command-Line Switches
@@ -146,3 +147,5 @@ scripts/boot-test.py --fault stall         # inject a stalled boot: expects the 
   - [ADR-003](docs/adr/ADR-003-xspherede-visibility.md) — Repository Visibility Policy for `mendsec/xspherede`
   - [ADR-004](docs/adr/ADR-004-console-grade-fluidity.md) — Console-Grade Fluidity Discipline (`zstd`, `cgroups v2`, `zram`, `DMA-BUF`)
   - [ADR-005](docs/adr/ADR-005-boot-procedural-audio.md) — Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement
+  - [ADR-006](docs/adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery
+  - [ADR-009](docs/adr/ADR-009-gpu-render-levels-and-warmup.md) — GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4)

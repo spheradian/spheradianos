@@ -57,3 +57,7 @@ jobs:
           scripts/boot-test.py --reduced-motion
           scripts/boot-test.py --fault fail
           scripts/boot-test.py --fault stall
+          scripts/boot-test.py --uefi
+          scripts/boot-test.py --uefi --reduced-motion
+          scripts/boot-test.py --uefi --fault fail
+          scripts/boot-test.py --uefi --fault stall
