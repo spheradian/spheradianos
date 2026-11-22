@@ -239,28 +239,30 @@ def splash_moves(guest):
     return verdict
 
 
-def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False):
-    """Boot once and return {assertion: passed}."""
+SESSION_UNIT = ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "xsphere-session.service"
+
+
+def boot_parameters(console=False, reduced_motion=False, fault=None, session_installed=False):
+    """Return the extra kernel parameters for one boot.
+
+    Fault checks type into the tty1 shell, so once the M1 kiosk session is
+    installed they need the console session as well, or the kiosk owns tty1.
+    """
     parameters = []
-    if console:
+    if console or (fault and session_installed):
         parameters.append("xsphere.session=console")
     if reduced_motion:
         parameters.append("xsphere.motion=reduced")
     if fault:
         parameters.append(f"xsphere.test.{fault}")
-    graphical_m1 = (
-        not console
-        and not fault
-        and (
-            ROOT
-            / "config"
-            / "includes.chroot"
-            / "etc"
-            / "systemd"
-            / "system"
-            / "xsphere-session.service"
-        ).exists()
-    )
+    return parameters
+
+
+def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False):
+    """Boot once and return {assertion: passed}."""
+    session_installed = SESSION_UNIT.exists()
+    parameters = boot_parameters(console, reduced_motion, fault, session_installed)
+    graphical_m1 = not console and not fault and session_installed
     results = {}
     with tempfile.TemporaryDirectory() as workdir:
         guest = Guest(iso, workdir, uefi)

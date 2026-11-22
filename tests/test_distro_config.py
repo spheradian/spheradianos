@@ -76,6 +76,24 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("Slice=xsphere-session.slice", service)
         self.assertIn("ConditionKernelCommandLine=!xsphere.session=console", service)
         self.assertIn("User=xsphere", service)
+        # Conflicts= is applied when the boot transaction is built, before the
+        # condition is checked, so it would stop the tty1 getty even when the
+        # session is then skipped (xsphere.session=console): no shell at all.
+        self.assertNotIn("Conflicts=getty@tty1.service", service)
+
+        # The same kernel switch selects exactly one owner of tty1.
+        getty_condition = (
+            REPO_ROOT
+            / "config"
+            / "includes.chroot"
+            / "etc"
+            / "systemd"
+            / "system"
+            / "getty@tty1.service.d"
+            / "xsphere-session.conf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("[Unit]", getty_condition)
+        self.assertIn("ConditionKernelCommandLine=xsphere.session=console", getty_condition)
 
         launcher = (
             REPO_ROOT
