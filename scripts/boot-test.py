@@ -50,6 +50,7 @@ class Guest:
     def __init__(self, iso, workdir, uefi=False):
         self.workdir = workdir
         self.uefi = uefi
+        self.serial_log = Path(workdir) / "serial.log"
         sock = os.path.join(workdir, "qmp.sock")
         qemu = shutil.which("qemu-system-x86_64")
         if not qemu:
@@ -89,6 +90,12 @@ class Guest:
                 *medium,
                 "-qmp",
                 f"unix:{sock},server,nowait",
+                # The image copies the session journal to this port when it sees the
+                # fw_cfg entry below (config/includes.chroot/usr/lib/xsphereos/test-journal).
+                "-serial",
+                f"file:{self.serial_log}",
+                "-fw_cfg",
+                "name=opt/xsphereos/test-journal,string=1",
             ]
         )
         self.channel = self._connect(sock)
@@ -349,7 +356,21 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
             results[name] = wait_until(Frame.shows_output_at_bottom, guest, SESSION_TIMEOUT, shots, "session")
         finally:
             guest.kill()
+            report_serial_log(results, guest.serial_log)
     return results
+
+
+def report_serial_log(results, path):
+    """Print what the guest wrote to its serial port, but only when a check failed."""
+    if all(results.values()):
+        return
+    content = path.read_bytes() if path.exists() else b""
+    if not content.strip():
+        print("no guest serial log (the session journal was not copied)", file=sys.stderr)
+        return
+    print("--- guest serial log ---", file=sys.stderr)
+    print(content.decode("utf-8", errors="replace").rstrip(), file=sys.stderr)
+    print("--- end of guest serial log ---", file=sys.stderr)
 
 
 def open_grub_menu(guest, shots):

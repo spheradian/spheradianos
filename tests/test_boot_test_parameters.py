@@ -112,5 +112,36 @@ class TimeoutEvidenceTests(unittest.TestCase):
             self.assertIn(str(saved[0]), stderr)
 
 
+class SerialLogTests(unittest.TestCase):
+    """A failed boot prints what the guest wrote to its serial port."""
+
+    def report(self, results, content):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log = Path(tmpdir) / "serial.log"
+            if content is not None:
+                log.write_bytes(content)
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                boot_test.report_serial_log(results, log)
+        return stderr.getvalue()
+
+    def test_a_passing_boot_prints_nothing(self) -> None:
+        self.assertEqual(self.report({"splash is shown": True}, b"journal line\n"), "")
+
+    def test_a_failed_boot_prints_the_serial_log(self) -> None:
+        stderr = self.report({"splash is shown": False}, b"cage: failed to start a session\n")
+        self.assertIn("guest serial log", stderr)
+        self.assertIn("cage: failed to start a session", stderr)
+
+    def test_a_failed_boot_without_a_serial_log_says_so(self) -> None:
+        self.assertIn("no guest serial log", self.report({"x": False}, None))
+        self.assertIn("no guest serial log", self.report({"x": False}, b""))
+
+    def test_undecodable_bytes_do_not_break_the_report(self) -> None:
+        stderr = self.report({"x": False}, b"ok \xff\xfe end\n")
+        self.assertIn("ok", stderr)
+        self.assertIn("end", stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

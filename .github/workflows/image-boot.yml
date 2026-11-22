@@ -59,16 +59,24 @@ jobs:
         env:
           # A check that times out keeps its last screenshot here (scripts/boot-test.py).
           XSPHERE_TEST_FAILURE_SHOTS: boot-failures
+        # Run every boot even after a failure, so one log shows all of them.
         run: |
-          scripts/boot-test.py
-          scripts/boot-test.py --console
-          scripts/boot-test.py --console --reduced-motion
-          scripts/boot-test.py --fault fail
-          scripts/boot-test.py --fault stall
-          scripts/boot-test.py --uefi
-          scripts/boot-test.py --uefi --reduced-motion
-          scripts/boot-test.py --uefi --fault fail
-          scripts/boot-test.py --uefi --fault stall
+          status=0
+          check() {
+            echo "::group::boot-test.py $*"
+            scripts/boot-test.py "$@" || status=1
+            echo "::endgroup::"
+          }
+          check
+          check --console
+          check --console --reduced-motion
+          check --fault fail
+          check --fault stall
+          check --uefi
+          check --uefi --reduced-motion
+          check --uefi --fault fail
+          check --uefi --fault stall
+          exit "$status"
 
       - name: Keep the last screen of failed boot checks
         if: failure()

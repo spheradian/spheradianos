@@ -98,6 +98,23 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("cage -s -- /usr/bin/xspherede", launcher)
         self.assertIn("exec cage -s -- /usr/bin/foot", launcher)
 
+    def test_session_journal_reaches_the_boot_test_only_inside_its_qemu(self) -> None:
+        systemd_dir = REPO_ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system"
+        unit = (systemd_dir / "xsphereos-test-journal.service").read_text(encoding="utf-8")
+        self.assertIn("ConditionVirtualization=vm", unit)
+        self.assertIn("ExecStart=/usr/lib/xsphereos/test-journal", unit)
+        wanted = systemd_dir / "multi-user.target.wants" / "xsphereos-test-journal.service"
+        self.assertTrue(wanted.is_symlink())
+
+        script = (
+            REPO_ROOT / "config" / "includes.chroot" / "usr" / "lib" / "xsphereos" / "test-journal"
+        ).read_text(encoding="utf-8")
+        # Gated on a fw_cfg entry that only scripts/boot-test.py gives its QEMU guest.
+        self.assertIn("/sys/firmware/qemu_fw_cfg/by_name/opt/xsphereos/test-journal/raw", script)
+        self.assertIn('[ -e "$flag" ] || exit 0', script)
+        self.assertIn("-u xsphere-session.service", script)
+        self.assertIn(">/dev/ttyS0", script)
+
     def test_package_lists_have_justifications_and_no_forbidden_packages(self) -> None:
         lists_dir = REPO_ROOT / "config" / "package-lists"
         list_files = sorted(p for p in lists_dir.glob("*.list.chroot") if p.name != "live.list.chroot")

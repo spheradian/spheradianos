@@ -38,6 +38,7 @@ jobs:
             auto/clean \
             scripts/*.sh \
             config/includes.chroot/usr/lib/xsphereos/xsphere-session \
+            config/includes.chroot/usr/lib/xsphereos/test-journal \
             config/includes.chroot/usr/lib/xsphereos/boot-watch \
             config/includes.chroot/etc/initramfs-tools/hooks/* \
             config/includes.chroot/etc/initramfs-tools/scripts/init-top/* \
