@@ -144,7 +144,7 @@
 
     <div class="card banner">
       <span id="profile-desc"></span>
-      <span class="mono" style="color: var(--muted);">xspherede (MIT Public) · xsphereos (Private) · xspherede-security (Private)</span>
+      <span class="mono" style="color: var(--muted);">xspherede (MIT Public) · xsphereos (MIT Public) · xspherede-security (Private)</span>
     </div>
 
     <div class="grid">
@@ -197,7 +197,7 @@
 
         <section class="card">
           <div class="layer-head">
-            <h2>Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Private)</h2>
+            <h2>Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Public MIT)</h2>
             <span class="badge">APT::Install-Recommends "false"</span>
           </div>
           <div class="nodes">
@@ -351,7 +351,7 @@
       "base-system": {
         title: "Debian minbase Core (systemd · dbus · udev)",
         ms: "M0",
-        repo: "mendsec/xsphereos (Private)",
+        repo: "mendsec/xsphereos (Public MIT)",
         resp: "Minimal substrate built with debootstrap --variant=minbase (Debian trixie), no task-* or implicit Recommends. Every package has a 1-line justification.",
         contracts: "auto/config defines image options; config/package-lists/xsphereos-base.list.chroot defines the manifest.",
         security: "Minimal attack surface; unjustified packages are rejected by CI.",
@@ -360,7 +360,7 @@
       "base-media": {
         title: "Graphics, Audio & Network Stack",
         ms: "M1–M3",
-        repo: "mendsec/xsphereos (Private)",
+        repo: "mendsec/xsphereos (Public MIT)",
         resp: "Mesa (Vulkan/GL), libdrm, libinput, seatd/libseat (M1–M2), PipeWire/WirePlumber (M3), and Wi-Fi/Ethernet stack (NetworkManager vs iwd).",
         contracts: "First-boot GPU probe automatically selects normal vs low-power rendering profile.",
         security: "Network stack decided via ADR (#8); non-free firmware policy via ADR (#11).",
@@ -369,7 +369,7 @@
       "base-packaging": {
         title: "Signed APT Repo & Installer",
         ms: "M4",
-        repo: "mendsec/xsphereos (Private)",
+        repo: "mendsec/xsphereos (Public MIT)",
         resp: "Signed APT repository with xsphereos-base metapackage, nightly/testing/stable channels, first-boot flow, and disk installer.",
         contracts: "System updates delivered as standard apt upgrades.",
         security: "Installer strategy (Calamares vs Debian Installer vs custom) governed by ADR (#11).",
@@ -414,7 +414,7 @@
       "ci-qemu": {
         title: "QEMU Headless Boot & Budget",
         ms: "M0–M1",
-        repo: "mendsec/xsphereos (Private)",
+        repo: "mendsec/xsphereos (Public MIT)",
         resp: "Containerized Debian build and headless QEMU boot assertions (scripts/boot-test.py) plus ISO size & package budget enforcement.",
         contracts: "Build fails if ISO size or package count exceeds the recorded margin.",
         security: "Serial console checks include no unexpected listening ports and boot-time self-audit.",

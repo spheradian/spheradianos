@@ -26,7 +26,7 @@ flowchart TB
         FALLBACK["Fallback Flat Wayland Session<br/>(No Vulkan/GL hardware path)"]
     end
 
-    subgraph L2["Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Private)"]
+    subgraph L2["Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Public MIT)"]
         direction LR
         SYS["Core OS<br/>(systemd, dbus, udev, seatd/logind)"]
         MEDIA["Graphics, Audio & Net<br/>(Mesa, PipeWire/WirePlumber, NM vs iwd)"]

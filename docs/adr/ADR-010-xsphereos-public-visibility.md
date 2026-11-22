@@ -80,7 +80,9 @@ All items must be done before the visibility switch.
   - 2026-11-22 review of `ci.yml`, `claude-review.yml`, and `image-boot.yml` on `main`. No workflow uses `pull_request_target` or self-hosted runners. Default permissions are empty or read-only, every checkout sets `persist-credentials: false`, actions are pinned by SHA, and downloaded binaries (`actionlint`, `opengrep`) are checked by SHA-256. The Claude jobs run only for same-repository PRs or for `@claude` mentions from owners, members, and collaborators, with `allow_fork_prs: false`, and fork PRs do not receive secrets. `image-boot.yml` builds fork code with `sudo` only on ephemeral GitHub-hosted runners, with no secrets.
   - `id-token: write` in both Claude jobs is required: without a `github_token` input, `claude-code-action` exchanges the job's OIDC token for a Claude GitHub App installation token. Dropping it is only possible together with passing `github_token: ${{ secrets.GITHUB_TOKEN }}`, so that comments are posted as `github-actions[bot]`.
   - Remaining: after the switch, set *Require approval for all external contributors* for fork PR workflow runs, so that the 45-minute boot job does not run unreviewed.
-- [ ] **Wording.** Update text that says the repository is private (`README.md`, `docs/ARCHITECTURE.md`, ADR-001, ADR-003, `ENGINEERING-PLAN.md` §5.3). Re-verify the claims about other distributions in `docs/BOOT-EXPERIENCE.md` §10, which that section itself flags for re-checking "before any public statement".
+- [x] **Wording.** Update text that says the repository is private (`README.md`, `docs/ARCHITECTURE.md`, ADR-001, ADR-003, `ENGINEERING-PLAN.md` §5.3).
+  - 2026-11-22: updated `README.md`, `docs/ARCHITECTURE.md`, `docs/architecture/index.html`, `docs/architecture/xsphereos.excalidraw`, `ENGINEERING-PLAN.md` §5.3, ADR-001 §7, and ADR-003 (status and §4). Mentions of the private `xspherede-security` repository and of the "See private tracker" rule stay as they are. These texts describe the state *after* the switch, so they must not reach `main` before it: merge them together with the visibility switch.
+- [ ] **Claims about other distributions.** Re-verify them in `docs/BOOT-EXPERIENCE.md` §10, which that section itself flags for re-checking "before any public statement".
 - [x] **`CONTRIBUTING.md`** (short): how to build, how to run the tests, the PR template, and the security-impact rule.
 
 ## 6. Consequences and Trade-offs
@@ -90,6 +92,8 @@ All items must be done before the visibility switch.
 - **Neutral:** Development practice does not change. The private-tracker rule for security-impact notes in PRs already assumes public PRs.
 
 ## 7. Documents to Update on Acceptance
+
+Done in the same change as this ADR (see the *Wording* item in §5).
 
 - ADR-003 §4: limit the "remain strictly private" clause to `xspherede-security`, and note that it is superseded for `xsphereos` by this ADR.
 - ADR-001 §7: replace with the Project `#5` decision from §5.

@@ -16,15 +16,13 @@ XSphereOS is in early development and has a single maintainer. Small, focused ch
 You need a Debian host with root access. On other hosts, build in a container: see [Building & Running the Image](README.md#building--running-the-image).
 
 ```sh
-sudo apt install live-build debootstrap squashfs-tools xorriso qemu-system-x86 ovmf shellcheck shfmt
+sudo apt install live-build debootstrap squashfs-tools xorriso qemu-system-x86 ovmf shellcheck shfmt pre-commit
 ```
 
-Static checks, which need no root access, are the same ones the CI runs:
+Static checks need no root access. `pre-commit` runs the same set as the CI: `unittest`, `ruff`, `shellcheck`, and `shfmt`. The full list of commands is in the [README](README.md#static--security-checks-no-root-required).
 
 ```sh
-python3 -m unittest discover -s tests -v
-shellcheck auto/config auto/build auto/clean scripts/*.sh
-shfmt -d scripts/*.sh
+pre-commit run --all-files
 ```
 
 If your change affects the image or the boot path, build the ISO and run the boot tests:
@@ -53,7 +51,7 @@ The full rules are in [docs/ENGINEERING-PLAN.md](docs/ENGINEERING-PLAN.md) (§3 
 - Use conventional-style commit messages in the imperative, for example `fix(scripts): …`, `feat(m1): …`, `docs(adr): …`, or `test: …`.
 - Refactors and behavior changes go in separate commits.
 - Open the PR against `main` and fill in the [pull request template](.github/PULL_REQUEST_TEMPLATE.md): what changed and why, how it was tested, and the **security-impact** note. Write "None", or "See private tracker" with no details.
-- All CI checks must pass. This includes the static checks, `gitleaks`, and the QEMU boot gate.
+- All CI checks must pass. This includes the static checks, `ruff`, `actionlint` and `zizmor`, `opengrep`, `gitleaks`, and the QEMU boot gate.
 - Update the docs in the same PR when behavior changes.
 
 ## License
