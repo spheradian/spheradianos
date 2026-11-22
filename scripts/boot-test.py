@@ -147,6 +147,17 @@ class Frame:
             raise ValueError("unexpected screendump format")
         self.width, self.height = int(fields[1]), int(fields[2])
         self.pixels = fields[4]
+        self.data = data
+
+    def summary(self):
+        """A one-line description of the screen, for logs when a check times out."""
+        return (
+            f"{self.width}x{self.height}, "
+            f"corner {self.mean(0, 0, 120, 120):.1f}, "
+            f"centre {self.centre_brightness():.1f}, "
+            f"top-text peak {self.peak(0, 0, min(400, self.width), 60)}, "
+            f"whole-screen mean {self.mean(0, 0, self.width, self.height):.1f}"
+        )
 
     def mean(self, left, top, width, height):
         total = 0
@@ -205,13 +216,34 @@ class Frame:
 def wait_until(predicate, guest, timeout, shots, label):
     deadline = time.time() + timeout * guest.slowdown
     count = 0
+    frame = None
     while time.time() < deadline:
         keep = shots / f"{label}-{count:03d}.ppm" if shots else None
-        if predicate(guest.screen(keep)):
+        frame = guest.screen(keep)
+        if predicate(frame):
             return True
         count += 1
         time.sleep(POLL)
+    report_timeout(label, frame)
     return False
+
+
+def report_timeout(label, frame):
+    """Say what was on screen when a check gave up; CI keeps no recording of the guest.
+
+    With XSPHERE_TEST_FAILURE_SHOTS set, the last screenshot is also kept there.
+    """
+    if frame is None:
+        print(f"{label}: timed out before any screenshot", file=sys.stderr)
+        return
+    print(f"{label}: timed out; last screen: {frame.summary()}", file=sys.stderr)
+    folder = os.environ.get("XSPHERE_TEST_FAILURE_SHOTS")
+    if folder:
+        path = Path(folder)
+        path.mkdir(parents=True, exist_ok=True)
+        saved = path / f"{time.strftime('%H%M%S')}-{label}.ppm"
+        saved.write_bytes(frame.data)
+        print(f"{label}: last screen saved to {saved}", file=sys.stderr)
 
 
 def splash_moves(guest):

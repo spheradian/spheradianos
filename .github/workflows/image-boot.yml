@@ -56,6 +56,9 @@ jobs:
           [ "$pkg_count" -le 420 ] || { echo "Package count exceeds 420 M1 budget" >&2; exit 1; }
 
       - name: Run QEMU headless boot tests
+        env:
+          # A check that times out keeps its last screenshot here (scripts/boot-test.py).
+          XSPHERE_TEST_FAILURE_SHOTS: boot-failures
         run: |
           scripts/boot-test.py
           scripts/boot-test.py --console
@@ -66,3 +69,12 @@ jobs:
           scripts/boot-test.py --uefi --reduced-motion
           scripts/boot-test.py --uefi --fault fail
           scripts/boot-test.py --uefi --fault stall
+
+      - name: Keep the last screen of failed boot checks
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: boot-failure-screens
+          path: boot-failures/
+          if-no-files-found: ignore
+          retention-days: 7

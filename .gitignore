@@ -29,3 +29,4 @@ __pycache__/
 /chroot.packages.live
 # staged xspherede binary built by scripts/build-xspherede.sh
 /config/includes.chroot/usr/bin/xspherede
+/boot-failures/

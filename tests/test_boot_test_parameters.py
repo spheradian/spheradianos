@@ -4,9 +4,14 @@ Every check that types into the tty1 shell needs xsphere.session=console once
 the M1 graphical session is installed, otherwise the kiosk owns tty1.
 """
 
+import contextlib
 import importlib.util
+import io
+import os
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -56,6 +61,55 @@ class BootParameterTests(unittest.TestCase):
             ),
             ["xsphere.session=console", "xsphere.motion=reduced", "xsphere.test.fail"],
         )
+
+
+def ppm(width, height, value):
+    return f"P6\n{width} {height}\n255\n".encode() + bytes([value]) * (width * height * 3)
+
+
+class FakeGuest:
+    slowdown = 1
+
+    def __init__(self, data):
+        self.data = data
+
+    def screen(self, keep_as=None):
+        return boot_test.Frame(self.data)
+
+
+class TimeoutEvidenceTests(unittest.TestCase):
+    """A check that times out must say what was on screen (CI keeps no video)."""
+
+    def wait_for_nothing(self, folder=None):
+        guest = FakeGuest(ppm(400, 300, 7))
+        environment = {"XSPHERE_TEST_FAILURE_SHOTS": folder} if folder else {}
+        stderr = io.StringIO()
+        with (
+            mock.patch.dict(os.environ, environment, clear=False),
+            mock.patch.object(boot_test, "POLL", 0),
+            contextlib.redirect_stderr(stderr),
+        ):
+            if not folder:
+                os.environ.pop("XSPHERE_TEST_FAILURE_SHOTS", None)
+            passed = boot_test.wait_until(lambda frame: False, guest, 0.05, None, "exit")
+        return passed, stderr.getvalue()
+
+    def test_timeout_prints_a_summary_of_the_last_screen(self) -> None:
+        passed, stderr = self.wait_for_nothing()
+        self.assertFalse(passed)
+        self.assertIn("exit: timed out", stderr)
+        self.assertIn("400x300", stderr)
+        self.assertIn("centre 7.0", stderr)
+
+    def test_timeout_saves_the_last_screen_when_asked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            folder = str(Path(tmpdir) / "failures")
+            passed, stderr = self.wait_for_nothing(folder)
+            saved = sorted(Path(folder).glob("*-exit.ppm"))
+            self.assertFalse(passed)
+            self.assertEqual(len(saved), 1)
+            self.assertEqual(saved[0].read_bytes(), ppm(400, 300, 7))
+            self.assertIn(str(saved[0]), stderr)
 
 
 if __name__ == "__main__":
