@@ -69,7 +69,7 @@ All items must be done before the visibility switch.
 - [ ] **Project `#5`.** Decide whether `XSphereOS — Roadmap` becomes public along with the repository, or stays private.
 - [ ] **Commit author identity.** Accept that commit author names and e-mail addresses become public, or rewrite them to a noreply address before publication.
 - [ ] **Stale branches.** Delete remote branches that should not be published (for example `backup/*`, abandoned experiments).
-  - 2026-11-22: `backup/*` exists only locally and was never pushed. Remote branches whose PRs are already merged: `ci/code-security-reviewers` (`#18`), `claude/adr-009-renumber-accepted` (`#21`), `claude/planning-progress-66bfed` (`#22`), `claude/project-progress-review-2c45ab` (`#20`). Delete them, and enable *Automatically delete head branches* in the repository settings.
+  - 2026-11-22: `backup/*` exists only locally and was never pushed. The remote branches whose PRs were already merged were deleted: `ci/code-security-reviewers` (`#18`), `claude/adr-009-renumber-accepted` (`#21`), `claude/planning-progress-66bfed` (`#22`), and `claude/project-progress-review-2c45ab` (`#20`). Each pointed at its PR's merged head, so no work was lost. Remaining: enable *Automatically delete head branches* in the repository settings, and check the branch list again just before the switch.
 
 **Repository hygiene**
 
