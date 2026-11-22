@@ -55,12 +55,9 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("MemoryLow=", slice_cfg)
 
     def test_m1_kiosk_session_and_fallback_configured(self) -> None:
-        manifest = (
-            REPO_ROOT
-            / "config"
-            / "package-lists"
-            / "xsphereos-base.list.chroot"
-        ).read_text(encoding="utf-8")
+        manifest = (REPO_ROOT / "config" / "package-lists" / "xsphereos-base.list.chroot").read_text(
+            encoding="utf-8"
+        )
         for pkg in ("seatd", "cage", "mesa-vulkan-drivers", "libegl-mesa0", "foot"):
             self.assertIn(pkg, manifest)
 
@@ -96,13 +93,7 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("ConditionKernelCommandLine=xsphere.session=console", getty_condition)
 
         launcher = (
-            REPO_ROOT
-            / "config"
-            / "includes.chroot"
-            / "usr"
-            / "lib"
-            / "xsphereos"
-            / "xsphere-session"
+            REPO_ROOT / "config" / "includes.chroot" / "usr" / "lib" / "xsphereos" / "xsphere-session"
         ).read_text(encoding="utf-8")
         self.assertIn("cage -s -- /usr/bin/xspherede", launcher)
         self.assertIn("exec cage -s -- /usr/bin/foot", launcher)
