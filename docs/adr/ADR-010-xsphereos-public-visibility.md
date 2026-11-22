@@ -82,7 +82,8 @@ All items must be done before the visibility switch.
   - Remaining: after the switch, set *Require approval for all external contributors* for fork PR workflow runs, so that the 45-minute boot job does not run unreviewed.
 - [x] **Wording.** Update text that says the repository is private (`README.md`, `docs/ARCHITECTURE.md`, ADR-001, ADR-003, `ENGINEERING-PLAN.md` §5.3).
   - 2026-11-22: updated `README.md`, `docs/ARCHITECTURE.md`, `docs/architecture/index.html`, `docs/architecture/xsphereos.excalidraw`, `ENGINEERING-PLAN.md` §5.3, ADR-001 §7, and ADR-003 (status and §4). Mentions of the private `xspherede-security` repository and of the "See private tracker" rule stay as they are. These texts describe the state *after* the switch, so they must not reach `main` before it: merge them together with the visibility switch.
-- [ ] **Claims about other distributions.** Re-verify them in `docs/BOOT-EXPERIENCE.md` §10, which that section itself flags for re-checking "before any public statement".
+- [x] **Claims about other distributions.** Re-verify them in `docs/BOOT-EXPERIENCE.md` §10, which that section itself flags for re-checking "before any public statement".
+  - 2026-11-22: checked against public sources, now cited at the end of §10. The corrections cover Debian (Plymouth not enabled by default), Fedora's flicker-free hand-off to GDM, how Plymouth estimates progress, Ubuntu's login sound, screenshot-based openQA testing, and Plymouth's text fallback.
 - [x] **`CONTRIBUTING.md`** (short): how to build, how to run the tests, the PR template, and the security-impact rule.
 
 ## 6. Consequences and Trade-offs

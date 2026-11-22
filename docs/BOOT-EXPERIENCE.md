@@ -277,17 +277,23 @@ Visual and audio quality, flicker at the real-hardware hand-off, behaviour on re
 
 ## 10. What is genuinely new
 
-An honest survey of the field, with the caveat that claims about other distributions are from general knowledge and should be re-verified before any public statement.
+An honest survey of the field. The claims about other distributions were checked against public sources on 2026-11-22 (listed at the end of this section). Re-check them before quoting them in a release announcement, since boot stacks change from release to release.
 
-**What exists:** Plymouth themes (spinner, logo-with-progress, fade-in, custom `script` animations) on essentially all mainstream distributions; firmware-logo continuity (BGRT) on some; a splash that is a separate renderer from the desktop that follows it, with a visible mode change or blank frame between them; estimated or decorative progress; startup sounds that are recorded files, usually played by the desktop session after login rather than as part of the boot.
+**What exists:**
+
+- **Plymouth themes** (spinner, logo-with-progress, fade-in, custom `script` animations) are the norm on mainstream desktop distributions such as Fedora and Ubuntu. On Debian, desktop environments pull Plymouth in, but a default install does not turn the splash on (no `splash` on the kernel command line) [1].
+- **Firmware-logo continuity (BGRT)** is available on some distributions. Fedora's `bgrt` theme draws its spinner over the firmware's OEM logo [2].
+- **The splash is a separate program from the desktop that replaces it.** Fedora's flicker-free boot work aims to remove display blanking and abrupt transitions all the way to the GDM login screen [2]. In practice the result still depends on hardware and drivers, and users still report flicker at the Plymouth-to-GDM hand-off [3]. Even when the hand-off is smooth, it is a replacement by another renderer, not a continuation of the same scene.
+- **Progress is estimated or decorative.** Plymouth estimates progress from the duration of the previous boot, stored in a cache file, and its accuracy depends on that file being readable early in the boot [4].
+- **Startup sounds are recorded files played by the desktop stack.** For example, Ubuntu plays its `desktop-login` sound when the GDM login screen is ready, not as part of the boot itself [5].
 
 **What this design adds, and why it is different:**
 
 1. **The splash is the desktop's own first frames.** The same sphere object, the same renderer for the final phase, and a recomputed, matched hand-off frame. The boot dissolves into the live desktop instead of being replaced by it.
 2. **Progress as real, spatial data.** The sphere's regions map to real boot milestones and, later, to trust domains, so the boot visualises the system's own structure instead of a generic bar.
 3. **One timeline for light and sound, with procedurally generated audio.** No sampled assets, reproducible, licence-clean, tiny, and impossible to drift out of sync.
-4. **Failure designed in, and tested.** A fault is part of the visual language, always paired with text, and covered by fault-injection tests in CI. Splash screens are rarely tested at all.
-5. **Explicit capability tiers with a monotonic downgrade rule.** Text, static, 2D, full, chosen by probes, so old hardware gets a smaller experience rather than a broken one.
+4. **Failure designed in, and tested.** A fault is part of the visual language, always paired with text, and covered by fault-injection tests in CI. Distribution test systems such as openQA check installs and desktops by matching screenshots [6], but we have not found one that drives a boot splash through failed-unit and stalled-boot faults.
+5. **Explicit capability tiers with a monotonic downgrade rule.** Text, static, 2D, full, chosen by probes, so old hardware gets a smaller experience rather than a broken one. Plymouth already falls back to a text splash when it finds no DRM or framebuffer device, but not when a device exists and does not work [7]. Here a tier can only drop during a boot, never rise, so a late failure lands on a lower tier that works (§6.3). On installed systems, a GPU crash also lowers the starting level of the next boot ([ADR-009](adr/ADR-009-gpu-render-levels-and-warmup.md)).
 6. **Boot experience as an engineered, budgeted component.** Hard budgets, property-tested logic, and a CI boot test that asserts a clean splash exit and a running session.
 
 7. **The set is the product.** In the reference, the environment revealed by the light exists only for the intro and is discarded by a cut to a logo. Here the revealed structure is the desktop itself, and there is no cut: the user ends up standing inside what they watched being lit.
@@ -295,6 +301,16 @@ An honest survey of the field, with the caveat that claims about other distribut
 9. **No logo hold.** The reference spends about a third of its length on a static brand lock-up. Here that time is given back to the user: the "hold" is a usable desktop.
 
 It is *not* new to have a short cinematic boot. The novelty is continuity, honesty and testability.
+
+**Sources** (checked 2026-11-22):
+
+1. Debian: [debian-boot list, July 2025](https://lists.debian.org/debian-boot/2025/07/msg00113.html) (desktop environments install Plymouth, the installer does not enable `splash`); [plymouth package, Debian stable](https://packages.debian.org/stable/plymouth).
+2. Fedora: [Changes/FlickerFreeBoot](https://www.fedoraproject.org/wiki/Changes/FlickerFreeBoot); [Hans de Goede, "New plymouth theme for flickerfree boot"](https://hansdegoede.dreamwidth.org/19558.html).
+3. GNOME: [GDM issue 890, "no smooth transition plymouth -> gdm"](https://gitlab.gnome.org/GNOME/gdm/-/issues/890).
+4. Plymouth: [issue 64, splash delay from the previous boot's time](https://gitlab.freedesktop.org/plymouth/plymouth/-/issues/64); [issue 22, `boot-duration` unavailable when `/var` is separate](https://gitlab.freedesktop.org/plymouth/plymouth/-/issues/22).
+5. Ubuntu: [Launchpad bug 1736046, "No sound indicator when login screen is ready"](https://bugs.launchpad.net/ubuntu/+source/gdm3/+bug/1736046); [OMG! Ubuntu, enabling the login sound (2024)](https://www.omgubuntu.co.uk/2024/03/enable-old-ubuntu-login-sound/amp).
+6. openQA: [openQA documentation](https://open.qa/docs).
+7. Plymouth fallback: [Red Hat bug 1431141](https://bugzilla.redhat.com/show_bug.cgi?id=1431141); [Fedora Changes/PlymouthUseSimpledrm](https://www.fedoraproject.org/wiki/Changes/PlymouthUseSimpledrm).
 
 ---
 
