@@ -15,6 +15,9 @@ udev
 # login and getty tooling
 login
 
+# pam_systemd: registers the kiosk session with logind and creates /run/user/<uid> (M1, ADR-007)
+libpam-systemd
+
 # interactive shell for the M0 console
 bash
 
@@ -47,3 +50,21 @@ zstd
 
 # compressed RAM swap via systemd to absorb memory spikes without disk thrashing (ADR-004)
 systemd-zram-generator
+
+# lightweight Wayland seat management without a display manager (M1, ADR-007)
+seatd
+
+# minimal Wayland-only kiosk compositor to host the M1 xspherede prototype (ADR-007)
+cage
+
+# Vulkan/Lavapipe Mesa drivers required by wgpu in xspherede (M1, ADR-007)
+mesa-vulkan-drivers
+
+# EGL/Mesa fallback drivers for Wayland kiosk rendering (M1, ADR-007)
+libegl-mesa0
+
+# lightweight Wayland-native terminal for the mandatory fallback flat session (M1, ADR-007)
+foot
+
+# free Linux kernel firmware explicitly tracked instead of live-build auto-scraping (ADR-007)
+firmware-linux-free

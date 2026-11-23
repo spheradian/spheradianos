@@ -19,14 +19,14 @@ flowchart TB
         SANDBOX["Per-Domain Sandbox (M5)<br/>(namespaces, seccomp, cgroups, clipboard vault)"]
     end
 
-    subgraph L3["Layer 3 · Compositor & Session (mendsec/xspherede · Public MIT)"]
+    subgraph L3["Layer 3 · Compositor & Session (mendsec/xspherede · Public Apache-2.0)"]
         direction LR
         SMITHAY["xspherede Compositor<br/>(Smithay + wgpu · no X11/Xwayland)"]
         CORE["Pure Core & Policy<br/>(input, state, commands, WindowSurfaceProvider)"]
         FALLBACK["Fallback Flat Wayland Session<br/>(No Vulkan/GL hardware path)"]
     end
 
-    subgraph L2["Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Private)"]
+    subgraph L2["Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Public Apache-2.0)"]
         direction LR
         SYS["Core OS<br/>(systemd, dbus, udev, seatd/logind)"]
         MEDIA["Graphics, Audio & Net<br/>(Mesa, PipeWire/WirePlumber, NM vs iwd)"]
@@ -112,9 +112,11 @@ See [docs/adr/README.md](adr/README.md) for accepted and proposed ADRs:
 - [ADR-004](adr/ADR-004-console-grade-fluidity.md) — Console-Grade Fluidity Discipline (`zstd`, `cgroups v2`, `zram`, `DMA-BUF`)
 - [ADR-005](adr/ADR-005-boot-procedural-audio.md) — Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement
 - [ADR-006](adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery
+- [ADR-007](adr/ADR-007-m1-kiosk-prototype-session.md) — M1 Prototype Session via Wayland Kiosk (`cage` + `seatd`) and Pinned `xspherede` Build
+- [ADR-007](adr/ADR-007-three-pillar-positioning-and-anti-pattern-prevention.md) — Three-Pillar Positioning (Privacy, Security, Old Computers) and Vulnerability-Driven Anti-Pattern Prevention
 
 ---
 
 ## 5. Technical References & Research
 
-See [docs/REFERENCES.md](REFERENCES.md) for systems research (UFPR Operating Systems Projects, Linux Storage Stack, embedded Wayland micro-compositor frame pacing, and SquashFS `zstd` vs `xz` benchmarks).
+See [docs/REFERENCES.md](REFERENCES.md) for systems research (UFPR Operating Systems Projects, Linux Storage Stack, embedded Wayland micro-compositor frame pacing, SquashFS `zstd` vs `xz` benchmarks, and comparative Privacy, Security, and Old Computers distribution research).

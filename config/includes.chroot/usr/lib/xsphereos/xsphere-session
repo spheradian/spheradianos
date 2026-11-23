@@ -1,0 +1,31 @@
+#!/bin/sh
+# Launch XSphereDE inside a minimal Wayland kiosk (cage), falling back to a
+# flat Wayland terminal (foot) if Vulkan/GL is unavailable or xspherede fails.
+set -eu
+
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
+export WLR_NO_HARDWARE_CURSORS=1
+
+fallback=0
+if [ ! -x /usr/bin/xspherede ]; then
+	fallback=1
+elif grep -qw 'xsphere\.fallback=1' /proc/cmdline 2>/dev/null; then
+	fallback=1
+fi
+
+if [ "$fallback" -eq 0 ]; then
+	# These two lines bracket xspherede's output in the journal, so a fallback
+	# can be explained (scripts/boot-test.py prints what lies between them).
+	echo "xsphere-session: starting xspherede" >&2
+	status=0
+	cage -s -- /usr/bin/xspherede || status=$?
+	if [ "$status" -eq 0 ]; then
+		exit 0
+	fi
+	echo "xsphere-session: xspherede exited with status $status, falling back to foot" >&2
+fi
+
+exec cage -s -- /usr/bin/foot
