@@ -26,7 +26,7 @@ This repository is the image recipe. It uses `live-build`, shell, and Python **b
 | Repository | Visibility | Role |
 |---|---|---|
 | `mendsec/xsphereos` (this repo) | Private | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
-| `mendsec/xspherede` | Public (MIT, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
+| `mendsec/xspherede` | Public (Apache-2.0, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
 | `mendsec/xspherede-security` | Private | Security analysis, threat models, and hardening notes for both projects |
 
 ---
@@ -173,3 +173,9 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
   - [ADR-016](docs/adr/ADR-016-first-usable-build-roadmap.md) — Roadmap Reordering: First Usable Build Before Boot Polish (Proposed)
 - [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md) — Product vision: console feel, security between secureblue and Qubes OS, Sphere and Planisphere, hardware targets.
 - [docs/ORGANIZATION.md](docs/ORGANIZATION.md) — Organization map, repositories, naming rules, and what is original versus inherited.
+
+---
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE). The same licence applies across the `spheradian` organization ([ADR-011](docs/adr/ADR-011-organization-and-product-structure.md) §5.5). The names and logos of Spheradian and SpheradianOS are not covered by the code licence.

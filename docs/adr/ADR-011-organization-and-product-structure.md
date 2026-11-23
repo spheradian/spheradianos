@@ -35,7 +35,7 @@ The decision also states plainly what is original and what is inherited (§5.2).
 - **The rename is underway, but no decision records it.** The `spheradian` organization was created on 2026-11-23. `mendsec/xspherede`, `mendsec/xsphereos`, and `mendsec/xspherede-security` now redirect to `spheradian/spheradian`, `spheradian/spheradianos`, and `spheradian/security`. The crate is now `spheradian`. PR #30 renames identifiers in this repository. The naming discussion lives in an issue (`spheradian/spheradian#17`), not in an ADR.
 - **`DISTRO-DESIGN.md` §10 leaves open question 6 open:** "Name, branding, and licensing of the distribution as distinct from the desktop."
 - **The company layer is undocumented.** Fabrintek (`github.com/fabrintek`) already exists as the maintainer's IT services company. Its relationship to the open-source project has not been decided.
-- **The licences disagree.** `spheradian/spheradian` ships `LICENSE` as Apache-2.0 (also in `Cargo.toml`). The organization profile, ADR-003, and this repository's README say MIT. PR #23 adds an MIT `LICENSE` to this repository.
+- **The licences disagree.** `spheradian/spheradian` ships `LICENSE` as Apache-2.0 (also in `Cargo.toml`). The organization profile, ADR-003, and this repository's README say MIT. PR #23 adds an MIT `LICENSE` to this repository. §5.5 resolves this in favour of Apache-2.0.
 
 ## 3. Scope
 
@@ -130,13 +130,14 @@ This means `spheradian/files` should be renamed to `spheradian/spheradian-files`
 - **When 3 or more components ship in the image:** Add an integration repository (`spheradian/spheradian-epoch`) that pins every component, so a desktop release is one tag. This works like `cosmic-epoch`. The recipe then pins one epoch tag instead of several SHAs.
 - **At M4:** Each shipped component gets a `debian/` directory in its own repository, as in the `pop-os` repositories. The signed APT repository publishes binaries, and the image installs packages instead of staging binaries into `includes.chroot`. With an atomic system layer, packages are used when the image is **built**. Installed systems do not run `apt` against the base: they receive whole signed images (ADR-013).
 
-### 5.5 Licensing (must be settled before acceptance)
+### 5.5 Licensing
 
-The repositories disagree today (§2). This ADR does not choose the licence. It records the questions:
+**Decided by the approver on 2026-11-23: Apache-2.0 for all project code.**
 
-1. **Desktop components:** Apache-2.0 (current `LICENSE` and `Cargo.toml`) or MIT (organization profile, ADR-003)? Pick one, then align `LICENSE`, `Cargo.toml`, the organization profile, and ADR-003. A common Rust choice is `MIT OR Apache-2.0`. COSMIC uses GPL-3.0, which keeps derivatives open but limits how others can reuse the code.
-2. **Distribution recipe:** MIT, as PR #23 proposes, or the same licence as the desktop.
-3. **Brand:** Code licences do not cover names and logos. A short trademark policy (in `.github`) should say who may use "Spheradian" and "SpheradianOS". Most distributions, Pop!_OS included, allow rebuilds but require a new name for modified images.
+1. **Desktop components:** Apache-2.0, as `spheradian/spheradian` already ships (`LICENSE`, `Cargo.toml`). Every new component repository starts with the same licence. Apache-2.0 is permissive like MIT, and it adds an explicit patent grant and a `NOTICE` mechanism, which matters for a project that a company sponsors and that others may build products on.
+2. **Distribution recipe:** Apache-2.0 as well, one licence across the organization. This repository gets an Apache-2.0 `LICENSE`. PR #23, which proposes an MIT `LICENSE` here, must switch to Apache-2.0 before it merges.
+3. **Where MIT is still stated, it is now wrong and must be corrected:** ADR-003 (amended by this ADR), the organization profile in `spheradian/.github`, and the architecture diagrams.
+4. **Brand:** Code licences do not cover names and logos. A short trademark policy (in `.github`) should say who may use "Spheradian" and "SpheradianOS". Most distributions, Pop!_OS included, allow rebuilds but require a new name for modified images.
 
 ## 6. Consequences and Trade-offs
 
@@ -161,8 +162,8 @@ The repositories disagree today (§2). This ADR does not choose the licence. It 
 | Step | Change | Where | Depends on |
 |---|---|---|---|
 | 1 | Merge the identifier rename (PR #30), coordinated with the open PRs it conflicts with (#23, #27, #28, #29, #31) | `spheradianos` | — |
-| 2 | Accept this ADR and ADR-012; close open question 6 in `DISTRO-DESIGN.md` §10 | `spheradianos` | Licence choice (§5.5) |
-| 3 | Align the licences across `LICENSE`, `Cargo.toml`, the organization profile, and ADR-003 | `spheradian`, `.github`, `spheradianos` | Step 2 |
+| 2 | Accept this ADR and ADR-012; close open question 6 in `DISTRO-DESIGN.md` §10 | `spheradianos` | — (licence decided: Apache-2.0, §5.5) |
+| 3 | Align on Apache-2.0: `LICENSE` in this repository (done with this ADR), the organization profile in `.github`, and PR #23's `LICENSE` | `.github`, `spheradianos` | — |
 | 4 | Close `spheradian/spheradian#17` with a link to this ADR | `spheradian` | Step 2 |
 | 5 | Rename `files` → `spheradian-files`; update the Pages links | `spheradian-files` | Step 2 |
 | 6 | Add the "sponsored by Fabrintek" line and a trademark policy to `.github` | `.github` | Step 3 |
@@ -181,7 +182,7 @@ The repositories disagree today (§2). This ADR does not choose the licence. It 
 ## 9. Related
 
 - [ADR-001](ADR-001-github-roadmap-governance.md): GitHub roadmap and governance
-- [ADR-003](ADR-003-xspherede-visibility.md): desktop repository visibility (licence wording affected by §5.5)
+- [ADR-003](ADR-003-xspherede-visibility.md): desktop repository visibility (licence amended to Apache-2.0 by §5.5)
 - [ADR-007](ADR-007-m1-kiosk-prototype-session.md): pinned desktop build in the image
 - [ADR-012](ADR-012-implementation-language-policy.md): implementation language policy
 - [docs/ORGANIZATION.md](../ORGANIZATION.md): the living map of the organization, repositories, and names

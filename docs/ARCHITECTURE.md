@@ -19,7 +19,7 @@ flowchart TB
         SANDBOX["Per-Domain Sandbox (M5)<br/>(namespaces, seccomp, cgroups, clipboard vault)"]
     end
 
-    subgraph L3["Layer 3 · Compositor & Session (mendsec/xspherede · Public MIT)"]
+    subgraph L3["Layer 3 · Compositor & Session (mendsec/xspherede · Public Apache-2.0)"]
         direction LR
         SMITHAY["xspherede Compositor<br/>(Smithay + wgpu · no X11/Xwayland)"]
         CORE["Pure Core & Policy<br/>(input, state, commands, WindowSurfaceProvider)"]

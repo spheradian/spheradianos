@@ -144,7 +144,7 @@
 
     <div class="card banner">
       <span id="profile-desc"></span>
-      <span class="mono" style="color: var(--muted);">xspherede (MIT Public) · xsphereos (Private) · xspherede-security (Private)</span>
+      <span class="mono" style="color: var(--muted);">xspherede (Apache-2.0 Public) · xsphereos (Private) · xspherede-security (Private)</span>
     </div>
 
     <div class="grid">
@@ -174,7 +174,7 @@
 
         <section class="card">
           <div class="layer-head">
-            <h2>Layer 3 · Compositor &amp; Session (mendsec/xspherede · Public MIT)</h2>
+            <h2>Layer 3 · Compositor &amp; Session (mendsec/xspherede · Public Apache-2.0)</h2>
             <span class="badge">Rust · unsafe forbidden</span>
           </div>
           <div class="nodes">
@@ -324,7 +324,7 @@
       "compositor-smithay": {
         title: "xspherede (Smithay + wgpu)",
         ms: "M1–M2",
-        repo: "mendsec/xspherede (Public MIT)",
+        repo: "mendsec/xspherede (Public Apache-2.0)",
         resp: "Sole display server and desktop shell. Runs as prototype in M1 kiosk session; becomes native Smithay + wgpu compositor in M2.",
         contracts: "Receives DRM master from Plymouth (B4) and manages Wayland surfaces and trusted input routing.",
         security: "Safe Rust (unsafe forbidden, panic='abort' in release, zero X11/Xwayland).",
@@ -333,7 +333,7 @@
       "compositor-core": {
         title: "Pure Core & Policy Engine",
         ms: "M1–M2",
-        repo: "mendsec/xspherede (Public MIT)",
+        repo: "mendsec/xspherede (Public Apache-2.0)",
         resp: "Pure logic extracted from main.rs (app, input, render, state, commands, security): spherical math, raycasting, drag/focus, surface validation.",
         contracts: "Injectable boundary traits: WindowSurfaceProvider, Clock, HostInfo (testable without GPU).",
         security: "Unit + property tests required; strict clippy lints in security-sensitive modules.",
