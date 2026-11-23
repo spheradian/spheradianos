@@ -38,9 +38,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends podman qemu-system-x86 ovmf python3 pkg-config libxkbcommon-dev libwayland-dev
 
-      - name: Build and stage pinned xspherede prototype (M1)
+      - name: Build and stage pinned spheradian prototype (M1)
         run: |
-          scripts/build-xspherede.sh
+          scripts/build-spheradian.sh
 
       - name: Build ISO in Debian trixie container
         run: |
@@ -58,7 +58,7 @@ jobs:
       - name: Run QEMU headless boot tests
         env:
           # A check that times out keeps its last screenshot here (scripts/boot-test.py).
-          XSPHERE_TEST_FAILURE_SHOTS: boot-failures
+          SPHERADIAN_TEST_FAILURE_SHOTS: boot-failures
         # Run every boot even after a failure, so one log shows all of them.
         run: |
           status=0

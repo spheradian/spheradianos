@@ -37,9 +37,9 @@ jobs:
             auto/build \
             auto/clean \
             scripts/*.sh \
-            config/includes.chroot/usr/lib/xsphereos/xsphere-session \
-            config/includes.chroot/usr/lib/xsphereos/test-journal \
-            config/includes.chroot/usr/lib/xsphereos/boot-watch \
+            config/includes.chroot/usr/lib/spheradianos/spheradian-session \
+            config/includes.chroot/usr/lib/spheradianos/test-journal \
+            config/includes.chroot/usr/lib/spheradianos/boot-watch \
             config/includes.chroot/etc/initramfs-tools/hooks/* \
             config/includes.chroot/etc/initramfs-tools/scripts/init-top/* \
             config/includes.chroot/etc/profile.d/*.sh
@@ -116,7 +116,7 @@ jobs:
             https://github.com/opengrep/opengrep/releases/download/v2.0.0/opengrep_linux_x86
           echo "37e93f4da5fd04a18c5c1febbdd12f7e98dfccd4d0c9cf2593bcb25eeb462da0  /tmp/opengrep" | sha256sum -c
           chmod +x /tmp/opengrep
-          /tmp/opengrep scan --config .opengrep/xsphereos-rules.yaml --error auto config scripts tests .github
+          /tmp/opengrep scan --config .opengrep/spheradianos-rules.yaml --error auto config scripts tests .github
 
   secret-scan:
     name: Secret Scan (gitleaks)

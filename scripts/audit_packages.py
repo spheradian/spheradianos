@@ -84,7 +84,7 @@ def audit_manifest_file(path: Path) -> tuple[int, list[str]]:
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point returning 0 on clean manifests, 1 on violations, 2 on missing input."""
     parser = argparse.ArgumentParser(
-        description="Audit an XSphereOS package manifest against forbidden packages.",
+        description="Audit an SpheradianOS package manifest against forbidden packages.",
     )
     parser.add_argument("manifest", type=Path, help="Path to live-image-amd64.packages")
     args = parser.parse_args(argv)

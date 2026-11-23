@@ -18,7 +18,7 @@ CHROOT = ROOT / "config" / "includes.chroot"
 THEMES_IN_IMAGE = "/usr/share/plymouth/themes"
 THEMES = CHROOT / THEMES_IN_IMAGE.lstrip("/")
 INITRAMFS = CHROOT / "etc" / "initramfs-tools"
-ANIMATED, STILL = "xsphere", "xsphere-still"
+ANIMATED, STILL = "spheradian", "spheradian-still"
 # Console-grade budget (docs/BOOT-EXPERIENCE.md 6.4): both themes together.
 THEME_BUDGET_BYTES = 64 * 1024
 AUDIO_SUFFIXES = {".wav", ".ogg", ".mp3", ".flac", ".opus"}
@@ -140,9 +140,9 @@ class GeneratedFiles(unittest.TestCase):
 
 
 class InitramfsIntegration(unittest.TestCase):
-    TRIM = INITRAMFS / "hooks" / "xsphereos-splash-trim"
-    THEMES_HOOK = INITRAMFS / "hooks" / "xsphereos-splash-themes"
-    MOTION = INITRAMFS / "scripts" / "init-top" / "xsphereos-motion"
+    TRIM = INITRAMFS / "hooks" / "spheradianos-splash-trim"
+    THEMES_HOOK = INITRAMFS / "hooks" / "spheradianos-splash-themes"
+    MOTION = INITRAMFS / "scripts" / "init-top" / "spheradianos-motion"
 
     def run_script(self, script, **variables):
         environment = {k: v for k, v in os.environ.items() if k != "DESTDIR"}
@@ -161,7 +161,7 @@ class InitramfsIntegration(unittest.TestCase):
     def test_trim_hook_removes_fonts_and_keeps_the_theme(self):
         with tempfile.TemporaryDirectory() as root:
             font = Path(root, "usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
-            theme = Path(root, "usr/share/plymouth/themes/xsphere/seed.png")
+            theme = Path(root, "usr/share/plymouth/themes/spheradian/seed.png")
             for path in (font, theme):
                 path.parent.mkdir(parents=True)
                 path.touch()
@@ -171,7 +171,7 @@ class InitramfsIntegration(unittest.TestCase):
 
     def test_themes_hook_adds_the_reduced_motion_theme(self):
         with tempfile.TemporaryDirectory() as root:
-            result = self.run_script(self.THEMES_HOOK, DESTDIR=root, XSPHERE_THEMES=str(THEMES))
+            result = self.run_script(self.THEMES_HOOK, DESTDIR=root, SPHERADIAN_THEMES=str(THEMES))
             self.assertEqual(result.returncode, 0, result.stderr)
             copied = Path(root, "usr/share/plymouth/themes", STILL, f"{STILL}.script")
             self.assertTrue(copied.is_file())
@@ -180,19 +180,19 @@ class InitramfsIntegration(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             cmdline, config = Path(root, "cmdline"), Path(root, "plymouthd.conf")
             cmdline.write_text(command_line + "\n")
-            config.write_text("[Daemon]\nTheme=xsphere\nShowDelay=0\n")
+            config.write_text("[Daemon]\nTheme=spheradian\nShowDelay=0\n")
             result = self.run_script(
-                self.MOTION, XSPHERE_CMDLINE=str(cmdline), XSPHERE_PLYMOUTH_CONF=str(config)
+                self.MOTION, SPHERADIAN_CMDLINE=str(cmdline), SPHERADIAN_PLYMOUTH_CONF=str(config)
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             return read_ini(config)["Daemon"]["Theme"]
 
     def test_reduced_motion_parameter_selects_the_still_theme(self):
-        self.assertEqual(self.select_theme("boot=live quiet splash xsphere.motion=reduced"), STILL)
+        self.assertEqual(self.select_theme("boot=live quiet splash spheradian.motion=reduced"), STILL)
 
     def test_default_command_line_keeps_the_animated_theme(self):
         self.assertEqual(self.select_theme("boot=live quiet splash"), ANIMATED)
-        self.assertEqual(self.select_theme("boot=live xsphere.motion=full splash"), ANIMATED)
+        self.assertEqual(self.select_theme("boot=live spheradian.motion=full splash"), ANIMATED)
 
 
 class ImageRecipe(unittest.TestCase):

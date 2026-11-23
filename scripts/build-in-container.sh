@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build the XSphereOS live ISO inside a Debian container, so the host needs
+# Build the SpheradianOS live ISO inside a Debian container, so the host needs
 # only podman. Use this on non-Debian hosts: Ubuntu ships an old live-build
 # fork that does not understand the options in auto/config.
 # Usage: sudo scripts/build-in-container.sh

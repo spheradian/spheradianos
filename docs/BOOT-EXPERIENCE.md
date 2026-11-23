@@ -1,10 +1,10 @@
-# XSphereOS: Boot Experience
+# SpheradianOS: Boot Experience
 
 Status: **draft for review, pre-implementation**. Nothing described here exists yet. This document builds on [DISTRO-DESIGN.md](DISTRO-DESIGN.md) and follows the rules in [ENGINEERING-PLAN.md](ENGINEERING-PLAN.md).
 
-> Scope note: boot-security design (secure boot, measured boot, threat models) lives in the private `xspherede-security` repository. This document mentions it only at a high level, in section 11.
+> Scope note: boot-security design (secure boot, measured boot, threat models) lives in the private `spheradian-security` repository. This document mentions it only at a high level, in section 11.
 
-> Originality note: this is an original work inspired by a *feeling*: a short, cinematic, sound-and-light-driven moment at power-on that makes the machine feel alive, as in the startup intro of the original Xbox console. It uses **no** Microsoft or Xbox assets, logo, sounds, shapes, colours or trade dress, and it must not be made to resemble them. Every visual and audio element is generated from XSphereOS's own sphere motif and its own code.
+> Originality note: this is an original work inspired by a *feeling*: a short, cinematic, sound-and-light-driven moment at power-on that makes the machine feel alive, as in the startup intro of the original Xbox console. It uses **no** Microsoft or Xbox assets, logo, sounds, shapes, colours or trade dress, and it must not be made to resemble them. Every visual and audio element is generated from SpheradianOS's own sphere motif and its own code.
 
 > Reference note: the reference video was analysed visually, frame by frame, and the findings are in Appendix A. Its audio was not analysed. A second reference video was later analysed for sound by **spectral measurement** (level and frequency content over time, not by listening); the findings are in Appendix B. Both appendices extract *principles*; neither is a shot list or a score to reproduce.
 
@@ -12,7 +12,7 @@ Status: **draft for review, pre-implementation**. Nothing described here exists 
 
 ## 1. Vision
 
-XSphereDE is a sphere: windows live on its surface, trust domains are regions of it, and the Mini-Globe shows it from outside. The boot experience is the **first appearance of that same sphere**, and the desktop is where it ends up. The boot is not an intro video placed in front of the desktop; it is the desktop assembling itself.
+Spheradian is a sphere: windows live on its surface, trust domains are regions of it, and the Mini-Globe shows it from outside. The boot experience is the **first appearance of that same sphere**, and the desktop is where it ends up. The boot is not an intro video placed in front of the desktop; it is the desktop assembling itself.
 
 The sequence, in one sentence: *a seed of light appears in the dark, restless and alive; its own glow reveals the lattice of the sphere around it, region by region, as the system genuinely comes up; when the system is ready the seed releases, its shell sweeps past the viewer, and the viewer is standing inside the lit sphere, which is the desktop*.
 
@@ -43,7 +43,7 @@ Target feel (not a spec of frames): calm, confident, about two to three seconds 
 | 5 | KMS driver load (`i915`, `amdgpu`, `nouveau`, virtio, ...) | Plymouth, switching from `simpledrm` | Plymouth re-opens the real DRM device when it appears (it handles this itself) | A mode change here can flash; mitigated by keeping the same resolution and a dark frame |
 | 6 | Root mount, `systemd` start | Plymouth (`plymouth-start.service`) | Progress events (`plymouth update-root-fs`, status messages) feed the theme | Live image: root is a squashfs overlay (`live-boot`) |
 | 7 | Services up (`seatd`/`logind`, PipeWire, network) | Plymouth until takeover | Real unit readiness drives the sphere's surface lighting | Section 4 |
-| 8 | Compositor start (`xspherede`) | Hand-off from Plymouth to the compositor | DRM master hand-over without a visible modeset; compositor renders the matching first frame | Section 5 |
+| 8 | Compositor start (`spheradian`) | Hand-off from Plymouth to the compositor | DRM master hand-over without a visible modeset; compositor renders the matching first frame | Section 5 |
 | 9 | Session running | Compositor | The "unfolding" transition into the desktop; the arrival sound | Input is live from the first desktop frame |
 
 ### 2.1 Mechanisms, with the realistic options for each hook
@@ -57,7 +57,7 @@ Target feel (not a spec of frames): calm, confident, about two to three seconds 
 | Option | Description | Pros | Cons |
 |---|---|---|---|
 | A. Plymouth only | Plymouth draws everything and `plymouth quit` before the session | Simplest, already packaged | Visible discontinuity at hand-off; no GPU 3D; the end of the intro is not the desktop |
-| B. **Plymouth then compositor intro (recommended)** | Plymouth carries stages 4 to 7 with a 2D approximation of the sphere. `xspherede` starts early and renders the final "gather and unfold" itself with the real renderer, starting from the frame Plymouth ended on | Real continuity; the intro ends *as* the desktop; reuses existing wgpu sphere code | Needs compositor work (depends on roadmap item "native Wayland compositor"); needs the hand-off protocol of section 5 |
+| B. **Plymouth then compositor intro (recommended)** | Plymouth carries stages 4 to 7 with a 2D approximation of the sphere. `spheradian` starts early and renders the final "gather and unfold" itself with the real renderer, starting from the frame Plymouth ended on | Real continuity; the intro ends *as* the desktop; reuses existing wgpu sphere code | Needs compositor work (depends on roadmap item "native Wayland compositor"); needs the hand-off protocol of section 5 |
 | C. Custom KMS splash daemon | A small Rust program replaces Plymouth, drawing via dumb buffers or a tiny software rasteriser | Full control, one codebase, testable pure core | Re-implements password prompts, serial handling, multi-monitor; large maintenance cost. Revisit only if Plymouth proves limiting |
 
 **Decision (proposed):** option B. Option A is the fallback and the M0 to M1 stopping point. Option C is deferred and tracked as an open question.
@@ -112,7 +112,7 @@ Boot progress that moves backwards, or a splash that outlives the boot, is a bug
 
 The classic flicker has three causes: a second modeset, a blank frame while DRM master changes owner, and a visual discontinuity (a different background or object). The plan addresses each.
 
-1. **Ordering.** `xspherede.service` is ordered after `plymouth-start.service`. Before taking the DRM device it runs `plymouth deactivate`, which releases DRM master but leaves the last frame scanned out on the display. After its first frame is presented it runs `plymouth quit --retain-splash`, so Plymouth never clears the screen.
+1. **Ordering.** `spheradian.service` is ordered after `plymouth-start.service`. Before taking the DRM device it runs `plymouth deactivate`, which releases DRM master but leaves the last frame scanned out on the display. After its first frame is presented it runs `plymouth quit --retain-splash`, so Plymouth never clears the screen.
 2. **No visible modeset.** The compositor reuses the resolution and refresh rate already active, and commits its first frame with an atomic commit that does not require a full modeset when the existing configuration already matches. If it does not match, it falls back to a normal modeset on a dark frame.
 3. **Deterministic first frame.** Rather than reading the previous framebuffer back (which needs privileges and driver support), the compositor *recomputes* the frame Plymouth ended on. Both consume the same small timeline description (a data file generated at image build time), and the final Plymouth frame is a known function of the timeline position. The compositor starts its intro at exactly that position.
 4. **Session start does not wait for the show.** The compositor accepts input and shows windows as soon as it is ready; the unfold animation runs *on top of* a live desktop and can be interrupted by any input (section 8).
@@ -127,7 +127,7 @@ Failure handling: if the compositor fails to start, `plymouth quit` runs through
 
 | Item | Budget | How measured |
 |---|---|---|
-| Added wall-clock boot time versus splash disabled | at most 150 ms, target 0 | `systemd-analyze` and QEMU boot-time comparison, splash on versus `xsphere.splash=off` |
+| Added wall-clock boot time versus splash disabled | at most 150 ms, target 0 | `systemd-analyze` and QEMU boot-time comparison, splash on versus `spheradian.splash=off` |
 | Added initramfs size | at most 1.5 MB compressed | size check in image build |
 | Theme assets in the image | at most 64 KiB, no binary audio (section 6.4) | static test |
 | First splash frame | within 1 s of the kernel starting on KVM-accelerated QEMU | timestamped log marker versus kernel start |
@@ -147,7 +147,7 @@ If a budget is exceeded, the build fails or the effect is cut, not the budget.
 
 | Tier | Selected when | Experience |
 |---|---|---|
-| 0. Text | `xsphere.splash=off`, `plymouth.enable=0`, no KMS or framebuffer, serial-only console, or any failure | Plain kernel and `systemd` status text. The mandatory baseline |
+| 0. Text | `spheradian.splash=off`, `plymouth.enable=0`, no KMS or framebuffer, serial-only console, or any failure | Plain kernel and `systemd` status text. The mandatory baseline |
 | 1. Static | Reduced-motion enabled, or very slow framebuffer only | One still frame of the sphere on the dark background, then a cross-fade into the desktop |
 | 2. 2D animated | KMS or `simpledrm`, no usable 3D | Plymouth theme: the full sequence drawn in 2D up to the hand-off; the compositor performs a simple fade if it has no GPU path |
 | 3. Full | Compositor starts with a working Vulkan or GL path | Tier 2 plus the compositor "Unfold", the real-renderer sphere and arrival sound |
@@ -160,7 +160,7 @@ A PC has memory and storage to spare, and that is exactly why software for it te
 
 How that was done, and what each technique means here:
 
-| Their constraint or technique | What XSphereOS takes from it |
+| Their constraint or technique | What SpheradianOS takes from it |
 |---|---|
 | No room for a recording, so the sound is *generated*: a text note list drives a synthesizer | The boot sound is a score plus a tiny synth, never an audio file. A 12.5 s stereo recording would be about 2.2 MiB; the score is a few hundred bytes |
 | Waveforms made by code (sine, sawtooth, noise) cost almost no storage and are full fidelity | All timbres come from code. No samples at all |
@@ -205,7 +205,7 @@ This is a hard rule, and has a test for every clause.
 
 1. Any of the following immediately ends the splash and shows text: `emergency.target` or `rescue.target` reached, a unit in the boot-critical chain fails, the compositor fails to start, the 20 s watchdog fires, a kernel panic or oops (the kernel prints directly to the console, not through the splash), initramfs failing to mount the root.
 2. The text view shows at minimum: what failed, the last relevant journal lines, and how to continue (key hints). It must be legible without the theme's fonts or images.
-3. `Esc` (and the `xsphere.splash=off` command-line parameter) always switch to text details, in every phase and tier. `Esc` is native Plymouth behaviour and is preserved.
+3. `Esc` (and the `spheradian.splash=off` command-line parameter) always switch to text details, in every phase and tier. `Esc` is native Plymouth behaviour and is preserved.
 4. Splash exit is on the same `systemd` ordering Plymouth already provides for failure targets (`plymouth-quit` conflicts), not on a custom timer alone.
 5. The theme may *add* a visual cue for failure. It must never replace or delay the text.
 6. Serial consoles get text always; the splash is not drawn on them.
@@ -218,7 +218,7 @@ This is a hard rule, and has a test for every clause.
 | Concern | Decision |
 |---|---|
 | Skippable | Any key or pointer press during the boot skips the remaining authored motion and, once the session is up, the "Unfold". `Esc` shows text details |
-| Reduced motion | Honoured via `xsphere.motion=reduced` on the kernel command line, a persisted setting from the settings tool, and the desktop's reduced-motion preference. Result: tier 1 (still frame and cross-fade, no rotation or zoom) |
+| Reduced motion | Honoured via `spheradian.motion=reduced` on the kernel command line, a persisted setting from the settings tool, and the desktop's reduced-motion preference. Result: tier 1 (still frame and cross-fade, no rotation or zoom) |
 | Audio | **Off unless enabled** (proposed default for the live image, see section 13). When enabled: only played when the output is not muted and volume is above zero, capped at a low fixed level, never louder than the system volume, short (about 1.5 s), played only after the audio server is up. Never delays the session. A separate, distinct, quiet cue for failure is allowed |
 | Photosensitivity | No full-screen flashing; no more than three flashes per second and no large high-contrast flicker (follow WCAG 2.3.1). A static test checks that the timeline never exceeds the luminance change rate limit |
 | Contrast and legibility | Text diagnostics use high contrast and a plain font, independent of theme assets |
@@ -254,10 +254,10 @@ All run headless against the built ISO, using a serial console plus QMP (`screen
 |---|---|
 | Splash happy path | `plymouthd` starts; at least N non-blank, changing screendumps before hand-off; `plymouth --ping` fails after session start (splash gone); the session unit is active; no failed units |
 | Clean exit | The splash exits within a bounded time after the session is ready; no leftover `plymouthd` process; the last screendump is not a splash frame |
-| Text fallback | With `xsphere.splash=off` and with a serial-only console, no splash is drawn and the boot reaches the same session or console state |
+| Text fallback | With `spheradian.splash=off` and with a serial-only console, no splash is drawn and the boot reaches the same session or console state |
 | Fault injection | A test-only kernel parameter makes a named unit fail (and another makes the compositor fail to start). Assert: the splash ends within the watchdog bound, the failure text appears on the console, the fallback session starts when applicable |
 | Watchdog | Stall a milestone; assert text diagnostics appear at about 20 s |
-| Reduced motion | `xsphere.motion=reduced` yields a static theme state (consecutive screendumps equal) |
+| Reduced motion | `spheradian.motion=reduced` yields a static theme state (consecutive screendumps equal) |
 | Esc key | A scripted `Esc` via QMP switches to text details |
 | Budget | Compare boot time with splash on versus off and record the delta, plus initramfs and asset sizes. Size gates are hard; timing is a trend reported per run, hard-gated only on KVM-capable runners, because emulated timing is noisy |
 | Frame golden (tolerance) | A downscaled screendump at fixed timeline positions compared with a stored reference using a perceptual tolerance, to catch broken themes without pixel-exact brittleness |
@@ -303,7 +303,7 @@ It is *not* new to have a short cinematic boot. The novelty is continuity, hones
 - The splash stack runs early and as root, so it is kept minimal, static and offline, and treats nothing from the network or user media as input.
 - The initramfs and theme assets are part of what a boot-integrity scheme must cover; they must be reproducible and signed with the rest of the image.
 - The splash must never be a place that can mislead the user about system state (for example by hiding a failure or faking a password prompt).
-- Secure boot, measured boot and the threat model are specified in the private `xspherede-security` repository.
+- Secure boot, measured boot and the threat model are specified in the private `spheradian-security` repository.
 
 ---
 
@@ -317,7 +317,7 @@ Mapped to the distro milestones of DISTRO-DESIGN section 9. Each is done only wh
 | B1 | Static brand theme | A minimal Plymouth theme (dark field, still sphere) ships in the live-build recipe; `quiet` boot; text fallback and `Esc` work; QEMU test asserts clean exit and session start; budgets recorded | M0 image |
 | B2 | Animated 2D sequence | Timeline crate with unit and property tests; Ignite, Gather and loop animation in Plymouth; reduced-motion tier; frame-golden tests | B1 |
 | B3 | Honest progress and failure path | Readiness model driven by real events; failure fracture plus text; watchdog; fault-injection tests | B2 |
-| B4 | Compositor hand-off | `xspherede` renders the Resolve and Unfold phases; no-flicker hand-off on QEMU and real hardware; tier 3 and downgrade tests | M2 real compositor |
+| B4 | Compositor hand-off | `spheradian` renders the Resolve and Unfold phases; no-flicker hand-off on QEMU and real hardware; tier 3 and downgrade tests | M2 real compositor |
 | B5 | Procedural audio | Audio synth module, muted-aware playback, tests for the generator output and the gating logic | B4, PipeWire in the image |
 | B6 | Hardening and measurement | Budget measurements on real older hardware; photosensitivity test; manual checklist; password-prompt support | B4 |
 | B7 | First-boot integration | The sequence flows into the first-boot flow inside the sphere | M4 |
@@ -325,13 +325,13 @@ Mapped to the distro milestones of DISTRO-DESIGN section 9. Each is done only wh
 Status of B3 (2026-11-15): implemented and booted. `scripts/boot-test.py` passes in QEMU in four modes: normal, reduced motion, an injected failed unit (`--fault fail`) and an injected stall (`--fault stall`).
 
 - *Honest progress.* systemd tells Plymouth the name of each service that finishes starting; six of them are milestones, and each wakes one 60 degree slice of the lattice in its own colour (`MILESTONES` in `scripts/boot_timeline.py`). Seen in captures: regions wake during a normal boot, and all six are awake in the stalled boot. The reduced-motion frame changes colour without animating.
-- *Failure path.* `/usr/lib/xsphereos/boot-watch` runs only while the splash is up and checks once a second. A failed unit, or 20 s without a change in systemd's job queue, ends the splash and prints the cause on the console; the same text is kept in `/run/xsphereos/boot-report` and repeated at each login. In the stall test the console showed the jobs still being waited for. In the failure test the unit failed in the splash's last moment, so the report appeared on the console about a second after the login prompt.
+- *Failure path.* `/usr/lib/spheradianos/boot-watch` runs only while the splash is up and checks once a second. A failed unit, or 20 s without a change in systemd's job queue, ends the splash and prints the cause on the console; the same text is kept in `/run/spheradianos/boot-report` and repeated at each login. In the stall test the console showed the jobs still being waited for. In the failure test the unit failed in the splash's last moment, so the report appeared on the console about a second after the login prompt.
 - *Found by looking at captures, not by the test.* The first version missed a unit that failed between two checks just as the splash left; the boot test passed anyway because it only checked that a console appeared. The watch now checks once more after the splash is gone, and the test asserts that the report file exists after an injected failure and is absent after a healthy boot.
 - *Deviations.* No "fracture" visual: the text takes over the screen, so there is no time for it; only the text contract is implemented. Failures are detected by polling once a second rather than by subscription, so the report can lag by up to a second. The watchdog covers the systemd phase only; a stall in the initramfs is handled by initramfs-tools' own timeout and panic path, which has not been tested here.
 
-Status of B2 (2026-11-15): implemented and booted. `scripts/boot-test.py` passes in QEMU in both modes: the splash animates by default and is a still frame with `xsphere.motion=reduced`; in both it exits to a readable console and the session starts. Time from the boot menu to the console, median of five KVM runs each: 7.03 s animated, 7.35 s still, 7.03 s with the splash disabled. The spread between runs (about 0.4 s) is larger than any difference, so the animation's cost is below what this method can resolve; the 150 ms budget is not yet proven and needs a finer measurement. Known blemish: a text-mode cursor is visible for a fraction of a second between the boot menu and the first splash frame. The theme is now animated (Ignite, Gather, endless loop) with a reduced-motion variant selected by `xsphere.motion=reduced`. Deviations from the row above: the timeline is a tested Python module (`scripts/boot_timeline.py`) rather than a Rust crate, because its only consumer today is the theme generator and this repository has no Rust toolchain; it moves to Rust when the compositor needs it (B4, open question 7). The lattice is drawn as dots, not lines, because Plymouth's script plugin can only place images; this keeps the whole theme at about 12 KiB with no stored frames. Frame-golden tests are replaced by a motion check in `scripts/boot-test.py` (frames differ when animated, are identical when reduced), since QEMU timing is not deterministic enough for golden frames.
+Status of B2 (2026-11-15): implemented and booted. `scripts/boot-test.py` passes in QEMU in both modes: the splash animates by default and is a still frame with `spheradian.motion=reduced`; in both it exits to a readable console and the session starts. Time from the boot menu to the console, median of five KVM runs each: 7.03 s animated, 7.35 s still, 7.03 s with the splash disabled. The spread between runs (about 0.4 s) is larger than any difference, so the animation's cost is below what this method can resolve; the 150 ms budget is not yet proven and needs a finer measurement. Known blemish: a text-mode cursor is visible for a fraction of a second between the boot menu and the first splash frame. The theme is now animated (Ignite, Gather, endless loop) with a reduced-motion variant selected by `spheradian.motion=reduced`. Deviations from the row above: the timeline is a tested Python module (`scripts/boot_timeline.py`) rather than a Rust crate, because its only consumer today is the theme generator and this repository has no Rust toolchain; it moves to Rust when the compositor needs it (B4, open question 7). The lattice is drawn as dots, not lines, because Plymouth's script plugin can only place images; this keeps the whole theme at about 12 KiB with no stored frames. Frame-golden tests are replaced by a motion check in `scripts/boot-test.py` (frames differ when animated, are identical when reduced), since QEMU timing is not deterministic enough for golden frames.
 
-Status of B1 (2026-11-15): implemented. The `xsphere` Plymouth theme ships in the recipe and `scripts/boot-test.py` passes against a built ISO in QEMU (BIOS boot, KVM): splash shown, clean exit to a readable console, session starts. Not yet done from the B1 row: recording the timing and initramfs budgets, an automated `Esc` check, and a text-fallback boot test. The bootloader menu still shows live-build's default artwork.
+Status of B1 (2026-11-15): implemented. The `spheradian` Plymouth theme ships in the recipe and `scripts/boot-test.py` passes against a built ISO in QEMU (BIOS boot, KVM): splash shown, clean exit to a readable console, session starts. Not yet done from the B1 row: recording the timing and initramfs budgets, an automated `Esc` check, and a text-fallback boot test. The bootloader menu still shows live-build's default artwork.
 
 ---
 
@@ -341,14 +341,14 @@ For the user, about the vision:
 
 1. **The reference video.** The visual analysis is in Appendix A. Sound character is answered (bright, organic, rising, pleasant ending; see section 3). Still needed from the user: is the reading of the visual principles right?
 2. **Duration.** Is a short sequence (about 2 to 3 s of authored motion that overlaps the boot) right, or should a longer, fixed-length intro be possible as an option, understanding that it would delay the session?
-3. **Colour identity.** Which palette is the sphere's? Recommendation: *not* a single glowing green on black, because that is the reference's signature look and XSphereDE's code-rain green would land very close to it. Proposed instead: a near-neutral seed with the trust-domain colours emerging region by region.
+3. **Colour identity.** Which palette is the sphere's? Recommendation: *not* a single glowing green on black, because that is the reference's signature look and Spheradian's code-rain green would land very close to it. Proposed instead: a near-neutral seed with the trust-domain colours emerging region by region.
 4. **Audio default.** Proposed: off on the live image, with a first-boot choice to enable it. Acceptable, or should it be on by default when the system is not muted?
 
 For engineering:
 
 5. Plymouth then compositor (option B) versus a custom splash daemon (option C): confirm B for now.
 6. Where does the persisted reduced-motion and tier setting live so the initramfs can read it, given the live image is stateless? (Proposal: command line on the live image, a file embedded in the initramfs by a hook on an installed system.)
-7. How is the timeline description shared between the Plymouth script (limited language) and the compositor, and which crate owns it (the `xsphereos` repository or `xspherede`)?
+7. How is the timeline description shared between the Plymouth script (limited language) and the compositor, and which crate owns it (the `spheradianos` repository or `spheradian`)?
 8. Does the readiness helper after the root switch subscribe to `systemd` over D-Bus, or is a simpler unit-ordering-based signal enough?
 9. Spoken or tonal diagnostics for blind users: in scope, or a later milestone?
 10. Is the KVM-capable runner available for hard timing gates, or are timing measurements trend-only (ENGINEERING-PLAN open question 4)?
@@ -389,7 +389,7 @@ Structure: about 1 s of darkness, about 5.5 s of action, about 3 s of hold.
 8. **A long, calm hold.** Roughly a third of the running time is a static frame, letting the moment land.
 9. **Fixed length, canned content.** The sequence appears to be the same every time and does not reflect what the machine is doing.
 
-### A.3 How XSphereOS uses each principle, and where it goes further
+### A.3 How SpheradianOS uses each principle, and where it goes further
 
 | Principle | Kept | Changed or surpassed |
 |---|---|---|
@@ -448,11 +448,11 @@ Source: a second reference video from the user, a capture of the original Xbox c
 8. **One sonic world.** The boot sound and the menu ambience share the same low register, so the boot flows into the environment.
 9. **Interface tones stay soft.** Pure, mid-range, short, a consonant interval apart: informative without fatigue.
 
-### B.4 Using this in XSphereOS
+### B.4 Using this in SpheradianOS
 
 The approved sound (section 3) is deliberately gentle: bells, a pad and a chord. These principles can add impact *around* it without changing its character:
 
-| Principle | Proposal for XSphereOS |
+| Principle | Proposal for SpheradianOS |
 |---|---|
 | 1, 6 | Keep the silence before the first note; place the strongest moment exactly on the Unfold release |
 | 2 | A soft, round low "bloom" under the release chord, with a doubling an octave up so it survives small speakers; never a harsh thump |

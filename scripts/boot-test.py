@@ -36,10 +36,10 @@ STALL_HOLD = 8.0  # well past a normal boot, well before the watchdog
 WATCHDOG_TIMEOUT = 40.0  # the watchdog fires after 20 s without progress
 POLL = 0.5
 JOURNAL_TIMEOUT = 120.0  # the guest copies its journal 60 s after reaching multi-user
-JOURNAL_END = "=== xsphereos-test-journal: end ==="
+JOURNAL_END = "=== spheradianos-test-journal: end ==="
 KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal", "-": "minus", "/": "slash"}
 SHIFTED = {"&": "7", "|": "backslash"}  # US layout, the live image default
-REPORT = "/run/xsphereos/boot-report"
+REPORT = "/run/spheradianos/boot-report"
 MOTION_SAMPLES = 6
 OVMF_CODE = Path("/usr/share/OVMF/OVMF_CODE_4M.fd")
 OVMF_VARS = Path("/usr/share/OVMF/OVMF_VARS_4M.fd")
@@ -93,11 +93,11 @@ class Guest:
                 "-qmp",
                 f"unix:{sock},server,nowait",
                 # The image copies the session journal to this port when it sees the
-                # fw_cfg entry below (config/includes.chroot/usr/lib/xsphereos/test-journal).
+                # fw_cfg entry below (config/includes.chroot/usr/lib/spheradianos/test-journal).
                 "-serial",
                 f"file:{self.serial_log}",
                 "-fw_cfg",
-                "name=opt/xsphereos/test-journal,string=1",
+                "name=opt/spheradianos/test-journal,string=1",
             ]
         )
         self.channel = self._connect(sock)
@@ -240,13 +240,13 @@ def wait_until(predicate, guest, timeout, shots, label):
 def report_timeout(label, frame):
     """Say what was on screen when a check gave up; CI keeps no recording of the guest.
 
-    With XSPHERE_TEST_FAILURE_SHOTS set, the last screenshot is also kept there.
+    With SPHERADIAN_TEST_FAILURE_SHOTS set, the last screenshot is also kept there.
     """
     if frame is None:
         print(f"{label}: timed out before any screenshot", file=sys.stderr)
         return
     print(f"{label}: timed out; last screen: {frame.summary()}", file=sys.stderr)
-    folder = os.environ.get("XSPHERE_TEST_FAILURE_SHOTS")
+    folder = os.environ.get("SPHERADIAN_TEST_FAILURE_SHOTS")
     if folder:
         path = Path(folder)
         path.mkdir(parents=True, exist_ok=True)
@@ -280,7 +280,7 @@ def splash_moves(guest):
     return verdict
 
 
-SESSION_UNIT = ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "xsphere-session.service"
+SESSION_UNIT = ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "spheradian-session.service"
 
 
 def boot_parameters(console=False, reduced_motion=False, fault=None, session_installed=False):
@@ -291,11 +291,11 @@ def boot_parameters(console=False, reduced_motion=False, fault=None, session_ins
     """
     parameters = []
     if console or (fault and session_installed):
-        parameters.append("xsphere.session=console")
+        parameters.append("spheradian.session=console")
     if reduced_motion:
-        parameters.append("xsphere.motion=reduced")
+        parameters.append("spheradian.motion=reduced")
     if fault:
-        parameters.append(f"xsphere.test.{fault}")
+        parameters.append(f"spheradian.test.{fault}")
     return parameters
 
 
@@ -340,7 +340,7 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
             if graphical_m1:
                 # The kiosk owns tty1, so the screen cannot prove the session runs (a
                 # restart loop left it black, and early boot text once passed for it).
-                # Ask the guest's journal instead (config/.../xsphereos/test-journal).
+                # Ask the guest's journal instead (config/.../spheradianos/test-journal).
                 running, client = session_state(wait_for_journal(guest, JOURNAL_TIMEOUT))
                 if client:
                     print(f"graphical session shows: {client}", file=sys.stderr)
@@ -384,20 +384,20 @@ def wait_for_journal(guest, timeout):
 
 
 def session_state(journal):
-    """Return (running, client) for xsphere-session from the guest journal copy.
+    """Return (running, client) for spheradian-session from the guest journal copy.
 
     Running means systemd reports it active and it never exited, so a restart
     loop caught between two attempts does not pass. The client is what cage shows.
     """
-    if "xsphere-session.service: Main process exited" in journal:
+    if "spheradian-session.service: Main process exited" in journal:
         return False, None
-    status = journal.split("=== xsphereos-test-journal: unit states ===", 1)[-1]
+    status = journal.split("=== spheradianos-test-journal: unit states ===", 1)[-1]
     if "Active: active (running)" not in status:
         return False, None
     if "cage -s -- /usr/bin/foot" in status:
         return True, "foot (fallback)"
-    if "/usr/bin/xspherede" in status:
-        return True, "xspherede"
+    if "/usr/bin/spheradian" in status:
+        return True, "spheradian"
     return True, None
 
 
@@ -477,7 +477,7 @@ def main():
     parser.add_argument(
         "--reduced-motion",
         action="store_true",
-        help="boot with xsphere.motion=reduced and expect a still splash",
+        help="boot with spheradian.motion=reduced and expect a still splash",
     )
     parser.add_argument(
         "--fault",
@@ -488,7 +488,7 @@ def main():
     parser.add_argument(
         "--console",
         action="store_true",
-        help="boot with xsphere.session=console to test the tty1 shell path",
+        help="boot with spheradian.session=console to test the tty1 shell path",
     )
     options = parser.parse_args()
     if options.shots:

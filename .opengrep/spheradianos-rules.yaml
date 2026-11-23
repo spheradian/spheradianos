@@ -1,5 +1,5 @@
 rules:
-  - id: xsphereos-python-subprocess-shell-true
+  - id: spheradianos-python-subprocess-shell-true
     languages: [python]
     severity: ERROR
     message: Do not invoke subprocess with shell=True; pass an explicit argv list instead.
@@ -12,7 +12,7 @@ rules:
       - pattern: subprocess.check_call(..., shell=True, ...)
       - pattern: subprocess.check_output(..., shell=True, ...)
 
-  - id: xsphereos-python-dangerous-exec
+  - id: spheradianos-python-dangerous-exec
     languages: [python]
     severity: ERROR
     message: Avoid dynamic code execution (eval, exec, os.system).
@@ -23,7 +23,7 @@ rules:
       - pattern: exec(...)
       - pattern: os.system(...)
 
-  - id: xsphereos-shell-curl-pipe-sh
+  - id: spheradianos-shell-curl-pipe-sh
     languages: [bash]
     severity: ERROR
     message: Do not pipe remote curl/wget output directly into a shell interpreter.
@@ -39,7 +39,7 @@ rules:
       - pattern: wget ... | bash
       - pattern: wget ... | bash ...
 
-  - id: xsphereos-shell-chmod-world-writable
+  - id: spheradianos-shell-chmod-world-writable
     languages: [bash]
     severity: ERROR
     message: Do not set world-writable permissions in image or build scripts.
@@ -55,7 +55,7 @@ rules:
       - pattern: chmod o+w ...
       - pattern: chmod -R o+w ...
 
-  - id: xsphereos-workflow-no-pull-request-target
+  - id: spheradianos-workflow-no-pull-request-target
     languages: [yaml]
     severity: ERROR
     paths:

@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-`mendsec/xsphereos` had design documentation and local tests but no GitHub issue tracking, milestones, or project board. We decided to structure project continuity natively on GitHub using Milestones (`M0`–`M5`), granular Issues, area/type/priority Labels, and a linked GitHub Project (`XSphereOS — Roadmap`).
+`mendsec/spheradianos` had design documentation and local tests but no GitHub issue tracking, milestones, or project board. We decided to structure project continuity natively on GitHub using Milestones (`M0`–`M5`), granular Issues, area/type/priority Labels, and a linked GitHub Project (`SpheradianOS — Roadmap`).
 
 ## 2. Context and Problem
 
@@ -18,8 +18,8 @@ Without decomposed milestones and acceptance criteria, M1/M2 work risked startin
 
 ## 3. Scope
 
-- **In scope:** GitHub Milestones (`M0`–`M5`), Issues (`#1`–`#14`), Labels, and Project `#5` (`XSphereOS — Roadmap`) in `mendsec/xsphereos`.
-- **Out of scope:** Detailed threat models and hardening specifics, which remain in the private `xspherede-security` repository.
+- **In scope:** GitHub Milestones (`M0`–`M5`), Issues (`#1`–`#14`), Labels, and Project `#5` (`SpheradianOS — Roadmap`) in `mendsec/spheradianos`.
+- **Out of scope:** Detailed threat models and hardening specifics, which remain in the private `spheradian-security` repository.
 
 ## 4. Options Considered
 
@@ -29,7 +29,7 @@ Without decomposed milestones and acceptance criteria, M1/M2 work risked startin
 
 ## 5. Decision
 
-Adopt **Option A**. All roadmap deliverables are tracked as Issues assigned to Milestones `M0` through `M5` and organized in `XSphereOS — Roadmap`. Open architectural choices are tracked with the `type:adr` label (`#8`, `#11`) and resolved before adding new packages to `config/package-lists/`.
+Adopt **Option A**. All roadmap deliverables are tracked as Issues assigned to Milestones `M0` through `M5` and organized in `SpheradianOS — Roadmap`. Open architectural choices are tracked with the `type:adr` label (`#8`, `#11`) and resolved before adding new packages to `config/package-lists/`.
 
 ## 6. Consequences and Trade-offs
 
@@ -38,4 +38,4 @@ Adopt **Option A**. All roadmap deliverables are tracked as Issues assigned to M
 
 ## 7. Security and Compliance
 
-`mendsec/xsphereos` and Project `#5` remain private. No sensitive security findings from `xspherede-security` are mirrored in GitHub Issues.
+`mendsec/spheradianos` and Project `#5` remain private. No sensitive security findings from `spheradian-security` are mirrored in GitHub Issues.

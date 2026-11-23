@@ -2,12 +2,12 @@
 # boot test asks for it (scripts/boot-test.py sets a fw_cfg entry that real
 # hardware never has), so a CI failure shows why the session did not start.
 [Unit]
-Description=XSphereOS boot test: session journal to the serial port
+Description=SpheradianOS boot test: session journal to the serial port
 ConditionVirtualization=vm
 
 [Service]
 Type=simple
-ExecStart=/usr/lib/xsphereos/test-journal
+ExecStart=/usr/lib/spheradianos/test-journal
 
 [Install]
 WantedBy=multi-user.target

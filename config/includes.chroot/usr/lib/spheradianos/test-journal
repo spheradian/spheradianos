@@ -7,7 +7,7 @@
 # exits at once on real hardware and in any other virtual machine.
 set -u
 
-flag=/sys/firmware/qemu_fw_cfg/by_name/opt/xsphereos/test-journal/raw
+flag=/sys/firmware/qemu_fw_cfg/by_name/opt/spheradianos/test-journal/raw
 
 modprobe qemu_fw_cfg 2>/dev/null || true
 [ -e "$flag" ] || exit 0
@@ -16,14 +16,14 @@ modprobe qemu_fw_cfg 2>/dev/null || true
 sleep 60
 
 {
-	echo "=== xsphereos-test-journal: session units ==="
+	echo "=== spheradianos-test-journal: session units ==="
 	journalctl -b --no-pager -o short-monotonic \
-		-u xsphere-session.service -u seatd.service -u systemd-logind.service \
+		-u spheradian-session.service -u seatd.service -u systemd-logind.service \
 		-u plymouth-quit.service -u plymouth-quit-wait.service
-	echo "=== xsphereos-test-journal: unit states ==="
+	echo "=== spheradianos-test-journal: unit states ==="
 	systemctl --no-pager --failed
-	systemctl --no-pager status --full xsphere-session.service
-	echo "=== xsphereos-test-journal: kernel graphics ==="
+	systemctl --no-pager status --full spheradian-session.service
+	echo "=== spheradianos-test-journal: kernel graphics ==="
 	journalctl -b --no-pager -o short-monotonic -k --grep 'drm|fb|virtio|simpledrm'
-	echo "=== xsphereos-test-journal: end ==="
+	echo "=== spheradianos-test-journal: end ==="
 } >/dev/ttyS0 2>&1

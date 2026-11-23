@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-The default `live-build` bootloader templates (`grub-efi` and `syslinux/isolinux`) pause indefinitely at interactive boot menus, contradicting the XSphereOS goal of booting straight into the desktop (`docs/BOOT-EXPERIENCE.md` §2). Rather than building a custom bootloader, we will override the `live-build` templates under `config/bootloaders/` to boot immediately with hidden/zero-timeout defaults while preserving key-triggered recovery access.
+The default `live-build` bootloader templates (`grub-efi` and `syslinux/isolinux`) pause indefinitely at interactive boot menus, contradicting the SpheradianOS goal of booting straight into the desktop (`docs/BOOT-EXPERIENCE.md` §2). Rather than building a custom bootloader, we will override the `live-build` templates under `config/bootloaders/` to boot immediately with hidden/zero-timeout defaults while preserving key-triggered recovery access.
 
 ## 2. Context and Problem
 

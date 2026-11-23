@@ -8,19 +8,19 @@
 # reported. The same text is kept in a file for later display.
 set -eu
 
-plymouth="${XSPHERE_PLYMOUTH:-plymouth}"
-systemctl="${XSPHERE_SYSTEMCTL:-systemctl}"
-pause="${XSPHERE_SLEEP:-sleep}"
-console="${XSPHERE_CONSOLE:-/dev/console}"
-report_file="${XSPHERE_REPORT:-/run/xsphereos/boot-report}"
-stall_limit="${XSPHERE_STALL_SECONDS:-20}"
+plymouth="${SPHERADIAN_PLYMOUTH:-plymouth}"
+systemctl="${SPHERADIAN_SYSTEMCTL:-systemctl}"
+pause="${SPHERADIAN_SLEEP:-sleep}"
+console="${SPHERADIAN_CONSOLE:-/dev/console}"
+report_file="${SPHERADIAN_REPORT:-/run/spheradianos/boot-report}"
+stall_limit="${SPHERADIAN_STALL_SECONDS:-20}"
 
 # Says what is wrong. The text must be readable without the theme.
 report() {
 	mkdir -p "$(dirname "$report_file")"
 	{
 		printf '\n'
-		printf 'XSphereOS: %s\n\n' "$1"
+		printf 'SpheradianOS: %s\n\n' "$1"
 		printf '%s\n\n' "$2"
 		printf 'Full log: journalctl -b    Unit details: systemctl status UNIT\n\n'
 	} | tee "$report_file" >"$console"

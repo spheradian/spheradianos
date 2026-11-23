@@ -17,10 +17,10 @@ prereqs)
 esac
 
 [ -n "${DESTDIR:-}" ] || {
-	echo "xsphereos-splash-themes: DESTDIR is not set" >&2
+	echo "spheradianos-splash-themes: DESTDIR is not set" >&2
 	exit 1
 }
 
-themes="${XSPHERE_THEMES:-/usr/share/plymouth/themes}"
+themes="${SPHERADIAN_THEMES:-/usr/share/plymouth/themes}"
 mkdir -p "${DESTDIR}/usr/share/plymouth/themes"
-cp -r "${themes}/xsphere-still" "${DESTDIR}/usr/share/plymouth/themes/"
+cp -r "${themes}/spheradian-still" "${DESTDIR}/usr/share/plymouth/themes/"

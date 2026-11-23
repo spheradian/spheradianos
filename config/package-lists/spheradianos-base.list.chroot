@@ -1,4 +1,4 @@
-# XSphereOS M0 base manifest.
+# SpheradianOS M0 base manifest.
 # Rule: every package has a one-line justification on the comment line directly above it.
 # No justification, no package. Inline comments are not allowed: live-build passes them to apt.
 # live-boot / live-config / the kernel are added by live-build itself.
@@ -54,10 +54,10 @@ systemd-zram-generator
 # lightweight Wayland seat management without a display manager (M1, ADR-007)
 seatd
 
-# minimal Wayland-only kiosk compositor to host the M1 xspherede prototype (ADR-007)
+# minimal Wayland-only kiosk compositor to host the M1 spheradian prototype (ADR-007)
 cage
 
-# Vulkan/Lavapipe Mesa drivers required by wgpu in xspherede (M1, ADR-007)
+# Vulkan/Lavapipe Mesa drivers required by wgpu in spheradian (M1, ADR-007)
 mesa-vulkan-drivers
 
 # EGL/Mesa fallback drivers for Wayland kiosk rendering (M1, ADR-007)

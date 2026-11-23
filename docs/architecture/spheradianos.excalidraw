@@ -28,14 +28,14 @@
       "updated": 1763480000000,
       "link": null,
       "locked": false,
-      "text": "XSphereOS — Layered System Architecture (M0–M5)",
+      "text": "SpheradianOS — Layered System Architecture (M0–M5)",
       "fontSize": 28,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 25,
       "containerId": null,
-      "originalText": "XSphereOS — Layered System Architecture (M0–M5)"
+      "originalText": "SpheradianOS — Layered System Architecture (M0–M5)"
     },
     {
       "id": "l4-box",
@@ -148,14 +148,14 @@
       "updated": 1763480000000,
       "link": null,
       "locked": false,
-      "text": "LAYER 3: Compositor & Session — mendsec/xspherede (Public MIT, ADR-003)\n• xspherede (Smithay + wgpu, safe Rust, unsafe forbidden, no X11/Xwayland)\n• Pure Core: input, state, commands, WindowSurfaceProvider (unit-testable without GPU)\n• Fallback Flat Wayland Session (M1, #5) when Vulkan/GL is unavailable",
+      "text": "LAYER 3: Compositor & Session — mendsec/spheradian (Public MIT, ADR-003)\n• spheradian (Smithay + wgpu, safe Rust, unsafe forbidden, no X11/Xwayland)\n• Pure Core: input, state, commands, WindowSurfaceProvider (unit-testable without GPU)\n• Fallback Flat Wayland Session (M1, #5) when Vulkan/GL is unavailable",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 14,
       "containerId": null,
-      "originalText": "LAYER 3: Compositor & Session — mendsec/xspherede (Public MIT, ADR-003)\n• xspherede (Smithay + wgpu, safe Rust, unsafe forbidden, no X11/Xwayland)\n• Pure Core: input, state, commands, WindowSurfaceProvider (unit-testable without GPU)\n• Fallback Flat Wayland Session (M1, #5) when Vulkan/GL is unavailable"
+      "originalText": "LAYER 3: Compositor & Session — mendsec/spheradian (Public MIT, ADR-003)\n• spheradian (Smithay + wgpu, safe Rust, unsafe forbidden, no X11/Xwayland)\n• Pure Core: input, state, commands, WindowSurfaceProvider (unit-testable without GPU)\n• Fallback Flat Wayland Session (M1, #5) when Vulkan/GL is unavailable"
     },
     {
       "id": "l2-box",
@@ -208,14 +208,14 @@
       "updated": 1763480000000,
       "link": null,
       "locked": false,
-      "text": "LAYER 2: Debian minbase Substrate — mendsec/xsphereos (Private)\n• Core OS (M0): Debian trixie minbase, systemd, dbus, udev, seatd/logind (no Recommends)\n• Media & Net (M1–M3): Mesa Vulkan/GL, PipeWire/WirePlumber, NetworkManager vs iwd (#8, #10)\n• Packaging & Install (M4, #11, #12): Signed APT repo, xsphereos-base metapackage, Installer",
+      "text": "LAYER 2: Debian minbase Substrate — mendsec/spheradianos (Private)\n• Core OS (M0): Debian trixie minbase, systemd, dbus, udev, seatd/logind (no Recommends)\n• Media & Net (M1–M3): Mesa Vulkan/GL, PipeWire/WirePlumber, NetworkManager vs iwd (#8, #10)\n• Packaging & Install (M4, #11, #12): Signed APT repo, spheradianos-base metapackage, Installer",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 14,
       "containerId": null,
-      "originalText": "LAYER 2: Debian minbase Substrate — mendsec/xsphereos (Private)\n• Core OS (M0): Debian trixie minbase, systemd, dbus, udev, seatd/logind (no Recommends)\n• Media & Net (M1–M3): Mesa Vulkan/GL, PipeWire/WirePlumber, NetworkManager vs iwd (#8, #10)\n• Packaging & Install (M4, #11, #12): Signed APT repo, xsphereos-base metapackage, Installer"
+      "originalText": "LAYER 2: Debian minbase Substrate — mendsec/spheradianos (Private)\n• Core OS (M0): Debian trixie minbase, systemd, dbus, udev, seatd/logind (no Recommends)\n• Media & Net (M1–M3): Mesa Vulkan/GL, PipeWire/WirePlumber, NetworkManager vs iwd (#8, #10)\n• Packaging & Install (M4, #11, #12): Signed APT repo, spheradianos-base metapackage, Installer"
     },
     {
       "id": "l1-box",
@@ -268,14 +268,14 @@
       "updated": 1763480000000,
       "link": null,
       "locked": false,
-      "text": "LAYER 1: Boot Chain & Early Experience (M0 / M2)\n• Bootloaders (ADR-002, #14): GRUB-EFI & ISOLINUX zero-prompt (timeout=0, Shift for fail-safe)\n• Kernel: linux-image-amd64 + simpledrm -> native KMS handover (quiet loglevel=3)\n• Plymouth xsphere (~18 KiB): arithmetic lattice, 20s watchdog, flicker-free hand-off B4 (#7)",
+      "text": "LAYER 1: Boot Chain & Early Experience (M0 / M2)\n• Bootloaders (ADR-002, #14): GRUB-EFI & ISOLINUX zero-prompt (timeout=0, Shift for fail-safe)\n• Kernel: linux-image-amd64 + simpledrm -> native KMS handover (quiet loglevel=3)\n• Plymouth spheradian (~18 KiB): arithmetic lattice, 20s watchdog, flicker-free hand-off B4 (#7)",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 14,
       "containerId": null,
-      "originalText": "LAYER 1: Boot Chain & Early Experience (M0 / M2)\n• Bootloaders (ADR-002, #14): GRUB-EFI & ISOLINUX zero-prompt (timeout=0, Shift for fail-safe)\n• Kernel: linux-image-amd64 + simpledrm -> native KMS handover (quiet loglevel=3)\n• Plymouth xsphere (~18 KiB): arithmetic lattice, 20s watchdog, flicker-free hand-off B4 (#7)"
+      "originalText": "LAYER 1: Boot Chain & Early Experience (M0 / M2)\n• Bootloaders (ADR-002, #14): GRUB-EFI & ISOLINUX zero-prompt (timeout=0, Shift for fail-safe)\n• Kernel: linux-image-amd64 + simpledrm -> native KMS handover (quiet loglevel=3)\n• Plymouth spheradian (~18 KiB): arithmetic lattice, 20s watchdog, flicker-free hand-off B4 (#7)"
     },
     {
       "id": "side-box",
@@ -328,14 +328,14 @@
       "updated": 1763480000000,
       "link": null,
       "locked": false,
-      "text": "DEVSECOPS & GOVERNANCE\n\nStatic Gates (#2):\n• shellcheck, shfmt\n• python3 unittest\n• manifest/config checks\n• cargo audit / deny\n• gitleaks, zizmor\n\nQEMU Boot Tests (#6):\n• boot-test.py (normal,\n  reduced, fail, stall)\n• ISO & pkg budget (#1)\n\nSupply Chain (M4, #12):\n• Pinned Debian snapshot\n• CycloneDX SBOM\n• Artifact signing\n• Reproducible build diff\n\nPrivate Security Repo:\n• xspherede-security\n  (threat models, audits)",
+      "text": "DEVSECOPS & GOVERNANCE\n\nStatic Gates (#2):\n• shellcheck, shfmt\n• python3 unittest\n• manifest/config checks\n• cargo audit / deny\n• gitleaks, zizmor\n\nQEMU Boot Tests (#6):\n• boot-test.py (normal,\n  reduced, fail, stall)\n• ISO & pkg budget (#1)\n\nSupply Chain (M4, #12):\n• Pinned Debian snapshot\n• CycloneDX SBOM\n• Artifact signing\n• Reproducible build diff\n\nPrivate Security Repo:\n• spheradian-security\n  (threat models, audits)",
       "fontSize": 15,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 13,
       "containerId": null,
-      "originalText": "DEVSECOPS & GOVERNANCE\n\nStatic Gates (#2):\n• shellcheck, shfmt\n• python3 unittest\n• manifest/config checks\n• cargo audit / deny\n• gitleaks, zizmor\n\nQEMU Boot Tests (#6):\n• boot-test.py (normal,\n  reduced, fail, stall)\n• ISO & pkg budget (#1)\n\nSupply Chain (M4, #12):\n• Pinned Debian snapshot\n• CycloneDX SBOM\n• Artifact signing\n• Reproducible build diff\n\nPrivate Security Repo:\n• xspherede-security\n  (threat models, audits)"
+      "originalText": "DEVSECOPS & GOVERNANCE\n\nStatic Gates (#2):\n• shellcheck, shfmt\n• python3 unittest\n• manifest/config checks\n• cargo audit / deny\n• gitleaks, zizmor\n\nQEMU Boot Tests (#6):\n• boot-test.py (normal,\n  reduced, fail, stall)\n• ISO & pkg budget (#1)\n\nSupply Chain (M4, #12):\n• Pinned Debian snapshot\n• CycloneDX SBOM\n• Artifact signing\n• Reproducible build diff\n\nPrivate Security Repo:\n• spheradian-security\n  (threat models, audits)"
     }
   ],
   "appState": {
