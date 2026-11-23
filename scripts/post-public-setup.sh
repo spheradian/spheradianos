@@ -19,6 +19,10 @@ fi
 # Required checks are the jobs of ci.yml, which run on every PR to main.
 # image-boot.yml is path-filtered and the Claude review skips fork PRs, so
 # requiring them would block PRs on which they never run.
+# There is no bypass actor (ENGINEERING-PLAN §2.3: no bypass for the
+# maintainer). If a required job is renamed or removed, merges block until
+# this list is updated: an org owner can always edit or disable the ruleset
+# under Settings -> Rules -> Rulesets, then rerun this script.
 ruleset=$(
 	cat <<'EOF'
 {
@@ -60,7 +64,7 @@ ruleset=$(
 EOF
 )
 
-existing=$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main") | .id')
+existing=$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main") | .id' | head -n 1)
 if [ -n "$existing" ]; then
 	printf '%s' "$ruleset" | gh api -X PUT "repos/$repo/rulesets/$existing" --input - >/dev/null
 	echo "updated ruleset main ($existing)"
