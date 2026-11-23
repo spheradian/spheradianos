@@ -36,7 +36,7 @@ Adopt **Option A**:
 1. Add `seatd`, `cage`, `mesa-vulkan-drivers`, `libegl-mesa0`, and `foot` to `config/package-lists/xsphereos-base.list.chroot` with one-line justifications.
 2. Run `xsphere-session.service` inside `xsphere-session.slice` (`ADR-004`) as unprivileged user `xsphere`, launching `cage -s -- /usr/bin/xspherede` and falling back automatically to `cage -s -- /usr/bin/foot` if `xspherede` fails or `xsphere.fallback=1` is set.
 3. Preserve `xsphere.session=console` via `ConditionKernelCommandLine=!xsphere.session=console` so `boot-test.py` console tests remain deterministic.
-4. Build `mendsec/xspherede` from a pinned commit SHA (`scripts/build-xspherede.sh`) and keep the binary gitignored.
+4. Build `mendsec/xspherede` from a pinned commit SHA (`scripts/build-xspherede.sh`) and keep the binary gitignored, inside a digest-pinned Debian trixie Rust container so it links against the image's glibc. A host build on the CI runner required `GLIBC_2.43` symbols that trixie (2.41) lacks, so `xspherede` exited at once and the kiosk always showed `foot`.
 
 ## 6. Consequences and Trade-offs
 

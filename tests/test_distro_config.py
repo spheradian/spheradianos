@@ -105,6 +105,15 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("xsphere-session: starting xspherede", launcher)
         self.assertIn("falling back to foot", launcher)
 
+    def test_xspherede_is_built_against_the_image_glibc(self) -> None:
+        # Built on the CI host it linked GLIBC_2.43 symbols, which trixie (2.41)
+        # lacks, so it could never start in the image and cage fell back to foot.
+        script = (REPO_ROOT / "scripts" / "build-xspherede.sh").read_text(encoding="utf-8")
+        self.assertRegex(script, r"rust:[0-9.]+-trixie@sha256:[0-9a-f]{64}")
+        self.assertIn("podman run", script)
+        self.assertIn("cargo build", script)
+        self.assertIn("--locked", script)
+
     def test_session_journal_reaches_the_boot_test_only_inside_its_qemu(self) -> None:
         systemd_dir = REPO_ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system"
         unit = (systemd_dir / "xsphereos-test-journal.service").read_text(encoding="utf-8")
