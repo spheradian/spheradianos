@@ -19,7 +19,7 @@ XSphereOS is the planned first (and initially only) target for XSphereDE: a smal
 ## 2. Non-goals (for now)
 
 - Supporting other desktop environments or display servers.
-- Supporting architectures other than `amd64` initially.
+- Supporting architectures other than `amd64` initially. *[ADR-014](adr/ADR-014-hardware-targets-and-budgets.md) proposes `arm64` (Raspberry Pi 4/5) as the second target after the first usable build.*
 - Being a general-purpose server distribution.
 - Claiming a security boundary before per-domain isolation is real. The trust-domain model remains unverified until clients are actually sandboxed.
 
@@ -68,7 +68,7 @@ Debian supplies the substrate. XSphereOS progressively takes over these layers:
 2. **First-boot experience.** Network setup, language and keyboard, and an optional install prompt, all presented inside the sphere.
 3. **Settings.** A small native tool for the handful of settings a user actually needs (display, network, audio, trust-domain defaults).
 4. **Application launching.** A launcher and dock on the polar rings (see the roadmap), mapping applications to trust domains by default.
-5. **Packaging and updates.** A custom APT repository and metapackage (`xsphereos-base`), so the system is defined by one package and upgrades are normal `apt` upgrades.
+5. **Packaging and updates.** A custom APT repository and metapackage (`xsphereos-base`), so the system is defined by one package and upgrades are normal `apt` upgrades. *Under review: [ADR-011](adr/ADR-011-organization-and-product-structure.md) §6 moves the system layer to an immutable image with atomic updates, so packages feed image builds and installed systems receive whole images. ADR-013 will decide.*
 6. **Branding and defaults.** Boot splash, wallpaper (the sphere itself), default configuration, and sane hardened defaults.
 
 Over time, decisions move from "whatever Debian ships" to "what XSphereOS ships", with a documented list of deliberate divergences.
@@ -96,7 +96,7 @@ Dependencies on the XSphereDE roadmap (the distro cannot be useful until these l
 | Per-domain process isolation | Makes trust domains mean something |
 | Polar docks and launchers | First-boot and daily-use usability |
 
-A **fallback session** is mandatory: on hardware with no usable Vulkan or GL, or if the compositor fails to start, boot into a minimal flat Wayland session so the machine is never unusable.
+A **fallback session** is mandatory: on hardware with no usable Vulkan or GL, or if the compositor fails to start, boot into a minimal flat Wayland session so the machine is never unusable. *[ADR-015](adr/ADR-015-planisphere-2d-presentation.md) proposes that this session be **Planisphere**, a full 2D presentation of the same desktop, not a minimal fallback.*
 
 ## 6. Performance mode for modest hardware
 
@@ -126,6 +126,8 @@ The profile is chosen at first boot from a quick GPU capability probe and can be
 Keeping the distro recipe separate prevents distribution concerns from leaking into the desktop codebase and lets the two have different visibility and release cadences.
 
 ## 9. Milestones
+
+> [ADR-016](adr/ADR-016-first-usable-build-roadmap.md) proposes reordering M2–M5 around a first usable build and adding M6 (`arm64`).
 
 | # | Milestone | Done when |
 |---|---|---|
@@ -160,4 +162,4 @@ UEFI notes (2026-11-21, QEMU with OVMF, KVM):
 3. Installer: custom, or adapt an existing one (Calamares or the Debian installer).
 4. Handling of non-free firmware in a default image.
 5. Whether and when to replace any Debian-supplied component with an XSphereOS one, and how to track those divergences.
-6. Name, branding, and licensing of the distribution as distinct from the desktop.
+6. Name, branding, and licensing of the distribution as distinct from the desktop. *Names and structure proposed in [ADR-011](adr/ADR-011-organization-and-product-structure.md); licensing still open (ADR-011 §5.5).*

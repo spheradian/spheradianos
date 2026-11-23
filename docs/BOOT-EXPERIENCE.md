@@ -145,6 +145,8 @@ If a budget is exceeded, the build fails or the effect is cut, not the budget.
 
 ### 6.3 Capability tiers
 
+> [ADR-015](adr/ADR-015-planisphere-2d-presentation.md) proposes that machines without a 3D path land in **Planisphere**, the 2D presentation of the desktop, instead of a flat fallback session. Its first frame can match the last 2D splash frame exactly.
+
 | Tier | Selected when | Experience |
 |---|---|---|
 | 0. Text | `xsphere.splash=off`, `plymouth.enable=0`, no KMS or framebuffer, serial-only console, or any failure | Plain kernel and `systemd` status text. The mandatory baseline |
@@ -348,7 +350,7 @@ For engineering:
 
 5. Plymouth then compositor (option B) versus a custom splash daemon (option C): confirm B for now.
 6. Where does the persisted reduced-motion and tier setting live so the initramfs can read it, given the live image is stateless? (Proposal: command line on the live image, a file embedded in the initramfs by a hook on an installed system.)
-7. How is the timeline description shared between the Plymouth script (limited language) and the compositor, and which crate owns it (the `xsphereos` repository or `xspherede`)?
+7. How is the timeline description shared between the Plymouth script (limited language) and the compositor, and which crate owns it (the `xsphereos` repository or `xspherede`)? *Proposed answer in [ADR-012](adr/ADR-012-implementation-language-policy.md) §5.3: a `spheradian-boot-timeline` crate next to the compositor, called by the asset generator through its CLI.*
 8. Does the readiness helper after the root switch subscribe to `systemd` over D-Bus, or is a simpler unit-ordering-based signal enough?
 9. Spoken or tonal diagnostics for blind users: in scope, or a later milestone?
 10. Is the KVM-capable runner available for hard timing gates, or are timing measurements trend-only (ENGINEERING-PLAN open question 4)?
