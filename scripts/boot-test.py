@@ -346,11 +346,12 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
                 if client:
                     print(f"graphical session shows: {client}", file=sys.stderr)
                 if client != "xspherede":
-                    attempt = xspherede_attempt(journal)
-                    if attempt:
-                        print("--- why xspherede did not stay up ---", file=sys.stderr)
-                        print("\n".join(attempt), file=sys.stderr)
-                        print("--- end ---", file=sys.stderr)
+                    # The launcher's own lines, or the whole session journal when
+                    # it never tried xspherede (missing binary, fallback switch).
+                    attempt = xspherede_attempt(journal) or journal.splitlines()
+                    print("--- why xspherede is not running ---", file=sys.stderr)
+                    print("\n".join(attempt), file=sys.stderr)
+                    print("--- end ---", file=sys.stderr)
                 results["the graphical session is running"] = running
                 return results
             name = (

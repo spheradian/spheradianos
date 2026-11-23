@@ -20,6 +20,9 @@ sleep 60
 	journalctl -b --no-pager -o short-monotonic \
 		-u xsphere-session.service -u seatd.service -u systemd-logind.service \
 		-u plymouth-quit.service -u plymouth-quit-wait.service
+	echo "=== xsphereos-test-journal: prototype binary ==="
+	ls -l /usr/bin/xspherede
+	cat /proc/cmdline
 	echo "=== xsphereos-test-journal: unit states ==="
 	systemctl --no-pager --failed
 	systemctl --no-pager status --full xsphere-session.service
