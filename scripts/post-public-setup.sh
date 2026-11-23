@@ -9,6 +9,17 @@
 set -eu
 
 repo=${1:-spheradian/spheradianos}
+case "$repo" in
+*[!A-Za-z0-9._/-]* | */*/* | /* | */ | *..*)
+	echo "error: '$repo' is not an owner/repo name." >&2
+	exit 1
+	;;
+*/*) ;;
+*)
+	echo "error: '$repo' is not an owner/repo name." >&2
+	exit 1
+	;;
+esac
 
 visibility=$(gh repo view "$repo" --json visibility --jq .visibility)
 if [ "$visibility" != "PUBLIC" ]; then
@@ -23,6 +34,8 @@ fi
 # maintainer). If a required job is renamed or removed, merges block until
 # this list is updated: an org owner can always edit or disable the ruleset
 # under Settings -> Rules -> Rulesets, then rerun this script.
+# integration_id 15368 is the GitHub Actions app: a status with the same name
+# posted by any other app or token does not satisfy the check.
 ruleset=$(
 	cat <<'EOF'
 {
@@ -52,10 +65,10 @@ ruleset=$(
         "strict_required_status_checks_policy": false,
         "do_not_enforce_on_create": false,
         "required_status_checks": [
-          { "context": "Static & Config Checks" },
-          { "context": "Workflow Security (actionlint & zizmor)" },
-          { "context": "SAST (Opengrep)" },
-          { "context": "Secret Scan (gitleaks)" }
+          { "context": "Static & Config Checks", "integration_id": 15368 },
+          { "context": "Workflow Security (actionlint & zizmor)", "integration_id": 15368 },
+          { "context": "SAST (Opengrep)", "integration_id": 15368 },
+          { "context": "Secret Scan (gitleaks)", "integration_id": 15368 }
         ]
       }
     }
