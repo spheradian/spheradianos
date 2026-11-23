@@ -87,7 +87,7 @@ The name joins *sphere* with *radian*, after the steradian, the unit of solid an
 
 ## 7. Open decisions
 
-1. ~~Licence~~ **Decided 2026-11-23: Apache-2.0** for all project code, desktop and recipe (ADR-011 §5.5). Still to align: the organization profile in `.github` and PR #23.
+1. ~~Licence~~ **Decided 2026-11-23: Apache-2.0** for all project code, desktop and recipe (ADR-011 §5.5). Alignment in progress: PR #23 switched to Apache-2.0; `spheradian/files#4` relicenses Files; `spheradian/.github#1` updates the organization profile (merge after `files#4`).
 2. Rename `files` → `spheradian-files` (ADR-011 §5.3).
 3. Domain and trademark registration under Fabrintek (ADR-011 §7, step 7).
 4. Commit the three-pillar positioning ADR (Privacy, Security, Old Computers) as ADR-008.

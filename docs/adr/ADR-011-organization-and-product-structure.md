@@ -136,7 +136,11 @@ This means `spheradian/files` should be renamed to `spheradian/spheradian-files`
 
 1. **Desktop components:** Apache-2.0, as `spheradian/spheradian` already ships (`LICENSE`, `Cargo.toml`). Every new component repository starts with the same licence. Apache-2.0 is permissive like MIT, and it adds an explicit patent grant and a `NOTICE` mechanism, which matters for a project that a company sponsors and that others may build products on.
 2. **Distribution recipe:** Apache-2.0 as well, one licence across the organization. This repository gets an Apache-2.0 `LICENSE`. PR #23, which proposes an MIT `LICENSE` here, must switch to Apache-2.0 before it merges.
-3. **Where MIT is still stated, it is now wrong and must be corrected:** ADR-003 (amended by this ADR), the organization profile in `spheradian/.github`, and the architecture diagrams.
+3. **Where MIT was stated, it is corrected:**
+   - ADR-003 and the architecture diagrams, in this change;
+   - PR #23's `LICENSE` and ADR-010;
+   - `spheradian/files`, relicensed from MIT in `spheradian/files#4` (single copyright holder; earlier versions stay available under MIT);
+   - the organization profile, in `spheradian/.github#1`.
 4. **Brand:** Code licences do not cover names and logos. A short trademark policy (in `.github`) should say who may use "Spheradian" and "SpheradianOS". Most distributions, Pop!_OS included, allow rebuilds but require a new name for modified images.
 
 ## 6. Consequences and Trade-offs
