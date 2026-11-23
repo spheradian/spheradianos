@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-`mendsec/spheradianos` had design documentation and local tests but no GitHub issue tracking, milestones, or project board. We decided to structure project continuity natively on GitHub using Milestones (`M0`–`M5`), granular Issues, area/type/priority Labels, and a linked GitHub Project (`SpheradianOS — Roadmap`).
+`spheradian/spheradianos` had design documentation and local tests but no GitHub issue tracking, milestones, or project board. We decided to structure project continuity natively on GitHub using Milestones (`M0`–`M5`), granular Issues, area/type/priority Labels, and a linked GitHub Project (`SpheradianOS — Roadmap`).
 
 ## 2. Context and Problem
 
@@ -18,7 +18,7 @@ Without decomposed milestones and acceptance criteria, M1/M2 work risked startin
 
 ## 3. Scope
 
-- **In scope:** GitHub Milestones (`M0`–`M5`), Issues (`#1`–`#14`), Labels, and Project `#5` (`SpheradianOS — Roadmap`) in `mendsec/spheradianos`.
+- **In scope:** GitHub Milestones (`M0`–`M5`), Issues (`#1`–`#14`), Labels, and Project `#5` (`SpheradianOS — Roadmap`) in `spheradian/spheradianos`.
 - **Out of scope:** Detailed threat models and hardening specifics, which remain in the private `spheradian-security` repository.
 
 ## 4. Options Considered
@@ -38,4 +38,4 @@ Adopt **Option A**. All roadmap deliverables are tracked as Issues assigned to M
 
 ## 7. Security and Compliance
 
-`mendsec/spheradianos` and Project `#5` remain private. No sensitive security findings from `spheradian-security` are mirrored in GitHub Issues.
+`spheradian/spheradianos` and Project `#5` remain private. No sensitive security findings from `spheradian-security` are mirrored in GitHub Issues.

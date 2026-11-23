@@ -1,6 +1,6 @@
 # SpheradianOS and Spheradian: Engineering Plan (TDD, Clean Code, DevSecOps)
 
-Status: **draft for review**. This plan covers both the desktop (`mendsec/spheradian`) and the distribution (`mendsec/spheradianos`). It builds on [DISTRO-DESIGN.md](DISTRO-DESIGN.md).
+Status: **draft for review**. This plan covers both the desktop (`spheradian/spheradian`) and the distribution (`spheradian/spheradianos`). It builds on [DISTRO-DESIGN.md](DISTRO-DESIGN.md).
 
 > Scope note: this file states practices and gates. Threat models, audit findings, and hardening specifics live only in the private `spheradian-security` repository.
 

@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-`mendsec/spheradian` is currently a `winit` + `wgpu` application (the native Smithay compositor lands in M2) with no published `.deb` packages or GitHub releases. We decided to launch it in M1 inside `cage` (a minimal Wayland-only kiosk compositor) on top of `seatd` and `mesa-vulkan-drivers` within `spheradian-session.slice` (`ADR-004`), with an automatic fallback to a flat Wayland terminal (`foot`) if Vulkan/GL or `spheradian` fails, while building `spheradian` from a pinned commit SHA during image CI.
+`spheradian/spheradian` is currently a `winit` + `wgpu` application (the native Smithay compositor lands in M2) with no published `.deb` packages or GitHub releases. We decided to launch it in M1 inside `cage` (a minimal Wayland-only kiosk compositor) on top of `seatd` and `mesa-vulkan-drivers` within `spheradian-session.slice` (`ADR-004`), with an automatic fallback to a flat Wayland terminal (`foot`) if Vulkan/GL or `spheradian` fails, while building `spheradian` from a pinned commit SHA during image CI.
 
 ## 2. Context and Problem
 
@@ -36,7 +36,7 @@ Adopt **Option A**:
 1. Add `seatd`, `cage`, `mesa-vulkan-drivers`, `libegl-mesa0`, and `foot` to `config/package-lists/spheradianos-base.list.chroot` with one-line justifications.
 2. Run `spheradian-session.service` inside `spheradian-session.slice` (`ADR-004`) as unprivileged user `spheradian`, launching `cage -s -- /usr/bin/spheradian` and falling back automatically to `cage -s -- /usr/bin/foot` if `spheradian` fails or `spheradian.fallback=1` is set.
 3. Preserve `spheradian.session=console` via `ConditionKernelCommandLine=!spheradian.session=console` so `boot-test.py` console tests remain deterministic.
-4. Build `mendsec/spheradian` from a pinned commit SHA (`scripts/build-spheradian.sh`) and keep the binary gitignored.
+4. Build `spheradian/spheradian` from a pinned commit SHA (`scripts/build-spheradian.sh`) and keep the binary gitignored.
 
 ## 6. Consequences and Trade-offs
 
