@@ -49,7 +49,13 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("compression-algorithm = zstd", zram_cfg)
 
         slice_cfg = (
-            REPO_ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "spheradian-session.slice"
+            REPO_ROOT
+            / "config"
+            / "includes.chroot"
+            / "etc"
+            / "systemd"
+            / "system"
+            / "spheradian-session.slice"
         ).read_text(encoding="utf-8")
         self.assertIn("CPUWeight=500", slice_cfg)
         self.assertIn("MemoryLow=", slice_cfg)

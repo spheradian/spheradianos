@@ -5,7 +5,7 @@ set -eu
 cd "$(dirname "$0")/.."
 
 SPHERADIAN_REPO="${SPHERADIAN_REPO:-https://github.com/spheradian/spheradian.git}"
-SPHERADIAN_SHA="${SPHERADIAN_SHA:-3214ba4737aafb554f9502aeeb9718cdba258d3d}"
+SPHERADIAN_SHA="${SPHERADIAN_SHA:-c60b694c739dbe7e255a6313daa5352574172beb}"
 OUT="config/includes.chroot/usr/bin/spheradian"
 
 for tool in git cargo; do

@@ -280,7 +280,9 @@ def splash_moves(guest):
     return verdict
 
 
-SESSION_UNIT = ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "spheradian-session.service"
+SESSION_UNIT = (
+    ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "spheradian-session.service"
+)
 
 
 def boot_parameters(console=False, reduced_motion=False, fault=None, session_installed=False):
