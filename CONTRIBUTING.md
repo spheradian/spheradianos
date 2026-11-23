@@ -56,4 +56,4 @@ The full rules are in [docs/ENGINEERING-PLAN.md](docs/ENGINEERING-PLAN.md) (§3 
 
 ## License
 
-XSphereOS is released under the [MIT License](LICENSE). By submitting a contribution, you agree that it is licensed under the same terms.
+XSphereOS is released under the [Apache License 2.0](LICENSE). By submitting a contribution, you agree that it is licensed under the same terms (Apache License 2.0, section 5).

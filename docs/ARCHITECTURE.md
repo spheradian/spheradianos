@@ -19,14 +19,14 @@ flowchart TB
         SANDBOX["Per-Domain Sandbox (M5)<br/>(namespaces, seccomp, cgroups, clipboard vault)"]
     end
 
-    subgraph L3["Layer 3 · Compositor & Session (mendsec/xspherede · Public MIT)"]
+    subgraph L3["Layer 3 · Compositor & Session (mendsec/xspherede · Public Apache-2.0)"]
         direction LR
         SMITHAY["xspherede Compositor<br/>(Smithay + wgpu · no X11/Xwayland)"]
         CORE["Pure Core & Policy<br/>(input, state, commands, WindowSurfaceProvider)"]
         FALLBACK["Fallback Flat Wayland Session<br/>(No Vulkan/GL hardware path)"]
     end
 
-    subgraph L2["Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Public MIT)"]
+    subgraph L2["Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Public Apache-2.0)"]
         direction LR
         SYS["Core OS<br/>(systemd, dbus, udev, seatd/logind)"]
         MEDIA["Graphics, Audio & Net<br/>(Mesa, PipeWire/WirePlumber, NM vs iwd)"]

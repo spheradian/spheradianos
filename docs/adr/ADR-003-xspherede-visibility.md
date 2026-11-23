@@ -25,7 +25,7 @@
 
 Adopt **Option A**: `mendsec/xspherede` remains public under the MIT license; `mendsec/xsphereos` and `mendsec/xspherede-security` remain strictly private.
 
-> **Update:** [ADR-010](ADR-010-xsphereos-public-visibility.md) supersedes this for `mendsec/xsphereos`, which becomes public under MIT after M0. `mendsec/xspherede-security` stays private.
+> **Update:** [ADR-010](ADR-010-xsphereos-public-visibility.md) supersedes this for `mendsec/xsphereos`, which becomes public under Apache-2.0 after M0. `mendsec/xspherede-security` stays private.
 
 ## 5. Consequences and Trade-offs
 

@@ -49,7 +49,7 @@ Adopt **Option B**:
 2. Once `M0` is closed and every §5 item is done, the approver switches `mendsec/xsphereos` to public. This is a manual action by the approver, never by automation.
 3. Do not announce the project before `M2` is complete. "Announce" means posts, forum threads, release notes, or promotion outside GitHub. Being discoverable on GitHub is fine.
 4. `mendsec/xspherede-security` stays private. The rule that no threat models, audit findings, or vulnerability details are committed to `xsphereos` becomes stricter, because the repository will be readable by anyone.
-5. **Licence: MIT** for the distribution recipe, tooling, tests, and documentation in `xsphereos`, matching `xspherede`. This resolves the licensing part of `DISTRO-DESIGN.md` §10, open question 6 (naming and branding remain open, see §5). It allows derivative distributions, including closed ones, and keeps both projects under one simple licence. Packages shipped in the image keep their own Debian licences, and the MIT licence covers only what this repository authors.
+5. **Licence: Apache-2.0** for the distribution recipe, tooling, tests, and documentation in `xsphereos`, matching `xspherede` (which already ships Apache-2.0). The approver decided Apache-2.0 for all project code on 2026-11-23 (ADR-011 §5.5, PR #34). This resolves the licensing part of `DISTRO-DESIGN.md` §10, open question 6 (naming and branding remain open, see §5). It allows derivative distributions, including closed ones, adds an explicit patent grant, and keeps both projects under one licence. Packages shipped in the image keep their own Debian licences, and the Apache-2.0 licence covers only what this repository authors.
 
 ## 5. Pre-Publication Checklist (gate)
 
@@ -57,7 +57,7 @@ All items must be done before the visibility switch.
 
 **Decisions that cannot be changed after publication**
 
-- [x] **Licence.** MIT `LICENSE` committed at the repository root, as decided in §4 item 5.
+- [x] **Licence.** Apache-2.0 `LICENSE` committed at the repository root, as decided in §4 item 5.
 - [ ] **Name and branding.** Check that "XSphereOS" and its boot theme do not conflict with an existing mark or project. Resolve the branding part of open question 6.
 - [ ] **Third-party material.** Confirm every file in the repository is original or carries its licence notice. Confirm that `docs/REFERENCES.md` describes external projects without copying their content.
 

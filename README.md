@@ -10,8 +10,8 @@
 
 | Repository | Visibility | Role |
 |---|---|---|
-| `mendsec/xsphereos` (this repo) | Public (MIT, [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md)) | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
-| `mendsec/xspherede` | Public (MIT, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
+| `mendsec/xsphereos` (this repo) | Public (Apache-2.0, [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md)) | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
+| `mendsec/xspherede` | Public (Apache-2.0, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
 | `mendsec/xspherede-security` | Private | Security analysis, threat models, and hardening notes for both projects |
 
 ---
