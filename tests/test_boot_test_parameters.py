@@ -187,5 +187,36 @@ class SessionStateTests(unittest.TestCase):
         self.assertEqual(boot_test.session_state(""), (False, None))
 
 
+FALLBACK_JOURNAL = """=== xsphereos-test-journal: session units ===
+[   73.5] xsphereos (-session)[918]: pam_unix(login:session): session opened for user xsphere
+[   73.6] xsphereos xsphere-session[920]: xsphere-session: starting xspherede
+[   73.9] xsphereos xsphere-session[930]: [INFO  xspherede] Starting XSphereDE v0.0.1
+[   74.1] xsphereos xsphere-session[930]: No compatible GPU adapter found
+[   74.2] xsphereos xsphere-session[920]: xsphere-session: xspherede exited with status 134, \
+falling back to foot
+[   74.3] xsphereos xsphere-session[940]: foot: some unrelated foot line
+=== xsphereos-test-journal: unit states ===
+"""
+
+
+class XspheredeAttemptTests(unittest.TestCase):
+    """When the kiosk falls back to foot, the boot test shows why xspherede exited."""
+
+    def test_the_attempt_is_cut_from_start_to_fallback(self) -> None:
+        attempt = boot_test.xspherede_attempt(FALLBACK_JOURNAL)
+        self.assertIn("starting xspherede", attempt[0])
+        self.assertIn("No compatible GPU adapter found", "\n".join(attempt))
+        self.assertIn("falling back to foot", attempt[-1])
+        self.assertNotIn("unrelated foot line", "\n".join(attempt))
+
+    def test_no_attempt_without_the_launcher_marker(self) -> None:
+        self.assertEqual(boot_test.xspherede_attempt(RUNNING_KIOSK), [])
+
+    def test_an_attempt_that_never_fell_back_runs_to_the_end_of_the_section(self) -> None:
+        journal = FALLBACK_JOURNAL.split("[   74.2]")[0] + "=== xsphereos-test-journal: unit states ===\n"
+        attempt = boot_test.xspherede_attempt(journal)
+        self.assertIn("No compatible GPU adapter found", attempt[-1])
+
+
 if __name__ == "__main__":
     unittest.main()

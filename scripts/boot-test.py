@@ -341,9 +341,16 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
                 # The kiosk owns tty1, so the screen cannot prove the session runs (a
                 # restart loop left it black, and early boot text once passed for it).
                 # Ask the guest's journal instead (config/.../xsphereos/test-journal).
-                running, client = session_state(wait_for_journal(guest, JOURNAL_TIMEOUT))
+                journal = wait_for_journal(guest, JOURNAL_TIMEOUT)
+                running, client = session_state(journal)
                 if client:
                     print(f"graphical session shows: {client}", file=sys.stderr)
+                if client != "xspherede":
+                    attempt = xspherede_attempt(journal)
+                    if attempt:
+                        print("--- why xspherede did not stay up ---", file=sys.stderr)
+                        print("\n".join(attempt), file=sys.stderr)
+                        print("--- end ---", file=sys.stderr)
                 results["the graphical session is running"] = running
                 return results
             name = (
@@ -399,6 +406,24 @@ def session_state(journal):
     if "/usr/bin/xspherede" in status:
         return True, "xspherede"
     return True, None
+
+
+def xspherede_attempt(journal):
+    """Return the journal lines of the launcher's first try of xspherede.
+
+    The launcher (config/.../xsphereos/xsphere-session) logs a line before it
+    starts xspherede and another when it falls back to foot; cage and xspherede
+    write to the same unit journal in between, so these lines say why it exited.
+    """
+    section = journal.split("=== xsphereos-test-journal: unit states ===", 1)[0]
+    attempt = []
+    for line in section.splitlines():
+        if not attempt and "xsphere-session: starting xspherede" not in line:
+            continue
+        attempt.append(line)
+        if "falling back to foot" in line:
+            break
+    return attempt
 
 
 def report_serial_log(results, path):

@@ -25,5 +25,6 @@ sleep 60
 	systemctl --no-pager status --full xsphere-session.service
 	echo "=== xsphereos-test-journal: kernel graphics ==="
 	journalctl -b --no-pager -o short-monotonic -k --grep 'drm|fb|virtio|simpledrm'
+	ls -l /dev/dri
 	echo "=== xsphereos-test-journal: end ==="
 } >/dev/ttyS0 2>&1

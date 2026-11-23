@@ -101,6 +101,9 @@ class DistroConfigTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("cage -s -- /usr/bin/xspherede", launcher)
         self.assertIn("exec cage -s -- /usr/bin/foot", launcher)
+        # scripts/boot-test.py cuts xspherede's output out of the journal between these.
+        self.assertIn("xsphere-session: starting xspherede", launcher)
+        self.assertIn("falling back to foot", launcher)
 
     def test_session_journal_reaches_the_boot_test_only_inside_its_qemu(self) -> None:
         systemd_dir = REPO_ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system"
