@@ -328,14 +328,14 @@
       "updated": 1763480000000,
       "link": null,
       "locked": false,
-      "text": "DEVSECOPS & GOVERNANCE\n\nStatic Gates (#2):\n• shellcheck, shfmt\n• python3 unittest\n• manifest/config checks\n• cargo audit / deny\n• gitleaks, zizmor\n\nQEMU Boot Tests (#6):\n• boot-test.py (normal,\n  reduced, fail, stall)\n• ISO & pkg budget (#1)\n\nSupply Chain (M4, #12):\n• Pinned Debian snapshot\n• CycloneDX SBOM\n• Artifact signing\n• Reproducible build diff\n\nPrivate Security Repo:\n• spheradian-security\n  (threat models, audits)",
+      "text": "DEVSECOPS & GOVERNANCE\n\nStatic Gates (#2):\n• shellcheck, shfmt\n• python3 unittest\n• manifest/config checks\n• cargo audit / deny\n• gitleaks, zizmor\n\nQEMU Boot Tests (#6):\n• boot-test.py (normal,\n  reduced, fail, stall)\n• ISO & pkg budget (#1)\n\nSupply Chain (M4, #12):\n• Pinned Debian snapshot\n• CycloneDX SBOM\n• Artifact signing\n• Reproducible build diff\n\nPrivate Security Repo:\n• spheradian/security\n  (threat models, audits)",
       "fontSize": 15,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 13,
       "containerId": null,
-      "originalText": "DEVSECOPS & GOVERNANCE\n\nStatic Gates (#2):\n• shellcheck, shfmt\n• python3 unittest\n• manifest/config checks\n• cargo audit / deny\n• gitleaks, zizmor\n\nQEMU Boot Tests (#6):\n• boot-test.py (normal,\n  reduced, fail, stall)\n• ISO & pkg budget (#1)\n\nSupply Chain (M4, #12):\n• Pinned Debian snapshot\n• CycloneDX SBOM\n• Artifact signing\n• Reproducible build diff\n\nPrivate Security Repo:\n• spheradian-security\n  (threat models, audits)"
+      "originalText": "DEVSECOPS & GOVERNANCE\n\nStatic Gates (#2):\n• shellcheck, shfmt\n• python3 unittest\n• manifest/config checks\n• cargo audit / deny\n• gitleaks, zizmor\n\nQEMU Boot Tests (#6):\n• boot-test.py (normal,\n  reduced, fail, stall)\n• ISO & pkg budget (#1)\n\nSupply Chain (M4, #12):\n• Pinned Debian snapshot\n• CycloneDX SBOM\n• Artifact signing\n• Reproducible build diff\n\nPrivate Security Repo:\n• spheradian/security\n  (threat models, audits)"
     }
   ],
   "appState": {

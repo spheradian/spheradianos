@@ -2,7 +2,7 @@
 
 Status: **draft for review, pre-implementation**. Nothing described here exists yet. This document builds on [DISTRO-DESIGN.md](DISTRO-DESIGN.md) and follows the rules in [ENGINEERING-PLAN.md](ENGINEERING-PLAN.md).
 
-> Scope note: boot-security design (secure boot, measured boot, threat models) lives in the private `spheradian-security` repository. This document mentions it only at a high level, in section 11.
+> Scope note: boot-security design (secure boot, measured boot, threat models) lives in the private `spheradian/security` repository. This document mentions it only at a high level, in section 11.
 
 > Originality note: this is an original work inspired by a *feeling*: a short, cinematic, sound-and-light-driven moment at power-on that makes the machine feel alive, as in the startup intro of the original Xbox console. It uses **no** Microsoft or Xbox assets, logo, sounds, shapes, colours or trade dress, and it must not be made to resemble them. Every visual and audio element is generated from SpheradianOS's own sphere motif and its own code.
 
@@ -303,7 +303,7 @@ It is *not* new to have a short cinematic boot. The novelty is continuity, hones
 - The splash stack runs early and as root, so it is kept minimal, static and offline, and treats nothing from the network or user media as input.
 - The initramfs and theme assets are part of what a boot-integrity scheme must cover; they must be reproducible and signed with the rest of the image.
 - The splash must never be a place that can mislead the user about system state (for example by hiding a failure or faking a password prompt).
-- Secure boot, measured boot and the threat model are specified in the private `spheradian-security` repository.
+- Secure boot, measured boot and the threat model are specified in the private `spheradian/security` repository.
 
 ---
 

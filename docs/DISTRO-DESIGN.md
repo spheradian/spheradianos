@@ -121,7 +121,7 @@ The profile is chosen at first boot from a quick GPU capability probe and can be
 
 - `spheradian` (this repository): the compositor and desktop. Stays focused on the desktop.
 - `spheradianos` (new, separate): the image recipe, package manifests, APT repository tooling, branding, first-boot helper, and release scripts.
-- `spheradian-security` (private, existing): all security analysis, threat models, and hardening notes for both of the above.
+- `spheradian/security` (private, existing): all security analysis, threat models, and hardening notes for both of the above.
 
 Keeping the distro recipe separate prevents distribution concerns from leaking into the desktop codebase and lets the two have different visibility and release cadences.
 

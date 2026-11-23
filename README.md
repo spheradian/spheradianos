@@ -2,7 +2,7 @@
 
 Private repository for **SpheradianOS** (`spheradian/spheradianos`): a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **Spheradian** spherical Wayland desktop, in the spirit of Kurumin Linux.
 
-> **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/spheradian-security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary.
+> **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary.
 
 ---
 
@@ -12,7 +12,7 @@ Private repository for **SpheradianOS** (`spheradian/spheradianos`): a minimal, 
 |---|---|---|
 | `spheradian/spheradianos` (this repo) | Private | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
 | `spheradian/spheradian` | Public (MIT, [ADR-003](docs/adr/ADR-003-spheradian-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
-| `spheradian/spheradian-security` | Private | Security analysis, threat models, and hardening notes for both projects |
+| `spheradian/security` | Private | Security analysis, threat models, and hardening notes for both projects |
 
 ---
 

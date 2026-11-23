@@ -2,7 +2,7 @@
 
 Status: **draft for review**. This plan covers both the desktop (`spheradian/spheradian`) and the distribution (`spheradian/spheradianos`). It builds on [DISTRO-DESIGN.md](DISTRO-DESIGN.md).
 
-> Scope note: this file states practices and gates. Threat models, audit findings, and hardening specifics live only in the private `spheradian-security` repository.
+> Scope note: this file states practices and gates. Threat models, audit findings, and hardening specifics live only in the private `spheradian/security` repository.
 
 ---
 
@@ -132,7 +132,7 @@ Every pull request runs the same stages; all required to pass.
 - Branch protection on `main`: required reviews or a required self-review checklist for a solo maintainer, required status checks, linear history, no force pushes, signed commits.
 - Least-privilege tokens in workflows (`permissions: contents: read` default, already used); `persist-credentials: false` on checkout (already used).
 - Two-factor authentication on the maintainer account; hardware key for the release signing role.
-- Private repositories: `spheradianos` and `spheradian-security` stay private; access list reviewed on a schedule.
+- Private repositories: `spheradianos` and `spheradian/security` stay private; access list reviewed on a schedule.
 - Security reporting stays private per `SECURITY.md`; fixes land with neutral, functional commit messages.
 
 ### 5.4 Runtime and host hardening (high level)
