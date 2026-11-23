@@ -1,6 +1,6 @@
 # XSphereOS
 
-Private repository for **XSphereOS** (`mendsec/xsphereos`): a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **XSphereDE** spherical Wayland desktop, in the spirit of Kurumin Linux.
+**XSphereOS** (`mendsec/xsphereos`) is a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **XSphereDE** spherical Wayland desktop, in the spirit of Kurumin Linux.
 
 > **Security scope:** Threat models, audit findings, and hardening specifics live in the private `mendsec/xspherede-security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in XSphereDE is **not** an enforced security boundary.
 
@@ -10,8 +10,8 @@ Private repository for **XSphereOS** (`mendsec/xsphereos`): a minimal, Debian-ba
 
 | Repository | Visibility | Role |
 |---|---|---|
-| `mendsec/xsphereos` (this repo) | Private | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
-| `mendsec/xspherede` | Public (MIT, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
+| `mendsec/xsphereos` (this repo) | Public (Apache-2.0, [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md)) | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
+| `mendsec/xspherede` | Public (Apache-2.0, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
 | `mendsec/xspherede-security` | Private | Security analysis, threat models, and hardening notes for both projects |
 
 ---
@@ -149,3 +149,4 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
   - [ADR-005](docs/adr/ADR-005-boot-procedural-audio.md) — Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement
   - [ADR-006](docs/adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery
   - [ADR-009](docs/adr/ADR-009-gpu-render-levels-and-warmup.md) — GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4)
+  - [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md) — Make `mendsec/xsphereos` Public After M0, Announce at M2

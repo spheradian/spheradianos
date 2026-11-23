@@ -1,7 +1,7 @@
 # ADR-003: Repository Visibility Policy for `mendsec/xspherede`
 
 **Date:** 2026-11-18  
-**Status:** Accepted  
+**Status:** Accepted (the `xsphereos` part of §4 is superseded by [ADR-010](ADR-010-xsphereos-public-visibility.md))  
 **Author:** Senior Software Architect  
 **Approver:** Fábio Mendes (`mendsec`)  
 **Confidence:** High  
@@ -24,6 +24,8 @@
 ## 4. Decision
 
 Adopt **Option A**: `mendsec/xspherede` remains public under the MIT license; `mendsec/xsphereos` and `mendsec/xspherede-security` remain strictly private.
+
+> **Update:** [ADR-010](ADR-010-xsphereos-public-visibility.md) supersedes this for `mendsec/xsphereos`, which becomes public under Apache-2.0 after M0. `mendsec/xspherede-security` stays private.
 
 ## 5. Consequences and Trade-offs
 
