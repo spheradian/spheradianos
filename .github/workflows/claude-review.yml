@@ -59,7 +59,7 @@ jobs:
           restrict_untrusted_prs: "true"
           use_sticky_comment: "true"
           claude_args: >-
-            --max-turns 10
+            --max-turns 25
             --allowedTools "Read,Glob,Grep,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
           prompt: |
             REPO: ${{ github.repository }}
@@ -113,5 +113,5 @@ jobs:
           allow_fork_prs: "false"
           restrict_untrusted_prs: "true"
           claude_args: >-
-            --max-turns 10
+            --max-turns 25
             --allowedTools "Read,Glob,Grep,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
