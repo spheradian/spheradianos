@@ -395,7 +395,9 @@ def session_state(journal):
     """Return (running, client) for xsphere-session from the guest journal copy.
 
     Running means systemd reports it active and it never exited, so a restart
-    loop caught between two attempts does not pass. The client is what cage shows.
+    loop caught between two attempts does not pass. The client is what cage shows,
+    read from the guest's list of the kiosk user's processes: pam_systemd moves
+    them into a logind scope, out of the unit's cgroup in systemctl status.
     """
     if "xsphere-session.service: Main process exited" in journal:
         return False, None

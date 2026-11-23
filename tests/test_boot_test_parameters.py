@@ -156,12 +156,38 @@ RUNNING_KIOSK = """=== xsphereos-test-journal: session units ===
 === xsphereos-test-journal: end ===
 """
 
+SCOPED_KIOSK = """=== xsphereos-test-journal: session units ===
+=== xsphereos-test-journal: unit states ===
+\u25cf xsphere-session.service - XSphereOS M1 Prototype Session (Wayland Kiosk + Fallback)
+     Active: active (running) since Mon 2026-11-23 02:44:46 UTC; 58s ago
+   Main PID: 893 (xsphere-session)
+     CGroup: /xsphere.slice/xsphere-session.slice/xsphere-session.service
+             \u2023 893 /bin/sh /usr/lib/xsphereos/xsphere-session
+=== xsphereos-test-journal: session processes ===
+/bin/sh /usr/lib/xsphereos/xsphere-session
+cage -s -- /usr/bin/xspherede
+/usr/bin/xspherede
+Xwayland :0 -rootless -core
+=== xsphereos-test-journal: kernel graphics ===
+=== xsphereos-test-journal: end ===
+"""
+
 
 class SessionStateTests(unittest.TestCase):
     """The graphical boot passes only if the kiosk session really runs."""
 
     def test_a_running_kiosk_with_xspherede(self) -> None:
         self.assertEqual(boot_test.session_state(RUNNING_KIOSK), (True, "xspherede"))
+
+    def test_xspherede_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
+        # pam_systemd moves cage and its client out of the unit's cgroup, so
+        # systemctl status shows only the launcher; the guest lists them instead.
+        journal = SCOPED_KIOSK
+        self.assertEqual(boot_test.session_state(journal), (True, "xspherede"))
+
+    def test_foot_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
+        journal = SCOPED_KIOSK.replace("/usr/bin/xspherede", "/usr/bin/foot")
+        self.assertEqual(boot_test.session_state(journal), (True, "foot (fallback)"))
 
     def test_a_running_kiosk_on_the_fallback_terminal(self) -> None:
         journal = RUNNING_KIOSK.replace("cage -s -- /usr/bin/xspherede", "cage -s -- /usr/bin/foot")
