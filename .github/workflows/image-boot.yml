@@ -29,15 +29,16 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install host dependencies (podman, QEMU, Rust)
+      - name: Install host dependencies (podman, QEMU)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends podman qemu-system-x86 ovmf python3 pkg-config libxkbcommon-dev libwayland-dev
+          sudo apt-get install -y --no-install-recommends podman qemu-system-x86 ovmf python3
 
+      # Built in a trixie container, so it links against the image's glibc.
       - name: Build and stage pinned xspherede prototype (M1)
         run: |
           scripts/build-xspherede.sh
@@ -80,7 +81,7 @@ jobs:
 
       - name: Keep the last screen of failed boot checks
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: boot-failure-screens
           path: boot-failures/

@@ -156,12 +156,38 @@ RUNNING_KIOSK = """=== xsphereos-test-journal: session units ===
 === xsphereos-test-journal: end ===
 """
 
+SCOPED_KIOSK = """=== xsphereos-test-journal: session units ===
+=== xsphereos-test-journal: unit states ===
+\u25cf xsphere-session.service - XSphereOS M1 Prototype Session (Wayland Kiosk + Fallback)
+     Active: active (running) since Mon 2026-11-23 02:44:46 UTC; 58s ago
+   Main PID: 893 (xsphere-session)
+     CGroup: /xsphere.slice/xsphere-session.slice/xsphere-session.service
+             \u2023 893 /bin/sh /usr/lib/xsphereos/xsphere-session
+=== xsphereos-test-journal: session processes ===
+/bin/sh /usr/lib/xsphereos/xsphere-session
+cage -s -- /usr/bin/xspherede
+/usr/bin/xspherede
+Xwayland :0 -rootless -core
+=== xsphereos-test-journal: kernel graphics ===
+=== xsphereos-test-journal: end ===
+"""
+
 
 class SessionStateTests(unittest.TestCase):
     """The graphical boot passes only if the kiosk session really runs."""
 
     def test_a_running_kiosk_with_xspherede(self) -> None:
         self.assertEqual(boot_test.session_state(RUNNING_KIOSK), (True, "xspherede"))
+
+    def test_xspherede_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
+        # pam_systemd moves cage and its client out of the unit's cgroup, so
+        # systemctl status shows only the launcher; the guest lists them instead.
+        journal = SCOPED_KIOSK
+        self.assertEqual(boot_test.session_state(journal), (True, "xspherede"))
+
+    def test_foot_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
+        journal = SCOPED_KIOSK.replace("/usr/bin/xspherede", "/usr/bin/foot")
+        self.assertEqual(boot_test.session_state(journal), (True, "foot (fallback)"))
 
     def test_a_running_kiosk_on_the_fallback_terminal(self) -> None:
         journal = RUNNING_KIOSK.replace("cage -s -- /usr/bin/xspherede", "cage -s -- /usr/bin/foot")
@@ -185,6 +211,37 @@ class SessionStateTests(unittest.TestCase):
 
     def test_no_journal_is_not_running(self) -> None:
         self.assertEqual(boot_test.session_state(""), (False, None))
+
+
+FALLBACK_JOURNAL = """=== xsphereos-test-journal: session units ===
+[   73.5] xsphereos (-session)[918]: pam_unix(login:session): session opened for user xsphere
+[   73.6] xsphereos xsphere-session[920]: xsphere-session: starting xspherede
+[   73.9] xsphereos xsphere-session[930]: [INFO  xspherede] Starting XSphereDE v0.0.1
+[   74.1] xsphereos xsphere-session[930]: No compatible GPU adapter found
+[   74.2] xsphereos xsphere-session[920]: xsphere-session: xspherede exited with status 134, \
+falling back to foot
+[   74.3] xsphereos xsphere-session[940]: foot: some unrelated foot line
+=== xsphereos-test-journal: unit states ===
+"""
+
+
+class XspheredeAttemptTests(unittest.TestCase):
+    """When the kiosk falls back to foot, the boot test shows why xspherede exited."""
+
+    def test_the_attempt_is_cut_from_start_to_fallback(self) -> None:
+        attempt = boot_test.xspherede_attempt(FALLBACK_JOURNAL)
+        self.assertIn("starting xspherede", attempt[0])
+        self.assertIn("No compatible GPU adapter found", "\n".join(attempt))
+        self.assertIn("falling back to foot", attempt[-1])
+        self.assertNotIn("unrelated foot line", "\n".join(attempt))
+
+    def test_no_attempt_without_the_launcher_marker(self) -> None:
+        self.assertEqual(boot_test.xspherede_attempt(RUNNING_KIOSK), [])
+
+    def test_an_attempt_that_never_fell_back_runs_to_the_end_of_the_section(self) -> None:
+        journal = FALLBACK_JOURNAL.split("[   74.2]")[0] + "=== xsphereos-test-journal: unit states ===\n"
+        attempt = boot_test.xspherede_attempt(journal)
+        self.assertIn("No compatible GPU adapter found", attempt[-1])
 
 
 if __name__ == "__main__":
