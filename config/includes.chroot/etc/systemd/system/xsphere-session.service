@@ -1,0 +1,27 @@
+[Unit]
+Description=XSphereOS M1 Prototype Session (Wayland Kiosk + Fallback)
+After=systemd-user-sessions.service seatd.service plymouth-quit-wait.service
+# tty1 has one owner per boot, chosen by the same kernel switch: this session,
+# or (with xsphere.session=console) the autologin getty, which carries the
+# inverse condition in getty@tty1.service.d/xsphere-session.conf. Do not add a
+# Conflicts= on the getty here: it is applied when the boot transaction is
+# built, before this condition is checked, so it stops the getty even when the
+# session is then skipped, leaving tty1 empty.
+ConditionKernelCommandLine=!xsphere.session=console
+
+[Service]
+Slice=xsphere-session.slice
+User=xsphere
+Group=xsphere
+SupplementaryGroups=video render input
+PAMName=login
+TTYPath=/dev/tty1
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+ExecStart=/usr/lib/xsphereos/xsphere-session
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

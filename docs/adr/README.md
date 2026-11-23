@@ -12,5 +12,6 @@ This directory stores Architecture Decision Records for **XSphereOS**, per `docs
 | [ADR-004](ADR-004-console-grade-fluidity.md) | Console-Grade Fluidity Discipline (`zstd`, `cgroups v2` QoS, `zram`, `DMA-BUF`) | Accepted | 2026-11-18 |
 | [ADR-005](ADR-005-boot-procedural-audio.md) | Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement | Accepted | 2026-11-18 |
 | [ADR-006](ADR-006-installed-performance-and-recovery.md) | Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery | Accepted | 2026-11-19 |
+| [ADR-007](ADR-007-m1-kiosk-prototype-session.md) | M1 Prototype Session via Wayland Kiosk (`cage` + `seatd`) and Pinned `xspherede` Build | Accepted | 2026-11-20 |
 | [ADR-009](ADR-009-gpu-render-levels-and-warmup.md) | GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4) | Accepted | 2026-11-21 |
 | [ADR-010](ADR-010-xsphereos-public-visibility.md) | Make `mendsec/xsphereos` Public After M0, Announce at M2 | Proposed | 2026-11-22 |

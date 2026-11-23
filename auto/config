@@ -17,6 +17,8 @@ lb config noauto \
 	--bootloaders "grub-efi,syslinux" \
 	--debian-installer none \
 	--memtest none \
+	--firmware-binary false \
+	--firmware-chroot false \
 	--chroot-squashfs-compression-type zstd \
 	--iso-application "XSphereOS" \
 	--iso-publisher "XSphereOS project" \
