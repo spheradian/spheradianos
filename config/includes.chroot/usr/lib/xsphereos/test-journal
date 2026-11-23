@@ -20,6 +20,10 @@ sleep 60
 	journalctl -b --no-pager -o short-monotonic \
 		-u xsphere-session.service -u seatd.service -u systemd-logind.service \
 		-u plymouth-quit.service -u plymouth-quit-wait.service
+	# pam_systemd moves the session process into a logind scope, so what the
+	# launcher, cage and xspherede print is logged under the user, not the unit.
+	echo "=== xsphereos-test-journal: session output ==="
+	journalctl -b --no-pager -o short-monotonic _UID="$(id -u xsphere)"
 	echo "=== xsphereos-test-journal: prototype binary ==="
 	ls -l /usr/bin/xspherede
 	cat /proc/cmdline

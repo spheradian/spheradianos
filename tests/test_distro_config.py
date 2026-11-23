@@ -122,6 +122,8 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("-u xsphere-session.service", script)
         self.assertIn(">/dev/ttyS0", script)
         self.assertIn("status --full xsphere-session.service", script)
+        # The session's own output is logged under its user's logind scope.
+        self.assertIn('_UID="$(id -u xsphere)"', script)
 
     def test_package_lists_have_justifications_and_no_forbidden_packages(self) -> None:
         lists_dir = REPO_ROOT / "config" / "package-lists"
