@@ -20,10 +20,26 @@ sleep 60
 	journalctl -b --no-pager -o short-monotonic \
 		-u xsphere-session.service -u seatd.service -u systemd-logind.service \
 		-u plymouth-quit.service -u plymouth-quit-wait.service
+	# pam_systemd moves the session process into a logind scope, so what the
+	# launcher, cage and xspherede print is logged under the user, not the unit.
+	echo "=== xsphereos-test-journal: session output ==="
+	journalctl -b --no-pager -o short-monotonic _UID="$(id -u xsphere)"
+	echo "=== xsphereos-test-journal: prototype binary ==="
+	ls -l /usr/bin/xspherede
+	cat /proc/cmdline
 	echo "=== xsphereos-test-journal: unit states ==="
 	systemctl --no-pager --failed
 	systemctl --no-pager status --full xsphere-session.service
+	# cage and its client run in the logind scope, outside the unit's cgroup,
+	# so list the kiosk user's processes to show which client is up.
+	echo "=== xsphereos-test-journal: session processes ==="
+	uid=$(id -u xsphere)
+	for proc in /proc/[0-9]*; do
+		[ "$(stat -c %u "$proc" 2>/dev/null)" = "$uid" ] || continue
+		tr '\0' ' ' <"$proc/cmdline" 2>/dev/null && echo
+	done
 	echo "=== xsphereos-test-journal: kernel graphics ==="
 	journalctl -b --no-pager -o short-monotonic -k --grep 'drm|fb|virtio|simpledrm'
+	ls -l /dev/dri
 	echo "=== xsphereos-test-journal: end ==="
 } >/dev/ttyS0 2>&1

@@ -101,6 +101,18 @@ class DistroConfigTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("cage -s -- /usr/bin/xspherede", launcher)
         self.assertIn("exec cage -s -- /usr/bin/foot", launcher)
+        # scripts/boot-test.py cuts xspherede's output out of the journal between these.
+        self.assertIn("xsphere-session: starting xspherede", launcher)
+        self.assertIn("falling back to foot", launcher)
+
+    def test_xspherede_is_built_against_the_image_glibc(self) -> None:
+        # Built on the CI host it linked GLIBC_2.43 symbols, which trixie (2.41)
+        # lacks, so it could never start in the image and cage fell back to foot.
+        script = (REPO_ROOT / "scripts" / "build-xspherede.sh").read_text(encoding="utf-8")
+        self.assertRegex(script, r"rust:[0-9.]+-trixie@sha256:[0-9a-f]{64}")
+        self.assertIn("podman run", script)
+        self.assertIn("cargo build", script)
+        self.assertIn("--locked", script)
 
     def test_session_journal_reaches_the_boot_test_only_inside_its_qemu(self) -> None:
         systemd_dir = REPO_ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system"
@@ -119,6 +131,9 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("-u xsphere-session.service", script)
         self.assertIn(">/dev/ttyS0", script)
         self.assertIn("status --full xsphere-session.service", script)
+        # The session's own output is logged under its user's logind scope.
+        self.assertIn('_UID="$(id -u xsphere)"', script)
+        self.assertIn("=== xsphereos-test-journal: session processes ===", script)
 
     def test_package_lists_have_justifications_and_no_forbidden_packages(self) -> None:
         lists_dir = REPO_ROOT / "config" / "package-lists"

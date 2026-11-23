@@ -17,9 +17,15 @@ elif grep -qw 'xsphere\.fallback=1' /proc/cmdline 2>/dev/null; then
 fi
 
 if [ "$fallback" -eq 0 ]; then
-	if cage -s -- /usr/bin/xspherede; then
+	# These two lines bracket xspherede's output in the journal, so a fallback
+	# can be explained (scripts/boot-test.py prints what lies between them).
+	echo "xsphere-session: starting xspherede" >&2
+	status=0
+	cage -s -- /usr/bin/xspherede || status=$?
+	if [ "$status" -eq 0 ]; then
 		exit 0
 	fi
+	echo "xsphere-session: xspherede exited with status $status, falling back to foot" >&2
 fi
 
 exec cage -s -- /usr/bin/foot
