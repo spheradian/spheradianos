@@ -1,6 +1,6 @@
 # XSphereOS: System Architecture
 
-High-level architecture and system design for **XSphereOS** (`mendsec/xsphereos`), **XSphereDE** (`mendsec/xspherede`), and their DevSecOps pipeline.
+High-level architecture and system design for **XSphereOS** (`spheradian/spheradianos`), **XSphereDE** (`spheradian/spheradian`), and their DevSecOps pipeline.
 
 > **Other views in this repository:**
 > - **Miro-like editable canvas:** [docs/architecture/xsphereos.excalidraw](architecture/xsphereos.excalidraw) (open in [excalidraw.com](https://excalidraw.com) or the IDE Excalidraw extension).
@@ -19,14 +19,14 @@ flowchart TB
         SANDBOX["Per-Domain Sandbox (M5)<br/>(namespaces, seccomp, cgroups, clipboard vault)"]
     end
 
-    subgraph L3["Layer 3 · Compositor & Session (mendsec/xspherede · Public MIT)"]
+    subgraph L3["Layer 3 · Compositor & Session (spheradian/spheradian · Public MIT)"]
         direction LR
         SMITHAY["xspherede Compositor<br/>(Smithay + wgpu · no X11/Xwayland)"]
         CORE["Pure Core & Policy<br/>(input, state, commands, WindowSurfaceProvider)"]
         FALLBACK["Fallback Flat Wayland Session<br/>(No Vulkan/GL hardware path)"]
     end
 
-    subgraph L2["Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Private)"]
+    subgraph L2["Layer 2 · Debian minbase Substrate (spheradian/spheradianos · Private)"]
         direction LR
         SYS["Core OS<br/>(systemd, dbus, udev, seatd/logind)"]
         MEDIA["Graphics, Audio & Net<br/>(Mesa, PipeWire/WirePlumber, NM vs iwd)"]
@@ -50,13 +50,13 @@ flowchart TB
     SMITHAY -->|"Wayland + DMA-BUF"| APPS
     SANDBOX -.->|"Enforced boundary (M5)"| APPS
 
-    click BOOT "https://github.com/mendsec/xsphereos/issues/14" "Issue #14: Zero-prompt bootloaders"
-    click PLY "https://github.com/mendsec/xsphereos/issues/7" "Issue #7: Plymouth hand-off (B4)"
-    click SMITHAY "https://github.com/mendsec/xsphereos/issues/9" "Issue #9: Smithay compositor session"
-    click FALLBACK "https://github.com/mendsec/xsphereos/issues/5" "Issue #5: M1 prototype & fallback"
-    click MEDIA "https://github.com/mendsec/xsphereos/issues/8" "Issue #8: Browser & network ADR"
-    click PKG "https://github.com/mendsec/xsphereos/issues/12" "Issue #12: Signed APT & release"
-    click SANDBOX "https://github.com/mendsec/xsphereos/issues/13" "Issue #13: Per-domain sandboxing"
+    click BOOT "https://github.com/spheradian/spheradianos/issues/14" "Issue #14: Zero-prompt bootloaders"
+    click PLY "https://github.com/spheradian/spheradianos/issues/7" "Issue #7: Plymouth hand-off (B4)"
+    click SMITHAY "https://github.com/spheradian/spheradianos/issues/9" "Issue #9: Smithay compositor session"
+    click FALLBACK "https://github.com/spheradian/spheradianos/issues/5" "Issue #5: M1 prototype & fallback"
+    click MEDIA "https://github.com/spheradian/spheradianos/issues/8" "Issue #8: Browser & network ADR"
+    click PKG "https://github.com/spheradian/spheradianos/issues/12" "Issue #12: Signed APT & release"
+    click SANDBOX "https://github.com/spheradian/spheradianos/issues/13" "Issue #13: Per-domain sandboxing"
 ```
 
 ---
@@ -108,7 +108,7 @@ flowchart LR
 See [docs/adr/README.md](adr/README.md) for accepted and proposed ADRs:
 - [ADR-001](adr/ADR-001-github-roadmap-governance.md) — GitHub Roadmap, Governance, and Continuity Structure
 - [ADR-002](adr/ADR-002-zero-prompt-bootloaders.md) — Zero-Prompt Direct Boot via `live-build` Bootloader Templates
-- [ADR-003](adr/ADR-003-xspherede-visibility.md) — Repository Visibility Policy for `mendsec/xspherede`
+- [ADR-003](adr/ADR-003-xspherede-visibility.md) — Repository Visibility Policy for `spheradian/spheradian`
 - [ADR-004](adr/ADR-004-console-grade-fluidity.md) — Console-Grade Fluidity Discipline (`zstd`, `cgroups v2`, `zram`, `DMA-BUF`)
 - [ADR-005](adr/ADR-005-boot-procedural-audio.md) — Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement
 - [ADR-006](adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery

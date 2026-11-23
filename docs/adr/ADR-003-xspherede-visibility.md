@@ -1,4 +1,4 @@
-# ADR-003: Repository Visibility Policy for `mendsec/xspherede`
+# ADR-003: Repository Visibility Policy for `spheradian/spheradian`
 
 **Date:** 2026-11-18  
 **Status:** Accepted  
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-`mendsec/xspherede` is currently public under the MIT license, while `mendsec/xsphereos` and `mendsec/xspherede-security` are private. We decided to **keep `mendsec/xspherede` public**, preserving free unlimited CI/CD for the Rust compositor matrix and public auditability, while keeping distribution recipes and security threat models isolated in the two private repositories.
+`spheradian/spheradian` is currently public under the MIT license, while `spheradian/spheradianos` and `spheradian/security` are private. We decided to **keep `spheradian/spheradian` public**, preserving free unlimited CI/CD for the Rust compositor matrix and public auditability, while keeping distribution recipes and security threat models isolated in the two private repositories.
 
 ## 2. Context and Problem
 
@@ -18,12 +18,12 @@
 
 ## 3. Options Considered
 
-- **Option A (Chosen):** Keep `mendsec/xspherede` **public** (MIT license).
-- **Option B:** Convert `mendsec/xspherede` to **private**.
+- **Option A (Chosen):** Keep `spheradian/spheradian` **public** (MIT license).
+- **Option B:** Convert `spheradian/spheradian` to **private**.
 
 ## 4. Decision
 
-Adopt **Option A**: `mendsec/xspherede` remains public under the MIT license; `mendsec/xsphereos` and `mendsec/xspherede-security` remain strictly private.
+Adopt **Option A**: `spheradian/spheradian` remains public under the MIT license; `spheradian/spheradianos` and `spheradian/security` remain strictly private.
 
 ## 5. Consequences and Trade-offs
 

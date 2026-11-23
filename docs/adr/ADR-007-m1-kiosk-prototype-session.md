@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-`mendsec/xspherede` is currently a `winit` + `wgpu` application (the native Smithay compositor lands in M2) with no published `.deb` packages or GitHub releases. We decided to launch it in M1 inside `cage` (a minimal Wayland-only kiosk compositor) on top of `seatd` and `mesa-vulkan-drivers` within `xsphere-session.slice` (`ADR-004`), with an automatic fallback to a flat Wayland terminal (`foot`) if Vulkan/GL or `xspherede` fails, while building `xspherede` from a pinned commit SHA during image CI.
+`spheradian/spheradian` is currently a `winit` + `wgpu` application (the native Smithay compositor lands in M2) with no published `.deb` packages or GitHub releases. We decided to launch it in M1 inside `cage` (a minimal Wayland-only kiosk compositor) on top of `seatd` and `mesa-vulkan-drivers` within `xsphere-session.slice` (`ADR-004`), with an automatic fallback to a flat Wayland terminal (`foot`) if Vulkan/GL or `xspherede` fails, while building `xspherede` from a pinned commit SHA during image CI.
 
 ## 2. Context and Problem
 
@@ -36,7 +36,7 @@ Adopt **Option A**:
 1. Add `seatd`, `cage`, `mesa-vulkan-drivers`, `libegl-mesa0`, and `foot` to `config/package-lists/xsphereos-base.list.chroot` with one-line justifications.
 2. Run `xsphere-session.service` inside `xsphere-session.slice` (`ADR-004`) as unprivileged user `xsphere`, launching `cage -s -- /usr/bin/xspherede` and falling back automatically to `cage -s -- /usr/bin/foot` if `xspherede` fails or `xsphere.fallback=1` is set.
 3. Preserve `xsphere.session=console` via `ConditionKernelCommandLine=!xsphere.session=console` so `boot-test.py` console tests remain deterministic.
-4. Build `mendsec/xspherede` from a pinned commit SHA (`scripts/build-xspherede.sh`) and keep the binary gitignored.
+4. Build `spheradian/spheradian` from a pinned commit SHA (`scripts/build-xspherede.sh`) and keep the binary gitignored.
 
 ## 6. Consequences and Trade-offs
 

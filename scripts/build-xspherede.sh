@@ -1,10 +1,10 @@
 #!/bin/sh
-# Build mendsec/xspherede from a pinned commit SHA and stage it into the chroot
+# Build spheradian/spheradian from a pinned commit SHA and stage it into the chroot
 # overlay at config/includes.chroot/usr/bin/xspherede (M1, ADR-007).
 set -eu
 cd "$(dirname "$0")/.."
 
-XSPHEREDE_REPO="${XSPHEREDE_REPO:-https://github.com/mendsec/xspherede.git}"
+XSPHEREDE_REPO="${XSPHEREDE_REPO:-https://github.com/spheradian/spheradian.git}"
 XSPHEREDE_SHA="${XSPHEREDE_SHA:-3214ba4737aafb554f9502aeeb9718cdba258d3d}"
 OUT="config/includes.chroot/usr/bin/xspherede"
 
