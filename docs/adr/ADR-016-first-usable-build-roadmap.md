@@ -64,10 +64,11 @@ The boot-experience track (B-milestones) keeps its numbering. Only its placement
 
 | Item | Decision |
 |---|---|
-| PR #27 (no text cursor under BIOS), PR #28 (bootloader menu art), PR #29 (splash cost measurement) | Finish if they are close to done, since each is small. Otherwise park them. They do not block M2 |
-| PR #30 (rename) | Merge first. Every other change rebases on it |
-| PR #31 (build against trixie glibc) | Required for M2 (the compositor must run in the image) |
-| PR #23 (ADR-010, visibility) | Independent; decide on its own schedule |
+| PR #27 (no text cursor under BIOS), PR #29 (splash cost measurement) | Done: merged |
+| PR #28 (bootloader menu art) | Finish if it is close to done, since it is small. Otherwise park it. It does not block M2 |
+| PR #30 (rename) | Done: merged first; later changes are based on it |
+| PR #31 (build against trixie glibc) | Done: merged. Required for M2 (the compositor must run in the image) |
+| PR #23 (ADR-010, visibility) | Done: merged; the repository is public |
 | `#7` (B4 hand-off) | Move from M2 to M3 |
 | `spheradian#26` (`--fullscreen`), `spheradian#27` (low-power profile) | `#26` is superseded by the compositor session in M2; `#27` is folded into Planisphere and render levels |
 

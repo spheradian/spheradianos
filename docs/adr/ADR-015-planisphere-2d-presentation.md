@@ -64,7 +64,7 @@ We decide that the 2D mode is **Planisphere**, a full presentation of the same d
 ### 5.3 Switching between presentations
 
 - **Live switch, when the hardware can run both:** an animated transition in which the sphere unrolls into the chart (and back). The transition is the clearest demonstration that both are the same space.
-- **A setting and a kernel switch:** `spheradian.presentation=sphere|planisphere|auto` (default `auto`), alongside the existing `spheradian.render` and `spheradian.motion` switches. These are the names after PR #30.
+- **A setting and a kernel switch:** `spheradian.presentation=sphere|planisphere|auto` (default `auto`), alongside the existing `spheradian.render` and `spheradian.motion` switches. These names come from the rename in PR #30.
 - **Reduced motion:** the switch becomes a cross-fade, and chart movement becomes instant re-centering. This follows the boot's `motion=reduced` rule.
 - Window positions, galaxies, and domains are **never** stored separately per presentation. There is one model.
 

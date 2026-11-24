@@ -32,7 +32,7 @@ The decision also states plainly what is original and what is inherited (§5.2).
 ## 2. Context and Problem
 
 - **Is the project a remaster?** The question was raised directly: Python is the most-used language in this repository, so the work can look like "an ISO assembler". In this repository that is true. The original work is in Rust, in a different repository: the desktop. No document says this, so the project looks smaller than it is.
-- **The rename is underway, but no decision records it.** The `spheradian` organization was created on 2026-11-23. `mendsec/xspherede`, `mendsec/xsphereos`, and `mendsec/xspherede-security` now redirect to `spheradian/spheradian`, `spheradian/spheradianos`, and `spheradian/security`. The crate is now `spheradian`. PR #30 renames identifiers in this repository. The naming discussion lives in an issue (`spheradian/spheradian#17`), not in an ADR.
+- **The rename is underway, but no decision records it.** The `spheradian` organization was created on 2026-11-23. `mendsec/xspherede`, `mendsec/xsphereos`, and `mendsec/xspherede-security` now redirect to `spheradian/spheradian`, `spheradian/spheradianos`, and `spheradian/security`. The crate is now `spheradian`. PR #30 renamed identifiers in this repository. The naming discussion lives in an issue (`spheradian/spheradian#17`), not in an ADR.
 - **`DISTRO-DESIGN.md` §10 leaves open question 6 open:** "Name, branding, and licensing of the distribution as distinct from the desktop."
 - **The company layer is undocumented.** Fabrintek (`github.com/fabrintek`) already exists as the maintainer's IT services company. Its relationship to the open-source project has not been decided.
 - **The licences disagree.** `spheradian/spheradian` ships `LICENSE` as Apache-2.0 (also in `Cargo.toml`). The organization profile, ADR-003, and this repository's README say MIT. PR #23 first proposed an MIT `LICENSE` for this repository. §5.5 resolves this in favour of Apache-2.0.
@@ -120,7 +120,7 @@ What the project should say about itself: **"SpheradianOS is an atomic, Debian-b
 | Repositories for shipped components | The same as the package and crate name, with the `spheradian-` prefix, as COSMIC does with `cosmic-*`. Crates and Debian packages share global namespaces, so the prefix belongs in the name, not only in the organization. | `spheradian-files`, `spheradian-session`, `spheradian-settings`, `spheradian-installer` |
 | The main desktop repository | `spheradian` (already) | `spheradian/spheradian` |
 | Repositories that ship nothing | Short names are fine | `security`, `.github`, `spheradianos` (the recipe) |
-| Distribution identifiers | `spheradianos-` for distribution-level files; `spheradian-` for desktop-level files; `spheradian.` for kernel parameters | `spheradianos-base` (metapackage), `spheradianos-boot-watch.service`, `spheradian-session.slice`, `spheradian.motion=reduced` (PR #30 already follows this) |
+| Distribution identifiers | `spheradianos-` for distribution-level files; `spheradian-` for desktop-level files; `spheradian.` for kernel parameters | `spheradianos-base` (metapackage), `spheradianos-boot-watch.service`, `spheradian-session.slice`, `spheradian.motion=reduced` (applied by PR #30) |
 
 This means `spheradian/files` should be renamed to `spheradian/spheradian-files` before it ships a package. GitHub redirects the old name. The redirect does not cover GitHub Pages, so the demo URL changes.
 
@@ -165,7 +165,7 @@ This means `spheradian/files` should be renamed to `spheradian/spheradian-files`
 
 | Step | Change | Where | Depends on |
 |---|---|---|---|
-| 1 | Merge the identifier rename (PR #30), coordinated with the open PRs it conflicts with (#23, #27, #28, #29, #31) | `spheradianos` | — |
+| 1 | Merge the identifier rename (PR #30), coordinated with the open PRs it conflicts with (#23, #27, #28, #29, #31). Done: merged after #23, #27, #29, and #31 | `spheradianos` | — |
 | 2 | Accept this ADR and ADR-012; close open question 6 in `DISTRO-DESIGN.md` §10 | `spheradianos` | — (licence decided: Apache-2.0, §5.5) |
 | 3 | Align on Apache-2.0: `LICENSE` in this repository (done with this ADR), the organization profile in `.github`, and PR #23's `LICENSE` (done: merged as Apache-2.0) | `.github`, `spheradianos` | — |
 | 4 | Close `spheradian/spheradian#17` with a link to this ADR | `spheradian` | Step 2 |
