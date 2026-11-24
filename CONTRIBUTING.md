@@ -57,7 +57,7 @@ The full rules are in [docs/ENGINEERING-PLAN.md](docs/ENGINEERING-PLAN.md) (§3 
 - All CI checks must pass. This includes the static checks, `ruff`, `actionlint` and `zizmor`, `opengrep`, `gitleaks`, and the QEMU boot gate.
 - Update the docs in the same PR when behavior changes.
 - **Review time:** there is a single maintainer, so expect a first response within about one week. If a PR has had no reply after two weeks, a polite ping on the PR is welcome.
-- The QEMU boot job is slow (about 45 minutes) and, for first-time contributors, starts only after a maintainer approves the workflow run.
+- The QEMU boot job is slow, and for pull requests from forks a maintainer may need to approve the workflow run before it starts.
 
 ## License
 

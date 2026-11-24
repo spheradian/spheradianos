@@ -24,7 +24,7 @@ This Code of Conduct applies in all project spaces (issues, pull requests, discu
 
 ## Reporting and Enforcement
 
-Report conduct problems privately to **fabiomendes@mailfence.com**. Do not use public issues for this. Reports are handled confidentially, and the reporter's identity is not shared without consent.
+Report conduct problems privately to **fabiomendes@mailfence.com**. Do not use public issues for this. Reports are handled confidentially, and the reporter's identity is not shared without consent. If a report concerns the maintainer, use GitHub's [Report content](https://docs.github.com/en/communities/maintaining-your-safety-on-github/reporting-abuse-or-spam) option on the comment, issue, or pull request instead, which goes to GitHub Support.
 
 Maintainers may edit or remove comments, close or lock threads, and temporarily or permanently ban anyone whose behavior breaks this Code of Conduct. Security vulnerabilities are a separate matter: follow [SECURITY.md](SECURITY.md).
 
