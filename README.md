@@ -4,7 +4,7 @@
 
 > **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary.
 
-> **Renaming:** SpheradianOS is becoming **SpheradianOS** and Spheradian is becoming **Spheradian**, under the [`spheradian`](https://github.com/spheradian) GitHub organization. The repositories have already moved; files and identifiers follow in PR #30. See [docs/ORGANIZATION.md](docs/ORGANIZATION.md).
+> **Renamed:** formerly XSphereOS (the distribution) and XSphereDE (the desktop), now **SpheradianOS** and **Spheradian** under the [`spheradian`](https://github.com/spheradian) GitHub organization. Repositories, files, and identifiers have moved (PR #30). See [docs/ORGANIZATION.md](docs/ORGANIZATION.md).
 
 ---
 
