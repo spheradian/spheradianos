@@ -17,7 +17,7 @@ XSphereOS is in early development. Until Milestone **M5** is complete, trust-dom
 - **Build and test tooling:** `scripts/` (`build.sh`, `build-in-container.sh`, `run-qemu.sh`, `boot-test.py`, the asset generators).
 - **CI and supply chain:** `.github/workflows/`, pinned actions, and how packages and artifacts are fetched.
 
-Vulnerabilities in Debian packages that the image only ships unchanged should go to the [Debian Security Team](https://www.debian.org/security/). Tell us about them as well if the XSphereOS default configuration makes them worse. Issues in the desktop compositor go to [`mendsec/xspherede`](https://github.com/mendsec/xspherede/security/policy).
+Vulnerabilities in Debian packages that the image only ships unchanged should go to the [Debian Security Team](https://www.debian.org/security/). Tell us about them as well if the XSphereOS default configuration makes them worse. Issues in the desktop compositor go to [`spheradian/spheradian`](https://github.com/spheradian/spheradian/security/policy).
 
 ## Reporting a Vulnerability
 
@@ -26,7 +26,7 @@ Please **do not** report security vulnerabilities through public GitHub issues, 
 ### Private Reporting Channels
 
 1. **GitHub Private Vulnerability Reporting (Preferred):**
-   Use the [Report a vulnerability](https://github.com/mendsec/xsphereos/security/advisories/new) button under the **Security** tab of this repository to open a confidential security advisory.
+   Use the [Report a vulnerability](https://github.com/spheradian/spheradianos/security/advisories/new) button under the **Security** tab of this repository to open a confidential security advisory.
 2. **Direct Email:**
    Send a detailed report to **fabiomendes@mailfence.com** with:
    - Description of the vulnerability and the affected component (see [Scope](#scope)).

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build mendsec/xspherede from a pinned commit SHA and stage it into the chroot
+# Build spheradian/spheradian from a pinned commit SHA and stage it into the chroot
 # overlay at config/includes.chroot/usr/bin/xspherede (M1, ADR-007).
 #
 # The build runs in a Debian trixie Rust container, so the binary links against
@@ -9,7 +9,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 
-XSPHEREDE_REPO="${XSPHEREDE_REPO:-https://github.com/mendsec/xspherede.git}"
+XSPHEREDE_REPO="${XSPHEREDE_REPO:-https://github.com/spheradian/spheradian.git}"
 XSPHEREDE_SHA="${XSPHEREDE_SHA:-3214ba4737aafb554f9502aeeb9718cdba258d3d}"
 # Rust toolchain on the image's Debian release, pinned by digest.
 BUILD_IMAGE="${XSPHEREDE_BUILD_IMAGE:-docker.io/library/rust:1.100.0-trixie@sha256:ebc54bef33ec8f9a5cd05799366010f35efbb73b354fb4f2cb086ec6b9460ef5}"

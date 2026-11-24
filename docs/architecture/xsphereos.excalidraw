@@ -148,14 +148,14 @@
       "updated": 1763480000000,
       "link": null,
       "locked": false,
-      "text": "LAYER 3: Compositor & Session — mendsec/xspherede (Public Apache-2.0, ADR-003)\n• xspherede (Smithay + wgpu, safe Rust, unsafe forbidden, no X11/Xwayland)\n• Pure Core: input, state, commands, WindowSurfaceProvider (unit-testable without GPU)\n• Fallback Flat Wayland Session (M1, #5) when Vulkan/GL is unavailable",
+      "text": "LAYER 3: Compositor & Session — spheradian/spheradian (Public Apache-2.0, ADR-003)\n• xspherede (Smithay + wgpu, safe Rust, unsafe forbidden, no X11/Xwayland)\n• Pure Core: input, state, commands, WindowSurfaceProvider (unit-testable without GPU)\n• Fallback Flat Wayland Session (M1, #5) when Vulkan/GL is unavailable",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 14,
       "containerId": null,
-      "originalText": "LAYER 3: Compositor & Session — mendsec/xspherede (Public Apache-2.0, ADR-003)\n• xspherede (Smithay + wgpu, safe Rust, unsafe forbidden, no X11/Xwayland)\n• Pure Core: input, state, commands, WindowSurfaceProvider (unit-testable without GPU)\n• Fallback Flat Wayland Session (M1, #5) when Vulkan/GL is unavailable"
+      "originalText": "LAYER 3: Compositor & Session — spheradian/spheradian (Public Apache-2.0, ADR-003)\n• xspherede (Smithay + wgpu, safe Rust, unsafe forbidden, no X11/Xwayland)\n• Pure Core: input, state, commands, WindowSurfaceProvider (unit-testable without GPU)\n• Fallback Flat Wayland Session (M1, #5) when Vulkan/GL is unavailable"
     },
     {
       "id": "l2-box",
@@ -208,14 +208,14 @@
       "updated": 1763480000000,
       "link": null,
       "locked": false,
-      "text": "LAYER 2: Debian minbase Substrate — mendsec/xsphereos (Public Apache-2.0)\n• Core OS (M0): Debian trixie minbase, systemd, dbus, udev, seatd/logind (no Recommends)\n• Media & Net (M1–M3): Mesa Vulkan/GL, PipeWire/WirePlumber, NetworkManager vs iwd (#8, #10)\n• Packaging & Install (M4, #11, #12): Signed APT repo, xsphereos-base metapackage, Installer",
+      "text": "LAYER 2: Debian minbase Substrate — spheradian/spheradianos (Public Apache-2.0)\n• Core OS (M0): Debian trixie minbase, systemd, dbus, udev, seatd/logind (no Recommends)\n• Media & Net (M1–M3): Mesa Vulkan/GL, PipeWire/WirePlumber, NetworkManager vs iwd (#8, #10)\n• Packaging & Install (M4, #11, #12): Signed APT repo, xsphereos-base metapackage, Installer",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 14,
       "containerId": null,
-      "originalText": "LAYER 2: Debian minbase Substrate — mendsec/xsphereos (Public Apache-2.0)\n• Core OS (M0): Debian trixie minbase, systemd, dbus, udev, seatd/logind (no Recommends)\n• Media & Net (M1–M3): Mesa Vulkan/GL, PipeWire/WirePlumber, NetworkManager vs iwd (#8, #10)\n• Packaging & Install (M4, #11, #12): Signed APT repo, xsphereos-base metapackage, Installer"
+      "originalText": "LAYER 2: Debian minbase Substrate — spheradian/spheradianos (Public Apache-2.0)\n• Core OS (M0): Debian trixie minbase, systemd, dbus, udev, seatd/logind (no Recommends)\n• Media & Net (M1–M3): Mesa Vulkan/GL, PipeWire/WirePlumber, NetworkManager vs iwd (#8, #10)\n• Packaging & Install (M4, #11, #12): Signed APT repo, xsphereos-base metapackage, Installer"
     },
     {
       "id": "l1-box",

@@ -28,7 +28,7 @@ Both patterns are inspired by the public `abyssal-garden` WebGPU demo (see §8);
 ## 3. Scope
 
 - **In scope:** render-level model and selector, crash detection and persisted downgrade, warm-up and pipeline cache during the Plymouth phase, kernel command-line overrides, test strategy, and the systemd/file-system contract between `xsphereos` and `xspherede`.
-- **Out of scope:** the content of each level (exact lattice density, effects), which is tuned in `mendsec/xspherede`; custom drivers or kernel changes (ADR-004 §3); tiers 0–2, which stay as specified in `BOOT-EXPERIENCE.md` §6.3.
+- **Out of scope:** the content of each level (exact lattice density, effects), which is tuned in `spheradian/spheradian`; custom drivers or kernel changes (ADR-004 §3); tiers 0–2, which stay as specified in `BOOT-EXPERIENCE.md` §6.3.
 
 ## 4. Options Considered
 

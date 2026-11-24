@@ -1,8 +1,8 @@
 # XSphereOS
 
-**XSphereOS** (`mendsec/xsphereos`) is a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **XSphereDE** spherical Wayland desktop, in the spirit of Kurumin Linux.
+**XSphereOS** (`spheradian/spheradianos`) is a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **XSphereDE** spherical Wayland desktop, in the spirit of Kurumin Linux.
 
-> **Security scope:** Threat models, audit findings, and hardening specifics live in the private `mendsec/xspherede-security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in XSphereDE is **not** an enforced security boundary.
+> **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in XSphereDE is **not** an enforced security boundary.
 
 ---
 
@@ -10,9 +10,9 @@
 
 | Repository | Visibility | Role |
 |---|---|---|
-| `mendsec/xsphereos` (this repo) | Public (Apache-2.0, [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md)) | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
-| `mendsec/xspherede` | Public (Apache-2.0, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
-| `mendsec/xspherede-security` | Private | Security analysis, threat models, and hardening notes for both projects |
+| `spheradian/spheradianos` (this repo) | Public (Apache-2.0, [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md)) | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
+| `spheradian/spheradian` | Public (Apache-2.0, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
+| `spheradian/security` | Private | Security analysis, threat models, and hardening notes for both projects |
 
 ---
 
@@ -101,7 +101,7 @@ shfmt -d auto/config auto/build auto/clean scripts/*.sh \
 pre-commit run --all-files                 # local mirror via .pre-commit-config.yaml
 ```
 
-Automated PR code and security reviews run via [`.github/workflows/claude-review.yml`](.github/workflows/claude-review.yml) (using [`.github/claude-review-guidelines.md`](.github/claude-review-guidelines.md)), requiring the Claude GitHub App (`https://github.com/apps/claude`) installed on `mendsec/xsphereos` and `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` configured in repository Secrets.
+Automated PR code and security reviews run via [`.github/workflows/claude-review.yml`](.github/workflows/claude-review.yml) (using [`.github/claude-review-guidelines.md`](.github/claude-review-guidelines.md)), requiring the Claude GitHub App (`https://github.com/apps/claude`) installed on `spheradian/spheradianos` and `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` configured in repository Secrets.
 
 ### Boot Splash & Headless QEMU Tests
 
@@ -144,9 +144,9 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
 - [docs/adr/README.md](docs/adr/README.md) — Architecture Decision Records:
   - [ADR-001](docs/adr/ADR-001-github-roadmap-governance.md) — GitHub Roadmap, Governance, and Continuity Structure
   - [ADR-002](docs/adr/ADR-002-zero-prompt-bootloaders.md) — Zero-Prompt Direct Boot via `live-build` Bootloader Templates
-  - [ADR-003](docs/adr/ADR-003-xspherede-visibility.md) — Repository Visibility Policy for `mendsec/xspherede`
+  - [ADR-003](docs/adr/ADR-003-xspherede-visibility.md) — Repository Visibility Policy for `spheradian/spheradian`
   - [ADR-004](docs/adr/ADR-004-console-grade-fluidity.md) — Console-Grade Fluidity Discipline (`zstd`, `cgroups v2`, `zram`, `DMA-BUF`)
   - [ADR-005](docs/adr/ADR-005-boot-procedural-audio.md) — Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement
   - [ADR-006](docs/adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery
   - [ADR-009](docs/adr/ADR-009-gpu-render-levels-and-warmup.md) — GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4)
-  - [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md) — Make `mendsec/xsphereos` Public After M0, Announce at M2
+  - [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md) — Make `spheradian/spheradianos` Public After M0, Announce at M2

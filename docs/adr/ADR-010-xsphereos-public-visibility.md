@@ -1,4 +1,4 @@
-# ADR-010: Make `mendsec/xsphereos` Public After M0, Announce at M2
+# ADR-010: Make `spheradian/spheradianos` Public After M0, Announce at M2
 
 **Date:** 2026-11-22  
 **Status:** Proposed  
@@ -11,7 +11,7 @@
 
 ## 1. Executive Summary
 
-`mendsec/xsphereos` is private by decision of ADR-003, ADR-001, and `ENGINEERING-PLAN.md` §5.3. We propose to **make it public once Milestone `M0` is closed and the pre-publication checklist in §5 is complete**, without announcing it, and to **announce the project publicly when `M2` (real compositor, B4) is done**. `mendsec/xspherede-security` stays private, unchanged.
+`spheradian/spheradianos` is private by decision of ADR-003, ADR-001, and `ENGINEERING-PLAN.md` §5.3. We propose to **make it public once Milestone `M0` is closed and the pre-publication checklist in §5 is complete**, without announcing it, and to **announce the project publicly when `M2` (real compositor, B4) is done**. `spheradian/security` stays private, unchanged.
 
 ## 2. Context and Problem
 
@@ -46,9 +46,9 @@ Option A protects nothing that matters: the sensitive material already lives in 
 Adopt **Option B**:
 
 1. Complete the checklist in §5. Each item is a GitHub Issue under Milestone `M0`.
-2. Once `M0` is closed and every §5 item is done, the approver switches `mendsec/xsphereos` to public. This is a manual action by the approver, never by automation.
+2. Once `M0` is closed and every §5 item is done, the approver switches `spheradian/spheradianos` to public. This is a manual action by the approver, never by automation.
 3. Do not announce the project before `M2` is complete. "Announce" means posts, forum threads, release notes, or promotion outside GitHub. Being discoverable on GitHub is fine.
-4. `mendsec/xspherede-security` stays private. The rule that no threat models, audit findings, or vulnerability details are committed to `xsphereos` becomes stricter, because the repository will be readable by anyone.
+4. `spheradian/security` stays private. The rule that no threat models, audit findings, or vulnerability details are committed to `xsphereos` becomes stricter, because the repository will be readable by anyone.
 5. **Licence: Apache-2.0** for the distribution recipe, tooling, tests, and documentation in `xsphereos`, matching `xspherede` (which already ships Apache-2.0). The approver decided Apache-2.0 for all project code on 2026-11-23 (ADR-011 §5.5, PR #34). This resolves the licensing part of `DISTRO-DESIGN.md` §10, open question 6 (naming and branding remain open, see §5). It allows derivative distributions, including closed ones, adds an explicit patent grant, and keeps both projects under one licence. Packages shipped in the image keep their own Debian licences, and the Apache-2.0 licence covers only what this repository authors.
 
 ## 5. Pre-Publication Checklist (gate)

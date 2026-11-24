@@ -1,6 +1,6 @@
 # Contributing to XSphereOS
 
-Thanks for your interest in XSphereOS. This repository holds the Debian `live-build` recipe, the boot experience, and the test and release tooling for the distribution. The desktop compositor lives in [`mendsec/xspherede`](https://github.com/mendsec/xspherede), and contributions to the compositor go there.
+Thanks for your interest in XSphereOS. This repository holds the Debian `live-build` recipe, the boot experience, and the test and release tooling for the distribution. The desktop compositor lives in [`spheradian/spheradian`](https://github.com/spheradian/spheradian), and contributions to the compositor go there.
 
 XSphereOS is in early development and has a single maintainer. Small, focused changes are the easiest to review.
 

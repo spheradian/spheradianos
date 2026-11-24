@@ -13,7 +13,7 @@ Review every pull request against the rules in `docs/ENGINEERING-PLAN.md` and ac
   - Enforce minimal per-job `permissions:` (`contents: read` by default), `persist-credentials: false` on checkout, and zero template injection (`${{ ... }}` directly inside `run:`).
 - **Secrets & repository isolation (`ADR-003`):**
   - Reject any credentials, tokens, or private keys.
-  - Never commit threat models, exploit details, or audit specifics belonging to `mendsec/xspherede-security`; PR security notes must stay neutral (`None` or `See private tracker`).
+  - Never commit threat models, exploit details, or audit specifics belonging to `spheradian/security`; PR security notes must stay neutral (`None` or `See private tracker`).
 
 ## 2. Distribution & ADR Invariants
 - **Minimal Debian `trixie` (`auto/config`, `config/package-lists/`):**
