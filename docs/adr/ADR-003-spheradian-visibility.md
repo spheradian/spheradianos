@@ -1,7 +1,7 @@
 # ADR-003: Repository Visibility Policy for `spheradian/spheradian`
 
 **Date:** 2026-11-18  
-**Status:** Accepted  
+**Status:** Accepted (the `spheradianos` part of §4 is superseded by [ADR-010](ADR-010-spheradianos-public-visibility.md))  
 **Author:** Senior Software Architect  
 **Approver:** Fábio Mendes (`mendsec`)  
 **Confidence:** High  
@@ -24,6 +24,8 @@
 ## 4. Decision
 
 Adopt **Option A**: `spheradian/spheradian` remains public under the MIT license; `spheradian/spheradianos` and `spheradian/security` remain strictly private.
+
+> **Update:** [ADR-010](ADR-010-spheradianos-public-visibility.md) supersedes this for `spheradian/spheradianos`, which becomes public under Apache-2.0 after M0. `spheradian/security` stays private.
 
 ## 5. Consequences and Trade-offs
 

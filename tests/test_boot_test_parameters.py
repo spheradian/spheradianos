@@ -156,12 +156,38 @@ RUNNING_KIOSK = """=== spheradianos-test-journal: session units ===
 === spheradianos-test-journal: end ===
 """
 
+SCOPED_KIOSK = """=== spheradianos-test-journal: session units ===
+=== spheradianos-test-journal: unit states ===
+\u25cf spheradian-session.service - SpheradianOS M1 Prototype Session (Wayland Kiosk + Fallback)
+     Active: active (running) since Mon 2026-11-23 02:44:46 UTC; 58s ago
+   Main PID: 893 (spheradian-session)
+     CGroup: /spheradian.slice/spheradian-session.slice/spheradian-session.service
+             \u2023 893 /bin/sh /usr/lib/spheradianos/spheradian-session
+=== spheradianos-test-journal: session processes ===
+/bin/sh /usr/lib/spheradianos/spheradian-session
+cage -s -- /usr/bin/spheradian
+/usr/bin/spheradian
+Xwayland :0 -rootless -core
+=== spheradianos-test-journal: kernel graphics ===
+=== spheradianos-test-journal: end ===
+"""
+
 
 class SessionStateTests(unittest.TestCase):
     """The graphical boot passes only if the kiosk session really runs."""
 
     def test_a_running_kiosk_with_spheradian(self) -> None:
         self.assertEqual(boot_test.session_state(RUNNING_KIOSK), (True, "spheradian"))
+
+    def test_spheradian_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
+        # pam_systemd moves cage and its client out of the unit's cgroup, so
+        # systemctl status shows only the launcher; the guest lists them instead.
+        journal = SCOPED_KIOSK
+        self.assertEqual(boot_test.session_state(journal), (True, "spheradian"))
+
+    def test_foot_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
+        journal = SCOPED_KIOSK.replace("/usr/bin/spheradian", "/usr/bin/foot")
+        self.assertEqual(boot_test.session_state(journal), (True, "foot (fallback)"))
 
     def test_a_running_kiosk_on_the_fallback_terminal(self) -> None:
         journal = RUNNING_KIOSK.replace("cage -s -- /usr/bin/spheradian", "cage -s -- /usr/bin/foot")
@@ -185,6 +211,37 @@ class SessionStateTests(unittest.TestCase):
 
     def test_no_journal_is_not_running(self) -> None:
         self.assertEqual(boot_test.session_state(""), (False, None))
+
+
+FALLBACK_JOURNAL = """=== spheradianos-test-journal: session units ===
+[   73.5] spheradianos (-session)[918]: pam_unix(login:session): session opened for user spheradian
+[   73.6] spheradianos spheradian-session[920]: spheradian-session: starting spheradian
+[   73.9] spheradianos spheradian-session[930]: [INFO  spheradian] Starting Spheradian v0.0.1
+[   74.1] spheradianos spheradian-session[930]: No compatible GPU adapter found
+[   74.2] spheradianos spheradian-session[920]: spheradian-session: spheradian exited with status 134, \
+falling back to foot
+[   74.3] spheradianos spheradian-session[940]: foot: some unrelated foot line
+=== spheradianos-test-journal: unit states ===
+"""
+
+
+class SpheradianAttemptTests(unittest.TestCase):
+    """When the kiosk falls back to foot, the boot test shows why spheradian exited."""
+
+    def test_the_attempt_is_cut_from_start_to_fallback(self) -> None:
+        attempt = boot_test.spheradian_attempt(FALLBACK_JOURNAL)
+        self.assertIn("starting spheradian", attempt[0])
+        self.assertIn("No compatible GPU adapter found", "\n".join(attempt))
+        self.assertIn("falling back to foot", attempt[-1])
+        self.assertNotIn("unrelated foot line", "\n".join(attempt))
+
+    def test_no_attempt_without_the_launcher_marker(self) -> None:
+        self.assertEqual(boot_test.spheradian_attempt(RUNNING_KIOSK), [])
+
+    def test_an_attempt_that_never_fell_back_runs_to_the_end_of_the_section(self) -> None:
+        journal = FALLBACK_JOURNAL.split("[   74.2]")[0] + "=== spheradianos-test-journal: unit states ===\n"
+        attempt = boot_test.spheradian_attempt(journal)
+        self.assertIn("No compatible GPU adapter found", attempt[-1])
 
 
 if __name__ == "__main__":

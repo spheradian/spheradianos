@@ -38,4 +38,4 @@ Adopt **Option A**. All roadmap deliverables are tracked as Issues assigned to M
 
 ## 7. Security and Compliance
 
-`spheradian/spheradianos` and Project `#5` remain private. No sensitive security findings from `spheradian/security` are mirrored in GitHub Issues.
+~~`spheradian/spheradianos` and Project `#5` remain private.~~ Superseded by [ADR-010](ADR-010-spheradianos-public-visibility.md): `spheradian/spheradianos` becomes public after M0, and ADR-010 settles the visibility of Project `#5`. No sensitive security findings from `spheradian/security` are mirrored in GitHub Issues.

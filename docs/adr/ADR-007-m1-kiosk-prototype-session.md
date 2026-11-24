@@ -36,7 +36,7 @@ Adopt **Option A**:
 1. Add `seatd`, `cage`, `mesa-vulkan-drivers`, `libegl-mesa0`, and `foot` to `config/package-lists/spheradianos-base.list.chroot` with one-line justifications.
 2. Run `spheradian-session.service` inside `spheradian-session.slice` (`ADR-004`) as unprivileged user `spheradian`, launching `cage -s -- /usr/bin/spheradian` and falling back automatically to `cage -s -- /usr/bin/foot` if `spheradian` fails or `spheradian.fallback=1` is set.
 3. Preserve `spheradian.session=console` via `ConditionKernelCommandLine=!spheradian.session=console` so `boot-test.py` console tests remain deterministic.
-4. Build `spheradian/spheradian` from a pinned commit SHA (`scripts/build-spheradian.sh`) and keep the binary gitignored.
+4. Build `spheradian/spheradian` from a pinned commit SHA (`scripts/build-spheradian.sh`) and keep the binary gitignored, inside a digest-pinned Debian trixie Rust container so it links against the image's glibc. A host build on the CI runner required `GLIBC_2.43` symbols that trixie (2.41) lacks, so `spheradian` exited at once and the kiosk always showed `foot`.
 
 ## 6. Consequences and Trade-offs
 

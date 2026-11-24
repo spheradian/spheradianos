@@ -17,9 +17,15 @@ elif grep -qw 'spheradian\.fallback=1' /proc/cmdline 2>/dev/null; then
 fi
 
 if [ "$fallback" -eq 0 ]; then
-	if cage -s -- /usr/bin/spheradian; then
+	# These two lines bracket spheradian's output in the journal, so a fallback
+	# can be explained (scripts/boot-test.py prints what lies between them).
+	echo "spheradian-session: starting spheradian" >&2
+	status=0
+	cage -s -- /usr/bin/spheradian || status=$?
+	if [ "$status" -eq 0 ]; then
 		exit 0
 	fi
+	echo "spheradian-session: spheradian exited with status $status, falling back to foot" >&2
 fi
 
 exec cage -s -- /usr/bin/foot
