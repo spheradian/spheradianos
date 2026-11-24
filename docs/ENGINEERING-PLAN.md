@@ -1,8 +1,8 @@
-# XSphereOS and XSphereDE: Engineering Plan (TDD, Clean Code, DevSecOps)
+# SpheradianOS and Spheradian: Engineering Plan (TDD, Clean Code, DevSecOps)
 
 Status: **draft for review**. This plan covers both the desktop (`spheradian/spheradian`) and the distribution (`spheradian/spheradianos`). It builds on [DISTRO-DESIGN.md](DISTRO-DESIGN.md).
 
-> Scope note: this file states practices and gates. Threat models, audit findings, and hardening specifics live only in the private `xspherede-security` repository.
+> Scope note: this file states practices and gates. Threat models, audit findings, and hardening specifics live only in the private `spheradian/security` repository.
 
 ---
 
@@ -12,7 +12,7 @@ Status: **draft for review**. This plan covers both the desktop (`spheradian/sph
 |---|---|---|
 | Rust tests | 7 `#[test]` across ~3,400 lines (6 in `security.rs`, 1 in `camera.rs`) | `main.rs` (1,471 lines), `window3d.rs`, `sphere_env.rs`, `minimap.rs` have none |
 | Structure | `main.rs` mixes windowing, rendering, input, and app state | Hard to test; hard to review |
-| CI (xspherede) | fmt, clippy `-D warnings`, test on stable and MSRV 1.88, `cargo audit`, BSD cross-check, weekly schedule, actions pinned by SHA, least-privilege token | Good base. No coverage, no deny/licence policy, no SBOM, no release signing |
+| CI (spheradian) | fmt, clippy `-D warnings`, test on stable and MSRV 1.88, `cargo audit`, BSD cross-check, weekly schedule, actions pinned by SHA, least-privilege token | Good base. No coverage, no deny/licence policy, no SBOM, no release signing |
 | Distro | M0 live-build recipe, syntax-checked only; never built | No automated checks at all yet |
 
 The plan below closes these gaps in order of risk reduction per unit of effort.
@@ -44,7 +44,7 @@ Bug fixes begin with a failing regression test that reproduces the bug.
 
 ### 3.2 Test pyramid for this project
 
-| Level | XSphereDE (Rust) | XSphereOS (image) | Speed target |
+| Level | Spheradian (Rust) | SpheradianOS (image) | Speed target |
 |---|---|---|---|
 | Unit | Pure functions and state machines: spherical math, raycasting, trust-domain policy, clipboard vault, surface validation | Manifest and config parsers, script helpers | seconds, no GPU, no network |
 | Integration | Layout and input routing against a fake `WindowSurfaceProvider`; headless wgpu adapter where available | Config-tree checks: every package justified, no forbidden package, `auto/config` options as expected | under a minute |
@@ -121,7 +121,7 @@ Every pull request runs the same stages; all required to pass.
 
 ### 5.2 Supply chain
 
-- **Pin everything.** GitHub Actions by commit SHA (already done), `Cargo.lock` committed and `--locked` everywhere, Debian snapshot date per image release, XSphereOS package versions pinned.
+- **Pin everything.** GitHub Actions by commit SHA (already done), `Cargo.lock` committed and `--locked` everywhere, Debian snapshot date per image release, SpheradianOS package versions pinned.
 - **Few dependencies, justified.** Each new crate or package needs a rationale in the PR; `cargo deny` bans unwanted licences and duplicate trees.
 - **Update flow.** Dependabot (exists) for crates and actions; for the distro, a scheduled job bumps the Debian snapshot and opens a PR that must pass the full pipeline.
 - **SBOM.** Generate an SBOM per release (CycloneDX for the Rust build, package list for the image) and publish it with the artifacts.
@@ -132,7 +132,7 @@ Every pull request runs the same stages; all required to pass.
 - Branch protection on `main`: required reviews or a required self-review checklist for a solo maintainer, required status checks, linear history, no force pushes, signed commits.
 - Least-privilege tokens in workflows (`permissions: contents: read` default, already used); `persist-credentials: false` on checkout (already used).
 - Two-factor authentication on the maintainer account; hardware key for the release signing role.
-- Repository visibility: `xspherede-security` stays private, with its access list reviewed on a schedule. `xsphereos` is public per ADR-010, like `xspherede`.
+- Repository visibility: `spheradian/security` stays private, with its access list reviewed on a schedule. `spheradianos` is public per ADR-010, like `spheradian`.
 - Security reporting stays private per `SECURITY.md`; fixes land with neutral, functional commit messages.
 
 ### 5.4 Runtime and host hardening (high level)
@@ -160,13 +160,13 @@ Ordered so each step makes the next safer.
 | Step | Deliverable | Repo |
 |---|---|---|
 | 1 | Branch protection, required checks, secret scanning and push protection enabled | both |
-| 2 | `shellcheck`, `shfmt`, and config-assertion tests for the recipe; CI workflow for the distro repo | xsphereos |
-| 3 | First real image build and QEMU boot test; record size and package budget (completes M0) | xsphereos |
-| 4 | `cargo deny` and `gitleaks` added to the desktop CI; `cargo llvm-cov` report | xspherede |
-| 5 | Characterization tests around `main.rs` behavior, then split `main.rs` into modules (behavior unchanged) | xspherede |
-| 6 | Property tests for math and the policy engine; `WindowSurfaceProvider` trait with a fake | xspherede |
+| 2 | `shellcheck`, `shfmt`, and config-assertion tests for the recipe; CI workflow for the distro repo | spheradianos |
+| 3 | First real image build and QEMU boot test; record size and package budget (completes M0) | spheradianos |
+| 4 | `cargo deny` and `gitleaks` added to the desktop CI; `cargo llvm-cov` report | spheradian |
+| 5 | Characterization tests around `main.rs` behavior, then split `main.rs` into modules (behavior unchanged) | spheradian |
+| 6 | Property tests for math and the policy engine; `WindowSurfaceProvider` trait with a fake | spheradian |
 | 7 | SBOM generation and signed, CI-built release artifacts | both |
-| 8 | Reproducible-build comparison job for the image | xsphereos |
+| 8 | Reproducible-build comparison job for the image | spheradianos |
 | 9 | ADR directory and PR template updates (security-impact note, test evidence) | both |
 
 Definition of done for any change: tests written first where logic is involved, all gates green, docs updated, no new unjustified dependency, security-impact note filled in.

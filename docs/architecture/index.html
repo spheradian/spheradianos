@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>XSphereOS — Architecture &amp; System Design</title>
+  <title>SpheradianOS — Architecture &amp; System Design</title>
   <style>
     :root {
       --bg: #0f1117;
@@ -109,11 +109,11 @@
     <header class="card header">
       <div>
         <div class="badges">
-          <span class="badge primary">XSphereOS</span>
+          <span class="badge primary">SpheradianOS</span>
           <span class="badge">Debian trixie · minbase · amd64</span>
           <span class="badge">Wayland-only (No X11/Xwayland)</span>
         </div>
-        <h1>XSphereOS — System Architecture &amp; Design</h1>
+        <h1>SpheradianOS — System Architecture &amp; Design</h1>
         <p class="sub">Offline standalone explorer. Click any component to inspect responsibilities, contracts, milestones (M0–M5), and ADRs.</p>
       </div>
 
@@ -144,7 +144,7 @@
 
     <div class="card banner">
       <span id="profile-desc"></span>
-      <span class="mono" style="color: var(--muted);">xspherede (Apache-2.0 Public) · xsphereos (Apache-2.0 Public) · xspherede-security (Private)</span>
+      <span class="mono" style="color: var(--muted);">spheradian (Apache-2.0 Public) · spheradianos (Apache-2.0 Public) · spheradian/security (Private)</span>
     </div>
 
     <div class="grid">
@@ -179,7 +179,7 @@
           </div>
           <div class="nodes">
             <button data-id="compositor-smithay" class="node">
-              <div class="node-top"><span>xspherede (Smithay + wgpu)</span><span class="node-ms">M1–M2</span></div>
+              <div class="node-top"><span>spheradian (Smithay + wgpu)</span><span class="node-ms">M1–M2</span></div>
               <p>Spherical 3D rendering, raycasting, camera, and window mesh.</p>
             </button>
             <button data-id="compositor-core" class="node">
@@ -211,7 +211,7 @@
             </button>
             <button data-id="base-packaging" class="node">
               <div class="node-top"><span>Signed APT &amp; Installer</span><span class="node-ms">M4</span></div>
-              <p>xsphereos-base metapackage, signed APT repo, and disk installer.</p>
+              <p>spheradianos-base metapackage, signed APT repo, and disk installer.</p>
             </button>
           </div>
         </section>
@@ -231,7 +231,7 @@
               <p>linux-image-amd64, quiet loglevel=3, native KMS handover.</p>
             </button>
             <button data-id="boot-plymouth" class="node">
-              <div class="node-top"><span>Plymouth xsphere (~18 KiB)</span><span class="node-ms">M0 / M2</span></div>
+              <div class="node-top"><span>Plymouth spheradian (~18 KiB)</span><span class="node-ms">M0 / M2</span></div>
               <p>Arithmetic splash, 20s watchdog, flicker-free hand-off (B4).</p>
             </button>
           </div>
@@ -315,14 +315,14 @@
       "domain-sandbox": {
         title: "Per-Domain Sandbox & Vault",
         ms: "M5",
-        repo: "spheradian/spheradian + spheradian/spheradianos + xspherede-security",
+        repo: "spheradian/spheradian + spheradian/spheradianos + spheradian/security",
         resp: "OS-level process isolation per trust domain (namespaces, seccomp, cgroups, Wayland security-context) and clipboard vault.",
         contracts: "Declarative domain policy verified by property tests (proptest) and boot-time self-audit.",
         security: "Turns the trust-domain model into an enforced boundary. Until M5, docs/UI state it is unverified.",
         refs: ["Issue #13", "DISTRO-DESIGN §2"]
       },
       "compositor-smithay": {
-        title: "xspherede (Smithay + wgpu)",
+        title: "spheradian (Smithay + wgpu)",
         ms: "M1–M2",
         repo: "spheradian/spheradian (Public Apache-2.0)",
         resp: "Sole display server and desktop shell. Runs as prototype in M1 kiosk session; becomes native Smithay + wgpu compositor in M2.",
@@ -353,7 +353,7 @@
         ms: "M0",
         repo: "spheradian/spheradianos (Public Apache-2.0)",
         resp: "Minimal substrate built with debootstrap --variant=minbase (Debian trixie), no task-* or implicit Recommends. Every package has a 1-line justification.",
-        contracts: "auto/config defines image options; config/package-lists/xsphereos-base.list.chroot defines the manifest.",
+        contracts: "auto/config defines image options; config/package-lists/spheradianos-base.list.chroot defines the manifest.",
         security: "Minimal attack surface; unjustified packages are rejected by CI.",
         refs: ["Issue #1", "Issue #2"]
       },
@@ -370,7 +370,7 @@
         title: "Signed APT Repo & Installer",
         ms: "M4",
         repo: "spheradian/spheradianos (Public Apache-2.0)",
-        resp: "Signed APT repository with xsphereos-base metapackage, nightly/testing/stable channels, first-boot flow, and disk installer.",
+        resp: "Signed APT repository with spheradianos-base metapackage, nightly/testing/stable channels, first-boot flow, and disk installer.",
         contracts: "System updates delivered as standard apt upgrades.",
         security: "Installer strategy (Calamares vs Debian Installer vs custom) governed by ADR (#11).",
         refs: ["Issue #11", "Issue #12"]
@@ -394,11 +394,11 @@
         refs: ["BOOT-EXPERIENCE §2", "Issue #1"]
       },
       "boot-plymouth": {
-        title: "Plymouth xsphere (~18 KiB)",
+        title: "Plymouth spheradian (~18 KiB)",
         ms: "M0 / M2",
         repo: "spheradian/spheradianos",
         resp: "Arithmetic splash generated by scripts/gen-boot-assets.py with reduced-motion variant and real systemd milestone lighting.",
-        contracts: "20s watchdog drops to plain text on stall/unit failure. Hands off DRM master cleanly to xspherede in M2 (B4).",
+        contracts: "20s watchdog drops to plain text on stall/unit failure. Hands off DRM master cleanly to spheradian in M2 (B4).",
         security: "Never extends boot duration; readable diagnostics guaranteed on failure.",
         refs: ["Issue #1", "Issue #7", "BOOT-EXPERIENCE"]
       },

@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CHROOT = ROOT / "config" / "includes.chroot"
 UNITS = CHROOT / "etc" / "systemd" / "system"
-PROBE = CHROOT / "usr" / "lib" / "xsphereos" / "boot-timing"
+PROBE = CHROOT / "usr" / "lib" / "spheradianos" / "boot-timing"
 
 
 def load_budget():
@@ -29,11 +29,11 @@ budget = load_budget()
 
 LIVE_CFG = """\
 label live-amd64
-\tmenu label ^XSphereOS Live (amd64)
+\tmenu label ^SpheradianOS Live (amd64)
 \tmenu default
 \tlinux /live/vmlinuz
 \tinitrd /live/initrd.img
-\tappend boot=live components quiet splash initrd=/live/initrd.img username=xsphere
+\tappend boot=live components quiet splash initrd=/live/initrd.img username=spheradian
 
 label live-amd64-failsafe
 \tlinux /live/vmlinuz
@@ -45,7 +45,7 @@ class CommandLine(unittest.TestCase):
     def test_the_default_entry_command_line_is_read_without_the_initrd(self):
         self.assertEqual(
             budget.default_append(LIVE_CFG),
-            ["boot=live", "components", "quiet", "splash", "username=xsphere"],
+            ["boot=live", "components", "quiet", "splash", "username=spheradian"],
         )
 
     def test_a_missing_entry_is_an_error(self):
@@ -59,15 +59,15 @@ class CommandLine(unittest.TestCase):
 
 class Report(unittest.TestCase):
     def test_the_probe_line_is_read_in_milliseconds(self):
-        text = "noise\nxsphere-timing userspace=1328395 finish=4344900 session=4327944\nmore"
+        text = "noise\nspheradian-timing userspace=1328395 finish=4344900 session=4327944\nmore"
         self.assertEqual(
             budget.parse_timing(text),
             {"userspace": 1328.395, "finish": 4344.9, "session": 4327.944},
         )
 
     def test_no_line_or_an_unrecorded_timestamp_is_no_report(self):
-        self.assertIsNone(budget.parse_timing("xsphere-tim"))
-        self.assertIsNone(budget.parse_timing("xsphere-timing userspace=1 finish=2 session=0\n"))
+        self.assertIsNone(budget.parse_timing("spheradian-tim"))
+        self.assertIsNone(budget.parse_timing("spheradian-timing userspace=1 finish=2 session=0\n"))
 
 
 class Statistics(unittest.TestCase):
@@ -101,12 +101,12 @@ class Statistics(unittest.TestCase):
 
 class Probe(unittest.TestCase):
     def test_the_probe_is_inert_without_its_kernel_parameter(self):
-        unit = (UNITS / "xsphereos-test-timing.service").read_text()
-        self.assertIn("ConditionKernelCommandLine=xsphere.test.timing", unit)
-        self.assertIn("ExecStart=/usr/lib/xsphereos/boot-timing", unit)
+        unit = (UNITS / "spheradianos-test-timing.service").read_text()
+        self.assertIn("ConditionKernelCommandLine=spheradian.test.timing", unit)
+        self.assertIn("ExecStart=/usr/lib/spheradianos/boot-timing", unit)
         # Type=exec lets the boot finish while the probe waits for it.
         self.assertIn("Type=exec", unit)
-        self.assertTrue((UNITS / "multi-user.target.wants" / "xsphereos-test-timing.service").is_symlink())
+        self.assertTrue((UNITS / "multi-user.target.wants" / "spheradianos-test-timing.service").is_symlink())
         self.assertTrue(os.access(PROBE, os.X_OK))
 
     def test_the_measurement_layers_every_probe_file(self):
@@ -133,7 +133,7 @@ class Probe(unittest.TestCase):
                 path.chmod(0o755)
             port = Path(root, "serial")
             environment = dict(
-                os.environ, PATH=f"{tools}:{os.environ['PATH']}", XSPHERE_TIMING_PORT=str(port)
+                os.environ, PATH=f"{tools}:{os.environ['PATH']}", SPHERADIAN_TIMING_PORT=str(port)
             )
             result = subprocess.run([str(PROBE)], env=environment, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -152,8 +152,8 @@ class Probe(unittest.TestCase):
             environment = dict(
                 os.environ,
                 PATH=f"{tools}:{os.environ['PATH']}",
-                XSPHERE_TIMING_PORT=str(Path(root, "serial")),
-                XSPHERE_TIMING_TRIES="2",
+                SPHERADIAN_TIMING_PORT=str(Path(root, "serial")),
+                SPHERADIAN_TIMING_TRIES="2",
             )
             result = subprocess.run([str(PROBE)], env=environment, capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)

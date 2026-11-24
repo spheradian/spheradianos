@@ -1,8 +1,0 @@
-[Plymouth Theme]
-Name=xsphere-still
-Description=XSphereOS boot splash, reduced motion: one still frame.
-ModuleName=script
-
-[script]
-ImageDir=/usr/share/plymouth/themes/xsphere
-ScriptFile=/usr/share/plymouth/themes/xsphere-still/xsphere-still.script

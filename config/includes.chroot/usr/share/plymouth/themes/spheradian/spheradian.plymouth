@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=spheradian
+Description=SpheradianOS boot splash: a seed of light reveals the sphere lattice.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/spheradian
+ScriptFile=/usr/share/plymouth/themes/spheradian/spheradian.script

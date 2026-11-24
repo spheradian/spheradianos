@@ -1,8 +1,8 @@
-# XSphereOS
+# SpheradianOS
 
-**XSphereOS** (`spheradian/spheradianos`) is a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **XSphereDE** spherical Wayland desktop, in the spirit of Kurumin Linux.
+**SpheradianOS** (`spheradian/spheradianos`) is a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **Spheradian** spherical Wayland desktop, in the spirit of Kurumin Linux.
 
-> **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in XSphereDE is **not** an enforced security boundary.
+> **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary.
 
 ---
 
@@ -10,20 +10,20 @@
 
 | Repository | Visibility | Role |
 |---|---|---|
-| `spheradian/spheradianos` (this repo) | Public (Apache-2.0, [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md)) | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
-| `spheradian/spheradian` | Public (Apache-2.0, [ADR-003](docs/adr/ADR-003-xspherede-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
+| `spheradian/spheradianos` (this repo) | Public (Apache-2.0, [ADR-010](docs/adr/ADR-010-spheradianos-public-visibility.md)) | `live-build` image recipe, package manifests, boot experience, QEMU/CI test harness, release tooling |
+| `spheradian/spheradian` | Public (Apache-2.0, [ADR-003](docs/adr/ADR-003-spheradian-visibility.md)) | Smithay + `wgpu` spherical Wayland compositor and desktop shell |
 | `spheradian/security` | Private | Security analysis, threat models, and hardening notes for both projects |
 
 ---
 
 ## Current Status
 
-XSphereOS is in active **M0 / Boot Experience (B1–B3)** development:
+SpheradianOS is in active **M0 / Boot Experience (B1–B3)** development:
 
 - **Implemented:**
   - `live-build` recipe (`auto/`, `config/`) producing a bootable hybrid ISO (`minbase`, no `Recommends`, `amd64`).
-  - `xsphere` Plymouth boot theme (~18 KiB across both variants), generated arithmetically from [`scripts/boot_timeline.py`](scripts/boot_timeline.py) via [`scripts/gen-boot-assets.py`](scripts/gen-boot-assets.py).
-  - **B1–B3 boot experience:** Ignite → Gather → Wake animation driven by real `systemd` milestones, `xsphere.motion=reduced` still-frame mode, 20 s stall watchdog, and plain-text failure reporting at login.
+  - `spheradian` Plymouth boot theme (~18 KiB across both variants), generated arithmetically from [`scripts/boot_timeline.py`](scripts/boot_timeline.py) via [`scripts/gen-boot-assets.py`](scripts/gen-boot-assets.py).
+  - **B1–B3 boot experience:** Ignite → Gather → Wake animation driven by real `systemd` milestones, `spheradian.motion=reduced` still-frame mode, 20 s stall watchdog, and plain-text failure reporting at login.
   - Headless QEMU boot verification ([`scripts/boot-test.py`](scripts/boot-test.py)) with normal, reduced-motion, failed-unit, and stalled-boot fault injection.
   - Concept audio/visual preview generator ([`scripts/render-boot-preview.py`](scripts/render-boot-preview.py), outputs in `preview/`).
   - GitHub Actions static & security CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) and PR review ([`.github/workflows/claude-review.yml`](.github/workflows/claude-review.yml)): `shellcheck`, `shfmt -d`, `ruff` (lint, Bandit `S` rules, format), `unittest` (including `systemd` unit checks), `actionlint`, `zizmor`, `opengrep`, `gitleaks`, and Claude Code PR & security review.
@@ -40,10 +40,10 @@ XSphereOS is in active **M0 / Boot Experience (B1–B3)** development:
 | Milestone | Scope | Done When |
 |---|---|---|
 | **M0** · Base image | Minimal Debian `minbase` live ISO | Boots unattended in QEMU to an autologged-in shell; package count and ISO size budgets recorded; static & boot CI green |
-| **M1** · Prototype session | Early desktop & performance substrate | XSphereDE prototype runs in a stub/kiosk session; fallback flat Wayland session exists; `zstd` squashfs, `cgroups v2` QoS, and `zram` applied ([ADR-004](docs/adr/ADR-004-console-grade-fluidity.md)) |
-| **M2** · Real compositor | Native Wayland session | `xspherede` (Smithay + `wgpu`) boots via DRM/KMS hand-off (**B4**); zero-copy `DMA-BUF` window capture renders a real terminal on the sphere |
+| **M1** · Prototype session | Early desktop & performance substrate | Spheradian prototype runs in a stub/kiosk session; fallback flat Wayland session exists; `zstd` squashfs, `cgroups v2` QoS, and `zram` applied ([ADR-004](docs/adr/ADR-004-console-grade-fluidity.md)) |
+| **M2** · Real compositor | Native Wayland session | `spheradian` (Smithay + `wgpu`) boots via DRM/KMS hand-off (**B4**); zero-copy `DMA-BUF` window capture renders a real terminal on the sphere |
 | **M3** · Usable desktop | Daily-driver essentials | Wayland-native browser, file manager, terminal, network, PipeWire/WirePlumber audio, procedural boot audio (**B5**, [ADR-005](docs/adr/ADR-005-boot-procedural-audio.md)), polar launcher, and low-power profile |
-| **M4** · Installable | Packaging & release pipeline | Installer, signed APT repo (`xsphereos-base`), first-boot flow (**B7**), reproducible builds, CycloneDX SBOM, and signed `testing` → `stable` releases |
+| **M4** · Installable | Packaging & release pipeline | Installer, signed APT repo (`spheradianos-base`), first-boot flow (**B7**), reproducible builds, CycloneDX SBOM, and signed `testing` → `stable` releases |
 | **M5** · Isolation | Enforced trust domains | Per-domain sandboxing (namespaces, seccomp, cgroups, clipboard vault) turns trust domains into a real security boundary |
 
 ### Boot Experience Milestones (`B0`–`B7`)
@@ -87,14 +87,14 @@ python3 -m unittest discover -s tests -v   # config, systemd unit, timeline math
 ruff check scripts tests                   # Python linting, import sorting, and Bandit security rules
 ruff format --check scripts tests          # Python formatting check
 shellcheck auto/config auto/build auto/clean scripts/*.sh \
-  config/hooks/live/9000-xsphereos-trim.hook.chroot \
-  config/includes.chroot/usr/lib/xsphereos/boot-watch \
+  config/hooks/live/9000-spheradianos-trim.hook.chroot \
+  config/includes.chroot/usr/lib/spheradianos/boot-watch \
   config/includes.chroot/etc/initramfs-tools/hooks/* \
   config/includes.chroot/etc/initramfs-tools/scripts/init-top/* \
   config/includes.chroot/etc/profile.d/*.sh
 shfmt -d auto/config auto/build auto/clean scripts/*.sh \
-  config/hooks/live/9000-xsphereos-trim.hook.chroot \
-  config/includes.chroot/usr/lib/xsphereos/boot-watch \
+  config/hooks/live/9000-spheradianos-trim.hook.chroot \
+  config/includes.chroot/usr/lib/spheradianos/boot-watch \
   config/includes.chroot/etc/initramfs-tools/hooks/* \
   config/includes.chroot/etc/initramfs-tools/scripts/init-top/* \
   config/includes.chroot/etc/profile.d/*.sh
@@ -106,9 +106,9 @@ Automated PR code and security reviews run via [`.github/workflows/claude-review
 ### Boot Splash & Headless QEMU Tests
 
 ```sh
-scripts/gen-boot-assets.py                 # regenerate the xsphere Plymouth theme (images and scripts)
+scripts/gen-boot-assets.py                 # regenerate the spheradian Plymouth theme (images and scripts)
 scripts/boot-test.py                       # boot the ISO headless in QEMU and verify the splash contract
-scripts/boot-test.py --reduced-motion      # verify the still-frame variant (xsphere.motion=reduced)
+scripts/boot-test.py --reduced-motion      # verify the still-frame variant (spheradian.motion=reduced)
 scripts/boot-test.py --fault fail          # inject a failed systemd unit: expects a plain-text report
 scripts/boot-test.py --fault stall         # inject a stalled boot: expects the 20 s watchdog report
 scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF and GRUB), ISO attached as a disk
@@ -116,7 +116,7 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
 
 ### Kernel Command-Line Switches
 
-- `xsphere.motion=reduced`: renders a single still frame instead of the animated sphere.
+- `spheradian.motion=reduced`: renders a single still frame instead of the animated sphere.
 - `plymouth.enable=0` (or removing `splash`): boots in plain text mode.
 - `Esc` during boot: switches to detailed text output.
 
@@ -137,16 +137,16 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
 ## Documentation & ADRs
 
 - [docs/DISTRO-DESIGN.md](docs/DISTRO-DESIGN.md) — Goals, non-goals, Debian `minbase` rules, session architecture, and `M0`–`M5` milestones.
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Layered system diagrams, boot hand-off sequence, DevSecOps pipeline, plus [Excalidraw canvas](docs/architecture/xsphereos.excalidraw) and [offline HTML inspector](docs/architecture/index.html).
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Layered system diagrams, boot hand-off sequence, DevSecOps pipeline, plus [Excalidraw canvas](docs/architecture/spheradianos.excalidraw) and [offline HTML inspector](docs/architecture/index.html).
 - [docs/BOOT-EXPERIENCE.md](docs/BOOT-EXPERIENCE.md) — Boot chain hooks, Ignite/Gather/Wake/Resolve/Unfold timeline, capability tiers, procedural audio, and `B0`–`B7` milestones.
 - [docs/ENGINEERING-PLAN.md](docs/ENGINEERING-PLAN.md) — TDD, Clean Code, DevSecOps gates, supply-chain pinning, SBOM, and release process.
 - [docs/REFERENCES.md](docs/REFERENCES.md) — Systems research, storage/compression benchmarks, and frame-pacing references.
 - [docs/adr/README.md](docs/adr/README.md) — Architecture Decision Records:
   - [ADR-001](docs/adr/ADR-001-github-roadmap-governance.md) — GitHub Roadmap, Governance, and Continuity Structure
   - [ADR-002](docs/adr/ADR-002-zero-prompt-bootloaders.md) — Zero-Prompt Direct Boot via `live-build` Bootloader Templates
-  - [ADR-003](docs/adr/ADR-003-xspherede-visibility.md) — Repository Visibility Policy for `spheradian/spheradian`
+  - [ADR-003](docs/adr/ADR-003-spheradian-visibility.md) — Repository Visibility Policy for `spheradian/spheradian`
   - [ADR-004](docs/adr/ADR-004-console-grade-fluidity.md) — Console-Grade Fluidity Discipline (`zstd`, `cgroups v2`, `zram`, `DMA-BUF`)
   - [ADR-005](docs/adr/ADR-005-boot-procedural-audio.md) — Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement
   - [ADR-006](docs/adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery
   - [ADR-009](docs/adr/ADR-009-gpu-render-levels-and-warmup.md) — GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4)
-  - [ADR-010](docs/adr/ADR-010-xsphereos-public-visibility.md) — Make `spheradian/spheradianos` Public After M0, Announce at M2
+  - [ADR-010](docs/adr/ADR-010-spheradianos-public-visibility.md) — Make `spheradian/spheradianos` Public After M0, Announce at M2

@@ -34,7 +34,7 @@ The Live ISO (`M0–M3`) carries `live-boot`, `squashfs`, and a generic `initrd`
 Adopt **Option B**:
 1. Separate performance targets: **Live ISO** (universal try-out) vs **Installed System (`M4`)** (primary console-grade boot target).
 2. At install time (`M4`), remove `live-boot`/`live-config`/`squashfs` and generate a `host-only` `initramfs` (`MODULES=dep` + `COMPRESS=zstd`).
-3. Keep all OS updates 100% binary and signed via APT (`xsphereos-base`); any future CPU microarchitecture optimization (e.g., `x86-64-v3`) is built in CI, never on the user's device.
+3. Keep all OS updates 100% binary and signed via APT (`spheradianos-base`); any future CPU microarchitecture optimization (e.g., `x86-64-v3`) is built in CI, never on the user's device.
 4. Maintain a **generic fallback `initrd` + Console-Style Recovery Mode** (clean minimal Wayland recovery UI, analogous to PlayStation Safe Mode) to re-detect hardware, rebuild `host-only` `initramfs`, verify integrity, or repair boot if the disk is moved to different hardware.
 
 ## 6. Consequences and Trade-offs

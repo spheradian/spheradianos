@@ -1,0 +1,26 @@
+#!/bin/sh
+# Test only: once the boot has finished, print the systemd boot timestamps as
+# one line on the first serial port, for scripts/boot-budget.py. Started by
+# spheradianos-test-timing.service when "spheradian.test.timing" is on the kernel
+# command line. All values are CLOCK_MONOTONIC microseconds since the kernel
+# started; "session" is when the tty1 session (the first thing the user can
+# use) was started.
+#
+# Overridable for tests: SPHERADIAN_TIMING_PORT, SPHERADIAN_TIMING_TRIES.
+set -u
+port=${SPHERADIAN_TIMING_PORT:-/dev/ttyS0}
+tries=${SPHERADIAN_TIMING_TRIES:-1200}
+
+# The unit is part of the boot transaction, so the boot cannot finish while it
+# waits; it is Type=exec and returns at once, and this loop runs after that.
+while ! systemd-analyze time >/dev/null 2>&1; do
+	tries=$((tries - 1))
+	[ "$tries" -gt 0 ] || exit 1
+	sleep 0.1
+done
+
+userspace=$(systemctl show --value -p UserspaceTimestampMonotonic)
+finish=$(systemctl show --value -p FinishTimestampMonotonic)
+session=$(systemctl show --value -p ActiveEnterTimestampMonotonic getty@tty1.service)
+printf 'spheradian-timing userspace=%s finish=%s session=%s\n' \
+	"$userspace" "$finish" "$session" >"$port"

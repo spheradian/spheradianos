@@ -1,6 +1,6 @@
 """Tests for the kernel parameters scripts/boot-test.py adds to each boot.
 
-Every check that types into the tty1 shell needs xsphere.session=console once
+Every check that types into the tty1 shell needs spheradian.session=console once
 the M1 graphical session is installed, otherwise the kiosk owns tty1.
 """
 
@@ -37,7 +37,7 @@ class BootParameterTests(unittest.TestCase):
     def test_console_flag_selects_the_console_session(self) -> None:
         self.assertEqual(
             boot_test.boot_parameters(console=True, session_installed=True),
-            ["xsphere.session=console"],
+            ["spheradian.session=console"],
         )
 
     def test_faults_use_the_console_session_when_the_kiosk_is_installed(self) -> None:
@@ -45,13 +45,13 @@ class BootParameterTests(unittest.TestCase):
             with self.subTest(fault=fault):
                 self.assertEqual(
                     boot_test.boot_parameters(fault=fault, session_installed=True),
-                    ["xsphere.session=console", f"xsphere.test.{fault}"],
+                    ["spheradian.session=console", f"spheradian.test.{fault}"],
                 )
 
     def test_faults_without_the_kiosk_keep_the_m0_command_line(self) -> None:
         self.assertEqual(
             boot_test.boot_parameters(fault="fail", session_installed=False),
-            ["xsphere.test.fail"],
+            ["spheradian.test.fail"],
         )
 
     def test_console_is_never_added_twice(self) -> None:
@@ -59,7 +59,7 @@ class BootParameterTests(unittest.TestCase):
             boot_test.boot_parameters(
                 console=True, reduced_motion=True, fault="fail", session_installed=True
             ),
-            ["xsphere.session=console", "xsphere.motion=reduced", "xsphere.test.fail"],
+            ["spheradian.session=console", "spheradian.motion=reduced", "spheradian.test.fail"],
         )
 
 
@@ -82,7 +82,7 @@ class TimeoutEvidenceTests(unittest.TestCase):
 
     def wait_for_nothing(self, folder=None):
         guest = FakeGuest(ppm(400, 300, 7))
-        environment = {"XSPHERE_TEST_FAILURE_SHOTS": folder} if folder else {}
+        environment = {"SPHERADIAN_TEST_FAILURE_SHOTS": folder} if folder else {}
         stderr = io.StringIO()
         with (
             mock.patch.dict(os.environ, environment, clear=False),
@@ -90,7 +90,7 @@ class TimeoutEvidenceTests(unittest.TestCase):
             contextlib.redirect_stderr(stderr),
         ):
             if not folder:
-                os.environ.pop("XSPHERE_TEST_FAILURE_SHOTS", None)
+                os.environ.pop("SPHERADIAN_TEST_FAILURE_SHOTS", None)
             passed = boot_test.wait_until(lambda frame: False, guest, 0.05, None, "exit")
         return passed, stderr.getvalue()
 
@@ -143,62 +143,62 @@ class SerialLogTests(unittest.TestCase):
         self.assertIn("end", stderr)
 
 
-RUNNING_KIOSK = """=== xsphereos-test-journal: session units ===
-[   73.5] xsphereos (-session)[918]: pam_unix(login:session): session opened for user xsphere
-=== xsphereos-test-journal: unit states ===
-\u25cf xsphere-session.service - XSphereOS M1 Prototype Session (Wayland Kiosk + Fallback)
+RUNNING_KIOSK = """=== spheradianos-test-journal: session units ===
+[   73.5] spheradianos (-session)[918]: pam_unix(login:session): session opened for user spheradian
+=== spheradianos-test-journal: unit states ===
+\u25cf spheradian-session.service - SpheradianOS M1 Prototype Session (Wayland Kiosk + Fallback)
      Active: active (running) since Sun 2026-11-22 19:50:30 UTC; 58s ago
-     CGroup: /xsphere-session.slice/xsphere-session.service
-             \u251c\u2500920 /bin/sh /usr/lib/xsphereos/xsphere-session
-             \u251c\u2500925 cage -s -- /usr/bin/xspherede
-             \u2514\u2500930 /usr/bin/xspherede
-=== xsphereos-test-journal: kernel graphics ===
-=== xsphereos-test-journal: end ===
+     CGroup: /spheradian-session.slice/spheradian-session.service
+             \u251c\u2500920 /bin/sh /usr/lib/spheradianos/spheradian-session
+             \u251c\u2500925 cage -s -- /usr/bin/spheradian
+             \u2514\u2500930 /usr/bin/spheradian
+=== spheradianos-test-journal: kernel graphics ===
+=== spheradianos-test-journal: end ===
 """
 
-SCOPED_KIOSK = """=== xsphereos-test-journal: session units ===
-=== xsphereos-test-journal: unit states ===
-\u25cf xsphere-session.service - XSphereOS M1 Prototype Session (Wayland Kiosk + Fallback)
+SCOPED_KIOSK = """=== spheradianos-test-journal: session units ===
+=== spheradianos-test-journal: unit states ===
+\u25cf spheradian-session.service - SpheradianOS M1 Prototype Session (Wayland Kiosk + Fallback)
      Active: active (running) since Mon 2026-11-23 02:44:46 UTC; 58s ago
-   Main PID: 893 (xsphere-session)
-     CGroup: /xsphere.slice/xsphere-session.slice/xsphere-session.service
-             \u2023 893 /bin/sh /usr/lib/xsphereos/xsphere-session
-=== xsphereos-test-journal: session processes ===
-/bin/sh /usr/lib/xsphereos/xsphere-session
-cage -s -- /usr/bin/xspherede
-/usr/bin/xspherede
+   Main PID: 893 (spheradian-session)
+     CGroup: /spheradian.slice/spheradian-session.slice/spheradian-session.service
+             \u2023 893 /bin/sh /usr/lib/spheradianos/spheradian-session
+=== spheradianos-test-journal: session processes ===
+/bin/sh /usr/lib/spheradianos/spheradian-session
+cage -s -- /usr/bin/spheradian
+/usr/bin/spheradian
 Xwayland :0 -rootless -core
-=== xsphereos-test-journal: kernel graphics ===
-=== xsphereos-test-journal: end ===
+=== spheradianos-test-journal: kernel graphics ===
+=== spheradianos-test-journal: end ===
 """
 
 
 class SessionStateTests(unittest.TestCase):
     """The graphical boot passes only if the kiosk session really runs."""
 
-    def test_a_running_kiosk_with_xspherede(self) -> None:
-        self.assertEqual(boot_test.session_state(RUNNING_KIOSK), (True, "xspherede"))
+    def test_a_running_kiosk_with_spheradian(self) -> None:
+        self.assertEqual(boot_test.session_state(RUNNING_KIOSK), (True, "spheradian"))
 
-    def test_xspherede_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
+    def test_spheradian_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
         # pam_systemd moves cage and its client out of the unit's cgroup, so
         # systemctl status shows only the launcher; the guest lists them instead.
         journal = SCOPED_KIOSK
-        self.assertEqual(boot_test.session_state(journal), (True, "xspherede"))
+        self.assertEqual(boot_test.session_state(journal), (True, "spheradian"))
 
     def test_foot_in_the_logind_scope_is_found_in_the_process_list(self) -> None:
-        journal = SCOPED_KIOSK.replace("/usr/bin/xspherede", "/usr/bin/foot")
+        journal = SCOPED_KIOSK.replace("/usr/bin/spheradian", "/usr/bin/foot")
         self.assertEqual(boot_test.session_state(journal), (True, "foot (fallback)"))
 
     def test_a_running_kiosk_on_the_fallback_terminal(self) -> None:
-        journal = RUNNING_KIOSK.replace("cage -s -- /usr/bin/xspherede", "cage -s -- /usr/bin/foot")
-        journal = journal.replace("930 /usr/bin/xspherede", "930 /usr/bin/foot")
+        journal = RUNNING_KIOSK.replace("cage -s -- /usr/bin/spheradian", "cage -s -- /usr/bin/foot")
+        journal = journal.replace("930 /usr/bin/spheradian", "930 /usr/bin/foot")
         self.assertEqual(boot_test.session_state(journal), (True, "foot (fallback)"))
 
     def test_a_restart_loop_is_not_running(self) -> None:
         journal = RUNNING_KIOSK.replace(
-            "session opened for user xsphere\n",
-            "session opened for user xsphere\n"
-            "[   73.6] xsphereos systemd[1]: xsphere-session.service: Main process exited, "
+            "session opened for user spheradian\n",
+            "session opened for user spheradian\n"
+            "[   73.6] spheradianos systemd[1]: spheradian-session.service: Main process exited, "
             "code=exited, status=1/FAILURE\n",
         )
         self.assertEqual(boot_test.session_state(journal)[0], False)
@@ -213,34 +213,34 @@ class SessionStateTests(unittest.TestCase):
         self.assertEqual(boot_test.session_state(""), (False, None))
 
 
-FALLBACK_JOURNAL = """=== xsphereos-test-journal: session units ===
-[   73.5] xsphereos (-session)[918]: pam_unix(login:session): session opened for user xsphere
-[   73.6] xsphereos xsphere-session[920]: xsphere-session: starting xspherede
-[   73.9] xsphereos xsphere-session[930]: [INFO  xspherede] Starting XSphereDE v0.0.1
-[   74.1] xsphereos xsphere-session[930]: No compatible GPU adapter found
-[   74.2] xsphereos xsphere-session[920]: xsphere-session: xspherede exited with status 134, \
+FALLBACK_JOURNAL = """=== spheradianos-test-journal: session units ===
+[   73.5] spheradianos (-session)[918]: pam_unix(login:session): session opened for user spheradian
+[   73.6] spheradianos spheradian-session[920]: spheradian-session: starting spheradian
+[   73.9] spheradianos spheradian-session[930]: [INFO  spheradian] Starting Spheradian v0.0.1
+[   74.1] spheradianos spheradian-session[930]: No compatible GPU adapter found
+[   74.2] spheradianos spheradian-session[920]: spheradian-session: spheradian exited with status 134, \
 falling back to foot
-[   74.3] xsphereos xsphere-session[940]: foot: some unrelated foot line
-=== xsphereos-test-journal: unit states ===
+[   74.3] spheradianos spheradian-session[940]: foot: some unrelated foot line
+=== spheradianos-test-journal: unit states ===
 """
 
 
-class XspheredeAttemptTests(unittest.TestCase):
-    """When the kiosk falls back to foot, the boot test shows why xspherede exited."""
+class SpheradianAttemptTests(unittest.TestCase):
+    """When the kiosk falls back to foot, the boot test shows why spheradian exited."""
 
     def test_the_attempt_is_cut_from_start_to_fallback(self) -> None:
-        attempt = boot_test.xspherede_attempt(FALLBACK_JOURNAL)
-        self.assertIn("starting xspherede", attempt[0])
+        attempt = boot_test.spheradian_attempt(FALLBACK_JOURNAL)
+        self.assertIn("starting spheradian", attempt[0])
         self.assertIn("No compatible GPU adapter found", "\n".join(attempt))
         self.assertIn("falling back to foot", attempt[-1])
         self.assertNotIn("unrelated foot line", "\n".join(attempt))
 
     def test_no_attempt_without_the_launcher_marker(self) -> None:
-        self.assertEqual(boot_test.xspherede_attempt(RUNNING_KIOSK), [])
+        self.assertEqual(boot_test.spheradian_attempt(RUNNING_KIOSK), [])
 
     def test_an_attempt_that_never_fell_back_runs_to_the_end_of_the_section(self) -> None:
-        journal = FALLBACK_JOURNAL.split("[   74.2]")[0] + "=== xsphereos-test-journal: unit states ===\n"
-        attempt = boot_test.xspherede_attempt(journal)
+        journal = FALLBACK_JOURNAL.split("[   74.2]")[0] + "=== spheradianos-test-journal: unit states ===\n"
+        attempt = boot_test.spheradian_attempt(journal)
         self.assertIn("No compatible GPU adapter found", attempt[-1])
 
 

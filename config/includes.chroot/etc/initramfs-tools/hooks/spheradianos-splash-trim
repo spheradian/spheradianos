@@ -1,0 +1,28 @@
+#!/bin/sh
+# Drop what Debian's plymouth hook copies for text rendering. The spheradian theme
+# draws no text, so the fonts and fontconfig data are dead weight in every
+# initramfs (about 1.1 MiB measured). Remove this hook when a theme needs text.
+set -eu
+
+PREREQ="plymouth"
+
+prereqs() {
+	echo "$PREREQ"
+}
+
+case "${1:-}" in
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+# Never run against the real root: initramfs-tools always sets DESTDIR.
+[ -n "${DESTDIR:-}" ] || {
+	echo "spheradianos-splash-trim: DESTDIR is not set" >&2
+	exit 1
+}
+
+rm -rf "${DESTDIR}/usr/share/fonts" "${DESTDIR}/usr/local/share/fonts" \
+	"${DESTDIR}/etc/fonts" "${DESTDIR}/var/cache/fontconfig"
+rm -f "${DESTDIR}/usr/share/plymouth/debian-logo.png"

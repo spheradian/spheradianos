@@ -1,0 +1,45 @@
+#!/bin/sh
+# Test only: when scripts/boot-test.py asks for it, copy the journal of the
+# graphical session and its dependencies to the first serial port, which the
+# boot test records and prints when a check fails.
+#
+# The request is a QEMU fw_cfg entry that only the boot test sets, so this
+# exits at once on real hardware and in any other virtual machine.
+set -u
+
+flag=/sys/firmware/qemu_fw_cfg/by_name/opt/spheradianos/test-journal/raw
+
+modprobe qemu_fw_cfg 2>/dev/null || true
+[ -e "$flag" ] || exit 0
+
+# Give the session time to start, fail and restart before taking the copy.
+sleep 60
+
+{
+	echo "=== spheradianos-test-journal: session units ==="
+	journalctl -b --no-pager -o short-monotonic \
+		-u spheradian-session.service -u seatd.service -u systemd-logind.service \
+		-u plymouth-quit.service -u plymouth-quit-wait.service
+	# pam_systemd moves the session process into a logind scope, so what the
+	# launcher, cage and spheradian print is logged under the user, not the unit.
+	echo "=== spheradianos-test-journal: session output ==="
+	journalctl -b --no-pager -o short-monotonic _UID="$(id -u spheradian)"
+	echo "=== spheradianos-test-journal: prototype binary ==="
+	ls -l /usr/bin/spheradian
+	cat /proc/cmdline
+	echo "=== spheradianos-test-journal: unit states ==="
+	systemctl --no-pager --failed
+	systemctl --no-pager status --full spheradian-session.service
+	# cage and its client run in the logind scope, outside the unit's cgroup,
+	# so list the kiosk user's processes to show which client is up.
+	echo "=== spheradianos-test-journal: session processes ==="
+	uid=$(id -u spheradian)
+	for proc in /proc/[0-9]*; do
+		[ "$(stat -c %u "$proc" 2>/dev/null)" = "$uid" ] || continue
+		tr '\0' ' ' <"$proc/cmdline" 2>/dev/null && echo
+	done
+	echo "=== spheradianos-test-journal: kernel graphics ==="
+	journalctl -b --no-pager -o short-monotonic -k --grep 'drm|fb|virtio|simpledrm'
+	ls -l /dev/dri
+	echo "=== spheradianos-test-journal: end ==="
+} >/dev/ttyS0 2>&1
