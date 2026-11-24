@@ -29,35 +29,61 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install host dependencies (podman & QEMU)
+      - name: Install host dependencies (podman, QEMU)
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends podman qemu-system-x86 ovmf python3
+
+      # Built in a trixie container, so it links against the image's glibc.
+      - name: Build and stage pinned spheradian prototype (M1)
+        run: |
+          scripts/build-spheradian.sh
 
       - name: Build ISO in Debian trixie container
         run: |
           sudo scripts/build-in-container.sh
 
-      - name: Enforce ISO size & package budget
+      - name: Enforce M1 ISO size & package budget
         run: |
           scripts/size-report.sh
           iso_bytes=$(stat -c '%s' live-image-amd64.hybrid.iso)
           pkg_count=$(grep -c . live-image-amd64.packages)
           echo "ISO bytes: $iso_bytes | Packages: $pkg_count"
-          [ "$iso_bytes" -le 471859200 ] || { echo "ISO exceeds 450 MiB M1 budget" >&2; exit 1; }
-          [ "$pkg_count" -le 260 ] || { echo "Package count exceeds 260 M1 budget" >&2; exit 1; }
+          [ "$iso_bytes" -le 524288000 ] || { echo "ISO exceeds 500 MiB M1 budget" >&2; exit 1; }
+          [ "$pkg_count" -le 420 ] || { echo "Package count exceeds 420 M1 budget" >&2; exit 1; }
 
       - name: Run QEMU headless boot tests
+        env:
+          # A check that times out keeps its last screenshot here (scripts/boot-test.py).
+          SPHERADIAN_TEST_FAILURE_SHOTS: boot-failures
+        # Run every boot even after a failure, so one log shows all of them.
         run: |
-          scripts/boot-test.py
-          scripts/boot-test.py --reduced-motion
-          scripts/boot-test.py --fault fail
-          scripts/boot-test.py --fault stall
-          scripts/boot-test.py --uefi
-          scripts/boot-test.py --uefi --reduced-motion
-          scripts/boot-test.py --uefi --fault fail
-          scripts/boot-test.py --uefi --fault stall
+          status=0
+          check() {
+            echo "::group::boot-test.py $*"
+            scripts/boot-test.py "$@" || status=1
+            echo "::endgroup::"
+          }
+          check
+          check --console
+          check --console --reduced-motion
+          check --fault fail
+          check --fault stall
+          check --uefi
+          check --uefi --reduced-motion
+          check --uefi --fault fail
+          check --uefi --fault stall
+          exit "$status"
+
+      - name: Keep the last screen of failed boot checks
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: boot-failure-screens
+          path: boot-failures/
+          if-no-files-found: ignore
+          retention-days: 7

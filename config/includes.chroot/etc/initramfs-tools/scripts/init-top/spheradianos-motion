@@ -1,0 +1,28 @@
+#!/bin/sh
+# Select the reduced-motion splash when the kernel command line asks for it.
+# Runs in the initramfs before plymouthd starts (init-top precedes init-premount).
+PREREQ=""
+
+prereqs() {
+	echo "$PREREQ"
+}
+
+case "${1:-}" in
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+cmdline="${SPHERADIAN_CMDLINE:-/proc/cmdline}"
+config="${SPHERADIAN_PLYMOUTH_CONF:-/etc/plymouth/plymouthd.conf}"
+
+# Word splitting is intended: the command line is a list of words.
+# shellcheck disable=SC2013
+for argument in $(cat "$cmdline"); do
+	case "$argument" in
+	spheradian.motion=reduced)
+		printf '[Daemon]\nTheme=spheradian-still\nShowDelay=0\n' >"$config"
+		;;
+	esac
+done

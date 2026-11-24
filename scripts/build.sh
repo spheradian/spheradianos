@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build the XSphereOS live ISO. Requires: live-build, debootstrap, squashfs-tools, xorriso, python3, root.
+# Build the SpheradianOS live ISO. Requires: live-build, debootstrap, squashfs-tools, xorriso, python3, root.
 set -eu
 cd "$(dirname "$0")/.."
 

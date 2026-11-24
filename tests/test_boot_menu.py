@@ -13,8 +13,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BOOTLOADERS = ROOT / "config" / "bootloaders"
-GRUB_THEME = BOOTLOADERS / "grub-pc" / "xsphere"
-FONT_HOOK = ROOT / "config" / "hooks" / "live" / "9100-xsphereos-grub-font.hook.binary"
+GRUB_THEME = BOOTLOADERS / "grub-pc" / "spheradian"
+FONT_HOOK = ROOT / "config" / "hooks" / "live" / "9100-spheradianos-grub-font.hook.binary"
 MENU_ART_BUDGET = 64 * 1024
 
 
@@ -80,9 +80,9 @@ class Configuration(unittest.TestCase):
     def test_grub_loads_only_the_small_font_and_the_theme(self):
         config = (BOOTLOADERS / "grub-pc" / "config.cfg").read_text()
         code = "\n".join(line.split("#", 1)[0] for line in config.splitlines())
-        self.assertIn("loadfont /boot/grub/xsphere/ascii.pf2", code)
+        self.assertIn("loadfont /boot/grub/spheradian/ascii.pf2", code)
         self.assertNotIn("unicode", code)
-        self.assertIn("set theme=/boot/grub/xsphere/theme.txt", code)
+        self.assertIn("set theme=/boot/grub/spheradian/theme.txt", code)
 
     def test_theme_images_exist(self):
         theme = (GRUB_THEME / "theme.txt").read_text()

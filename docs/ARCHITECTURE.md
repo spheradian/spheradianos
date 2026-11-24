@@ -1,9 +1,9 @@
-# XSphereOS: System Architecture
+# SpheradianOS: System Architecture
 
-High-level architecture and system design for **XSphereOS** (`mendsec/xsphereos`), **XSphereDE** (`mendsec/xspherede`), and their DevSecOps pipeline.
+High-level architecture and system design for **SpheradianOS** (`spheradian/spheradianos`), **Spheradian** (`spheradian/spheradian`), and their DevSecOps pipeline.
 
 > **Other views in this repository:**
-> - **Miro-like editable canvas:** [docs/architecture/xsphereos.excalidraw](architecture/xsphereos.excalidraw) (open in [excalidraw.com](https://excalidraw.com) or the IDE Excalidraw extension).
+> - **Miro-like editable canvas:** [docs/architecture/spheradianos.excalidraw](architecture/spheradianos.excalidraw) (open in [excalidraw.com](https://excalidraw.com) or the IDE Excalidraw extension).
 > - **Offline interactive inspector:** [docs/architecture/index.html](architecture/index.html) (open locally in any browser).
 
 ---
@@ -19,25 +19,25 @@ flowchart TB
         SANDBOX["Per-Domain Sandbox (M5)<br/>(namespaces, seccomp, cgroups, clipboard vault)"]
     end
 
-    subgraph L3["Layer 3 · Compositor & Session (mendsec/xspherede · Public MIT)"]
+    subgraph L3["Layer 3 · Compositor & Session (spheradian/spheradian · Public Apache-2.0)"]
         direction LR
-        SMITHAY["xspherede Compositor<br/>(Smithay + wgpu · no X11/Xwayland)"]
+        SMITHAY["spheradian Compositor<br/>(Smithay + wgpu · no X11/Xwayland)"]
         CORE["Pure Core & Policy<br/>(input, state, commands, WindowSurfaceProvider)"]
         FALLBACK["Fallback Flat Wayland Session<br/>(No Vulkan/GL hardware path)"]
     end
 
-    subgraph L2["Layer 2 · Debian minbase Substrate (mendsec/xsphereos · Private)"]
+    subgraph L2["Layer 2 · Debian minbase Substrate (spheradian/spheradianos · Public Apache-2.0)"]
         direction LR
         SYS["Core OS<br/>(systemd, dbus, udev, seatd/logind)"]
         MEDIA["Graphics, Audio & Net<br/>(Mesa, PipeWire/WirePlumber, NM vs iwd)"]
-        PKG["Packaging & Install (M4)<br/>(Signed APT, xsphereos-base, Installer)"]
+        PKG["Packaging & Install (M4)<br/>(Signed APT, spheradianos-base, Installer)"]
     end
 
     subgraph L1["Layer 1 · Boot Chain (M0 / M2)"]
         direction LR
         BOOT["GRUB-EFI & ISOLINUX<br/>(ADR-002 Zero-Prompt · timeout=0)"]
         KERN["Linux Kernel + simpledrm<br/>(quiet loglevel=3 · KMS hand-off)"]
-        PLY["Plymouth xsphere (~18 KiB)<br/>(boot_timeline.py · 20s watchdog · B4)"]
+        PLY["Plymouth spheradian (~18 KiB)<br/>(boot_timeline.py · 20s watchdog · B4)"]
     end
 
     BOOT --> KERN --> PLY
@@ -50,13 +50,13 @@ flowchart TB
     SMITHAY -->|"Wayland + DMA-BUF"| APPS
     SANDBOX -.->|"Enforced boundary (M5)"| APPS
 
-    click BOOT "https://github.com/mendsec/xsphereos/issues/14" "Issue #14: Zero-prompt bootloaders"
-    click PLY "https://github.com/mendsec/xsphereos/issues/7" "Issue #7: Plymouth hand-off (B4)"
-    click SMITHAY "https://github.com/mendsec/xsphereos/issues/9" "Issue #9: Smithay compositor session"
-    click FALLBACK "https://github.com/mendsec/xsphereos/issues/5" "Issue #5: M1 prototype & fallback"
-    click MEDIA "https://github.com/mendsec/xsphereos/issues/8" "Issue #8: Browser & network ADR"
-    click PKG "https://github.com/mendsec/xsphereos/issues/12" "Issue #12: Signed APT & release"
-    click SANDBOX "https://github.com/mendsec/xsphereos/issues/13" "Issue #13: Per-domain sandboxing"
+    click BOOT "https://github.com/spheradian/spheradianos/issues/14" "Issue #14: Zero-prompt bootloaders"
+    click PLY "https://github.com/spheradian/spheradianos/issues/7" "Issue #7: Plymouth hand-off (B4)"
+    click SMITHAY "https://github.com/spheradian/spheradianos/issues/9" "Issue #9: Smithay compositor session"
+    click FALLBACK "https://github.com/spheradian/spheradianos/issues/5" "Issue #5: M1 prototype & fallback"
+    click MEDIA "https://github.com/spheradian/spheradianos/issues/8" "Issue #8: Browser & network ADR"
+    click PKG "https://github.com/spheradian/spheradianos/issues/12" "Issue #12: Signed APT & release"
+    click SANDBOX "https://github.com/spheradian/spheradianos/issues/13" "Issue #13: Per-domain sandboxing"
 ```
 
 ---
@@ -69,8 +69,8 @@ sequenceDiagram
     participant FW as UEFI / BIOS Firmware
     participant BL as GRUB-EFI / ISOLINUX
     participant K as Linux Kernel (simpledrm)
-    participant P as Plymouth (xsphere)
-    participant C as xspherede (Smithay + wgpu)
+    participant P as Plymouth (spheradian)
+    participant C as spheradian (Smithay + wgpu)
 
     FW->>BL: Power on
     alt Shift / Esc held
@@ -95,7 +95,7 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     PR["Pull Request"] --> S1["Static Gates (#2)<br/>shellcheck, shfmt, unittest,<br/>manifest & auto/config checks"]
-    PR --> S2["Security Gates (#2, #3)<br/>gitleaks, zizmor,<br/>cargo audit & deny (xspherede)"]
+    PR --> S2["Security Gates (#2, #3)<br/>gitleaks, zizmor,<br/>cargo audit & deny (spheradian)"]
     S1 --> Q["QEMU Headless Boot (#6)<br/>normal, reduced-motion,<br/>fault fail/stall, size budget"]
     S2 --> Q
     Q --> R["Release Pipeline (#12, M4)<br/>Pinned Debian snapshot,<br/>CycloneDX SBOM, signing, reproducible diff"]
@@ -108,13 +108,15 @@ flowchart LR
 See [docs/adr/README.md](adr/README.md) for accepted and proposed ADRs:
 - [ADR-001](adr/ADR-001-github-roadmap-governance.md) — GitHub Roadmap, Governance, and Continuity Structure
 - [ADR-002](adr/ADR-002-zero-prompt-bootloaders.md) — Zero-Prompt Direct Boot via `live-build` Bootloader Templates
-- [ADR-003](adr/ADR-003-xspherede-visibility.md) — Repository Visibility Policy for `mendsec/xspherede`
+- [ADR-003](adr/ADR-003-spheradian-visibility.md) — Repository Visibility Policy for `spheradian/spheradian`
 - [ADR-004](adr/ADR-004-console-grade-fluidity.md) — Console-Grade Fluidity Discipline (`zstd`, `cgroups v2`, `zram`, `DMA-BUF`)
 - [ADR-005](adr/ADR-005-boot-procedural-audio.md) — Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement
 - [ADR-006](adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery
+- [ADR-007](adr/ADR-007-m1-kiosk-prototype-session.md) — M1 Prototype Session via Wayland Kiosk (`cage` + `seatd`) and Pinned `spheradian` Build
+- [ADR-007](adr/ADR-007-three-pillar-positioning-and-anti-pattern-prevention.md) — Three-Pillar Positioning (Privacy, Security, Old Computers) and Vulnerability-Driven Anti-Pattern Prevention
 
 ---
 
 ## 5. Technical References & Research
 
-See [docs/REFERENCES.md](REFERENCES.md) for systems research (UFPR Operating Systems Projects, Linux Storage Stack, embedded Wayland micro-compositor frame pacing, and SquashFS `zstd` vs `xz` benchmarks).
+See [docs/REFERENCES.md](REFERENCES.md) for systems research (UFPR Operating Systems Projects, Linux Storage Stack, embedded Wayland micro-compositor frame pacing, SquashFS `zstd` vs `xz` benchmarks, and comparative Privacy, Security, and Old Computers distribution research).

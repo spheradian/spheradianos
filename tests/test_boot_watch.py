@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CHROOT = ROOT / "config" / "includes.chroot"
-WATCH = CHROOT / "usr" / "lib" / "xsphereos" / "boot-watch"
+WATCH = CHROOT / "usr" / "lib" / "spheradianos" / "boot-watch"
 UNITS = CHROOT / "etc" / "systemd" / "system"
 
 FAKE_PLYMOUTH = """#!/bin/sh
@@ -66,12 +66,12 @@ class BootWatch(unittest.TestCase):
                 "FAKE_SPLASH_SECONDS": str(splash_seconds),
                 "FAKE_FAILED": failed,
                 "FAKE_JOBS": jobs,
-                "XSPHERE_PLYMOUTH": executable(fake / "plymouth", FAKE_PLYMOUTH),
-                "XSPHERE_SYSTEMCTL": executable(fake / "systemctl", FAKE_SYSTEMCTL),
-                "XSPHERE_SLEEP": "true",
-                "XSPHERE_CONSOLE": str(console),
-                "XSPHERE_REPORT": str(fake / "run" / "boot-report"),
-                "XSPHERE_STALL_SECONDS": str(stall_seconds),
+                "SPHERADIAN_PLYMOUTH": executable(fake / "plymouth", FAKE_PLYMOUTH),
+                "SPHERADIAN_SYSTEMCTL": executable(fake / "systemctl", FAKE_SYSTEMCTL),
+                "SPHERADIAN_SLEEP": "true",
+                "SPHERADIAN_CONSOLE": str(console),
+                "SPHERADIAN_REPORT": str(fake / "run" / "boot-report"),
+                "SPHERADIAN_STALL_SECONDS": str(stall_seconds),
             }
             result = subprocess.run([str(WATCH)], env=environment, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -118,7 +118,7 @@ class BootWatch(unittest.TestCase):
 
 
 class LoginReport(unittest.TestCase):
-    SNIPPET = CHROOT / "etc" / "profile.d" / "xsphereos-boot-report.sh"
+    SNIPPET = CHROOT / "etc" / "profile.d" / "spheradianos-boot-report.sh"
 
     def login(self, report_text):
         with tempfile.TemporaryDirectory() as directory:
@@ -127,7 +127,7 @@ class LoginReport(unittest.TestCase):
                 report.write_text(report_text)
             result = subprocess.run(
                 ["sh", "-eu", "-c", f". {self.SNIPPET}; echo prompt"],
-                env={**os.environ, "XSPHERE_REPORT": str(report)},
+                env={**os.environ, "SPHERADIAN_REPORT": str(report)},
                 capture_output=True,
                 text=True,
             )
@@ -135,7 +135,7 @@ class LoginReport(unittest.TestCase):
             return result.stdout
 
     def test_a_boot_problem_is_shown_at_login(self):
-        self.assertEqual(self.login("XSphereOS: a unit failed\n"), "XSphereOS: a unit failed\nprompt\n")
+        self.assertEqual(self.login("SpheradianOS: a unit failed\n"), "SpheradianOS: a unit failed\nprompt\n")
 
     def test_a_healthy_boot_shows_nothing_extra_at_login(self):
         self.assertEqual(self.login(None), "prompt\n")
@@ -143,16 +143,16 @@ class LoginReport(unittest.TestCase):
 
 class Units(unittest.TestCase):
     def test_watch_runs_early_and_only_with_a_splash(self):
-        unit = (UNITS / "xsphereos-boot-watch.service").read_text()
-        self.assertIn("ExecStart=/usr/lib/xsphereos/boot-watch", unit)
+        unit = (UNITS / "spheradianos-boot-watch.service").read_text()
+        self.assertIn("ExecStart=/usr/lib/spheradianos/boot-watch", unit)
         self.assertIn("ConditionKernelCommandLine=splash", unit)
         self.assertIn("After=plymouth-start.service", unit)
-        self.assertTrue((UNITS / "sysinit.target.wants" / "xsphereos-boot-watch.service").is_symlink())
+        self.assertTrue((UNITS / "sysinit.target.wants" / "spheradianos-boot-watch.service").is_symlink())
         self.assertTrue(os.access(WATCH, os.X_OK))
 
     def test_fault_injection_units_are_inert_without_their_kernel_parameter(self):
-        for name, parameter in (("fail", "xsphere.test.fail"), ("stall", "xsphere.test.stall")):
-            unit = (UNITS / f"xsphereos-test-{name}.service").read_text()
+        for name, parameter in (("fail", "spheradian.test.fail"), ("stall", "spheradian.test.stall")):
+            unit = (UNITS / f"spheradianos-test-{name}.service").read_text()
             self.assertIn(f"ConditionKernelCommandLine={parameter}", unit)
             self.assertIn("Before=plymouth-quit.service", unit)
 

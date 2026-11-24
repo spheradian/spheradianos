@@ -43,9 +43,11 @@ SESSION_TIMEOUT = 20.0
 STALL_HOLD = 8.0  # well past a normal boot, well before the watchdog
 WATCHDOG_TIMEOUT = 40.0  # the watchdog fires after 20 s without progress
 POLL = 0.5
+JOURNAL_TIMEOUT = 120.0  # the guest copies its journal 60 s after reaching multi-user
+JOURNAL_END = "=== spheradianos-test-journal: end ==="
 KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal", "-": "minus", "/": "slash"}
 SHIFTED = {"&": "7", "|": "backslash"}  # US layout, the live image default
-REPORT = "/run/xsphereos/boot-report"
+REPORT = "/run/spheradianos/boot-report"
 MOTION_SAMPLES = 6
 OVMF_CODE = Path("/usr/share/OVMF/OVMF_CODE_4M.fd")
 OVMF_VARS = Path("/usr/share/OVMF/OVMF_VARS_4M.fd")
@@ -58,6 +60,7 @@ class Guest:
     def __init__(self, iso, workdir, uefi=False):
         self.workdir = workdir
         self.uefi = uefi
+        self.serial_log = Path(workdir) / "serial.log"
         sock = os.path.join(workdir, "qmp.sock")
         qemu = shutil.which("qemu-system-x86_64")
         if not qemu:
@@ -97,6 +100,12 @@ class Guest:
                 *medium,
                 "-qmp",
                 f"unix:{sock},server,nowait",
+                # The image copies the session journal to this port when it sees the
+                # fw_cfg entry below (config/includes.chroot/usr/lib/spheradianos/test-journal).
+                "-serial",
+                f"file:{self.serial_log}",
+                "-fw_cfg",
+                "name=opt/spheradianos/test-journal,string=1",
             ]
         )
         self.channel = self._connect(sock)
@@ -155,6 +164,17 @@ class Frame:
             raise ValueError("unexpected screendump format")
         self.width, self.height = int(fields[1]), int(fields[2])
         self.pixels = fields[4]
+        self.data = data
+
+    def summary(self):
+        """A one-line description of the screen, for logs when a check times out."""
+        return (
+            f"{self.width}x{self.height}, "
+            f"corner {self.mean(0, 0, 120, 120):.1f}, "
+            f"centre {self.centre_brightness():.1f}, "
+            f"top-text peak {self.peak(0, 0, min(400, self.width), 60)}, "
+            f"whole-screen mean {self.mean(0, 0, self.width, self.height):.1f}"
+        )
 
     def mean(self, left, top, width, height):
         total = 0
@@ -207,7 +227,7 @@ class Frame:
 
     def shows_grub_menu(self):
         """The themed GRUB menu: help text near the bottom edge, and the selected
-        entry in the theme's teal (config/bootloaders/grub-pc/xsphere/theme.txt)
+        entry in the theme's teal (config/bootloaders/grub-pc/spheradian/theme.txt)
         in the band where the menu sits. A plain, unthemed menu does not match."""
         band_top = self.height * 85 // 100
         help_text = self.peak(0, band_top, self.width, self.height * 95 // 100 - band_top) > 100
@@ -238,13 +258,34 @@ class Frame:
 def wait_until(predicate, guest, timeout, shots, label):
     deadline = time.time() + timeout * guest.slowdown
     count = 0
+    frame = None
     while time.time() < deadline:
         keep = shots / f"{label}-{count:03d}.ppm" if shots else None
-        if predicate(guest.screen(keep)):
+        frame = guest.screen(keep)
+        if predicate(frame):
             return True
         count += 1
         time.sleep(POLL)
+    report_timeout(label, frame)
     return False
+
+
+def report_timeout(label, frame):
+    """Say what was on screen when a check gave up; CI keeps no recording of the guest.
+
+    With SPHERADIAN_TEST_FAILURE_SHOTS set, the last screenshot is also kept there.
+    """
+    if frame is None:
+        print(f"{label}: timed out before any screenshot", file=sys.stderr)
+        return
+    print(f"{label}: timed out; last screen: {frame.summary()}", file=sys.stderr)
+    folder = os.environ.get("SPHERADIAN_TEST_FAILURE_SHOTS")
+    if folder:
+        path = Path(folder)
+        path.mkdir(parents=True, exist_ok=True)
+        saved = path / f"{time.strftime('%H%M%S')}-{label}.ppm"
+        saved.write_bytes(frame.data)
+        print(f"{label}: last screen saved to {saved}", file=sys.stderr)
 
 
 def splash_moves(guest):
@@ -272,13 +313,32 @@ def splash_moves(guest):
     return verdict
 
 
-def run(iso, shots, reduced_motion=False, fault=None, uefi=False):
-    """Boot once and return {assertion: passed}."""
+SESSION_UNIT = (
+    ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "spheradian-session.service"
+)
+
+
+def boot_parameters(console=False, reduced_motion=False, fault=None, session_installed=False):
+    """Return the extra kernel parameters for one boot.
+
+    Fault checks type into the tty1 shell, so once the M1 kiosk session is
+    installed they need the console session as well, or the kiosk owns tty1.
+    """
     parameters = []
+    if console or (fault and session_installed):
+        parameters.append("spheradian.session=console")
     if reduced_motion:
-        parameters.append("xsphere.motion=reduced")
+        parameters.append("spheradian.motion=reduced")
     if fault:
-        parameters.append(f"xsphere.test.{fault}")
+        parameters.append(f"spheradian.test.{fault}")
+    return parameters
+
+
+def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False):
+    """Boot once and return {assertion: passed}."""
+    session_installed = SESSION_UNIT.exists()
+    parameters = boot_parameters(console, reduced_motion, fault, session_installed)
+    graphical_m1 = not console and not fault and session_installed
     results = {}
     with tempfile.TemporaryDirectory() as workdir:
         guest = Guest(iso, workdir, uefi)
@@ -309,6 +369,23 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False):
                 results["reduced motion: splash is a still frame"] = moves is False
             elif not fault:
                 results["splash animates"] = moves is True
+            if graphical_m1:
+                # The kiosk owns tty1, so the screen cannot prove the session runs (a
+                # restart loop left it black, and early boot text once passed for it).
+                # Ask the guest's journal instead (config/.../spheradianos/test-journal).
+                journal = wait_for_journal(guest, JOURNAL_TIMEOUT)
+                running, client = session_state(journal)
+                if client:
+                    print(f"graphical session shows: {client}", file=sys.stderr)
+                if client != "spheradian":
+                    # The launcher's own lines, or the whole session journal when
+                    # it never tried spheradian (missing binary, fallback switch).
+                    attempt = spheradian_attempt(journal) or journal.splitlines()
+                    print("--- why spheradian is not running ---", file=sys.stderr)
+                    print("\n".join(attempt), file=sys.stderr)
+                    print("--- end ---", file=sys.stderr)
+                results["the graphical session is running"] = running
+                return results
             name = (
                 "a failed unit ends the splash with text on the console"
                 if fault
@@ -328,6 +405,7 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False):
             results[name] = wait_until(Frame.shows_output_at_bottom, guest, SESSION_TIMEOUT, shots, "session")
         finally:
             guest.kill()
+            report_serial_log(results, guest.serial_log)
     return results
 
 
@@ -369,6 +447,71 @@ def no_text_before_kernel(guest):
             return last_text_mode is None or now - last_text_mode > TEXT_MODE_MARGIN
         time.sleep(0.03)
     return False
+
+
+def wait_for_journal(guest, timeout):
+    """Return the guest serial log once the journal copy is complete, or what there is."""
+    deadline = time.time() + timeout * guest.slowdown
+    while True:
+        text = (
+            guest.serial_log.read_bytes().decode("utf-8", errors="replace")
+            if guest.serial_log.exists()
+            else ""
+        )
+        if JOURNAL_END in text or time.time() >= deadline:
+            return text
+        time.sleep(POLL)
+
+
+def session_state(journal):
+    """Return (running, client) for spheradian-session from the guest journal copy.
+
+    Running means systemd reports it active and it never exited, so a restart
+    loop caught between two attempts does not pass. The client is what cage shows,
+    read from the guest's list of the kiosk user's processes: pam_systemd moves
+    them into a logind scope, out of the unit's cgroup in systemctl status.
+    """
+    if "spheradian-session.service: Main process exited" in journal:
+        return False, None
+    status = journal.split("=== spheradianos-test-journal: unit states ===", 1)[-1]
+    if "Active: active (running)" not in status:
+        return False, None
+    if "cage -s -- /usr/bin/foot" in status:
+        return True, "foot (fallback)"
+    if "/usr/bin/spheradian" in status:
+        return True, "spheradian"
+    return True, None
+
+
+def spheradian_attempt(journal):
+    """Return the journal lines of the launcher's first try of spheradian.
+
+    The launcher (config/.../spheradianos/spheradian-session) logs a line before it
+    starts spheradian and another when it falls back to foot; cage and spheradian
+    write to the same unit journal in between, so these lines say why it exited.
+    """
+    section = journal.split("=== spheradianos-test-journal: unit states ===", 1)[0]
+    attempt = []
+    for line in section.splitlines():
+        if not attempt and "spheradian-session: starting spheradian" not in line:
+            continue
+        attempt.append(line)
+        if "falling back to foot" in line:
+            break
+    return attempt
+
+
+def report_serial_log(results, path):
+    """Print what the guest wrote to its serial port, but only when a check failed."""
+    if all(results.values()):
+        return
+    content = path.read_bytes() if path.exists() else b""
+    if not content.strip():
+        print("no guest serial log (the session journal was not copied)", file=sys.stderr)
+        return
+    print("--- guest serial log ---", file=sys.stderr)
+    print(content.decode("utf-8", errors="replace").rstrip(), file=sys.stderr)
+    print("--- end of guest serial log ---", file=sys.stderr)
 
 
 def open_grub_menu(guest, shots):
@@ -434,7 +577,7 @@ def main():
     parser.add_argument(
         "--reduced-motion",
         action="store_true",
-        help="boot with xsphere.motion=reduced and expect a still splash",
+        help="boot with spheradian.motion=reduced and expect a still splash",
     )
     parser.add_argument(
         "--fault",
@@ -442,12 +585,22 @@ def main():
         help="inject a failed unit or a stalled boot and expect text diagnostics",
     )
     parser.add_argument("--uefi", action="store_true", help="boot OVMF and GRUB instead of BIOS and ISOLINUX")
+    parser.add_argument(
+        "--console",
+        action="store_true",
+        help="boot with spheradian.session=console to test the tty1 shell path",
+    )
     options = parser.parse_args()
     if options.shots:
         options.shots.mkdir(parents=True, exist_ok=True)
 
     results = run(
-        options.iso or find_iso(), options.shots, options.reduced_motion, options.fault, options.uefi
+        options.iso or find_iso(),
+        options.shots,
+        options.reduced_motion,
+        options.fault,
+        uefi=options.uefi,
+        console=options.console,
     )
     for name, passed in results.items():
         print(f"{'PASS' if passed else 'FAIL'}  {name}")
