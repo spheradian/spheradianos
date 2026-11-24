@@ -162,4 +162,4 @@ UEFI notes (2026-11-21, QEMU with OVMF, KVM):
 3. Installer: custom, or adapt an existing one (Calamares or the Debian installer).
 4. Handling of non-free firmware in a default image.
 5. Whether and when to replace any Debian-supplied component with an SpheradianOS one, and how to track those divergences.
-6. Name, branding, and licensing of the distribution as distinct from the desktop. *Names and structure proposed in [ADR-011](adr/ADR-011-organization-and-product-structure.md); licensing still open (ADR-011 §5.5).*
+6. Name, branding, and licensing of the distribution as distinct from the desktop. *Names and structure proposed in [ADR-011](adr/ADR-011-organization-and-product-structure.md); licence decided: Apache-2.0 (ADR-011 §5.5); branding still open.*

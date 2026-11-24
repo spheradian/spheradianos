@@ -2,7 +2,7 @@
 
 This is the current map of who owns what. The decisions behind it are in [ADR-011](adr/ADR-011-organization-and-product-structure.md) (structure and names) and [ADR-012](adr/ADR-012-implementation-language-policy.md) (languages). When this file and an ADR disagree, the ADR wins. Fix this file.
 
-> **Rename in progress.** The GitHub repositories already use the new names. Most files, identifiers, and documents in this repository still say *SpheradianOS* / *Spheradian* / `spheradian*`, until PR #30 is merged. In this document, the old and new names refer to the same things.
+> **Rename complete.** Repositories, files, identifiers, and documents use the new names since PR #30. The former names *XSphereOS* / *XSphereDE* / `xsphere*` remain only in git history and in records of the rename.
 
 ---
 
@@ -87,7 +87,7 @@ The name joins *sphere* with *radian*, after the steradian, the unit of solid an
 
 ## 7. Open decisions
 
-1. ~~Licence~~ **Decided 2026-11-23: Apache-2.0** for all project code, desktop and recipe (ADR-011 §5.5). Alignment in progress: PR #23 switched to Apache-2.0; `spheradian/files#4` relicenses Files; `spheradian/.github#1` updates the organization profile (merge after `files#4`).
+1. ~~Licence~~ **Decided 2026-11-23: Apache-2.0** for all project code, desktop and recipe (ADR-011 §5.5). Alignment in progress: this repository has shipped an Apache-2.0 `LICENSE` since PR #23 merged; `spheradian/files#4` relicenses Files; `spheradian/.github#1` updates the organization profile (merge after `files#4`).
 2. Rename `files` → `spheradian-files` (ADR-011 §5.3).
 3. Domain and trademark registration under Fabrintek (ADR-011 §7, step 7).
 4. Commit the three-pillar positioning ADR (Privacy, Security, Old Computers) as ADR-008.
