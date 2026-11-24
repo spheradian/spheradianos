@@ -1,0 +1,13 @@
+# Test only: fails during boot when "spheradian.test.fail" is on the kernel command
+# line, so scripts/boot-test.py can check that a failure ends the splash.
+[Unit]
+Description=SpheradianOS boot test: injected failure
+ConditionKernelCommandLine=spheradian.test.fail
+Before=plymouth-quit.service plymouth-quit-wait.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/false
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,40 @@
+# ADR-003: Repository Visibility Policy for `spheradian/spheradian`
+
+**Date:** 2026-11-18  
+**Status:** Accepted (the `spheradianos` part of §4 is superseded by [ADR-010](ADR-010-spheradianos-public-visibility.md))  
+**Author:** Senior Software Architect  
+**Approver:** Fábio Mendes (`mendsec`)  
+**Confidence:** High  
+**Impact:** Medium  
+**Reversibility:** Easy  
+
+> **Amended 2026-11-23 by [ADR-011](ADR-011-organization-and-product-structure.md) §5.5:** the licence is **Apache-2.0**, not MIT. The repository already shipped Apache-2.0 (`LICENSE`, `Cargo.toml`). The visibility decision below is unchanged.
+
+## 1. Executive Summary
+
+`spheradian/spheradian` is currently public under the MIT license, while `spheradian/spheradianos` and `spheradian/security` are private. We decided to **keep `spheradian/spheradian` public**, preserving free unlimited CI/CD for the Rust compositor matrix and public auditability, while keeping distribution recipes and security threat models isolated in the two private repositories.
+
+## 2. Context and Problem
+
+`DISTRO-DESIGN.md` (§8) and `ENGINEERING-PLAN.md` (§5.3) separate the desktop compositor (`spheradian`) from the distribution (`spheradianos`) and security tracking (`spheradian/security`). Making `spheradian` private would unify repository privacy during early development, at the cost of private GitHub Actions minute quotas and extra token management for artifact consumption in `spheradianos`.
+
+## 3. Options Considered
+
+- **Option A (Chosen):** Keep `spheradian/spheradian` **public** (MIT license).
+- **Option B:** Convert `spheradian/spheradian` to **private**.
+
+## 4. Decision
+
+Adopt **Option A**: `spheradian/spheradian` remains public under the MIT license; `spheradian/spheradianos` and `spheradian/security` remain strictly private.
+
+> **Update:** [ADR-010](ADR-010-spheradianos-public-visibility.md) supersedes this for `spheradian/spheradianos`, which becomes public under Apache-2.0 after M0. `spheradian/security` stays private.
+
+## 5. Consequences and Trade-offs
+
+- **Pros:** Unlimited GitHub Actions minutes for Rust `stable`, MSRV 1.88, BSD cross-check, `cargo audit`, and coverage; simpler artifact consumption by `spheradianos`; public auditability of the desktop codebase.
+- **Cons:** Pre-M2 desktop development remains publicly visible.
+
+## 6. Security and Compliance
+
+- No secrets, credentials, or detailed threat models from `spheradian/security` may be committed to `spheradian`.
+- Documentation and UI must continue stating that trust-domain isolation is not an enforced security boundary until Milestone `M5` is complete.

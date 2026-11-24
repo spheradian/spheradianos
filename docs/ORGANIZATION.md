@@ -2,7 +2,7 @@
 
 This is the current map of who owns what. The decisions behind it are in [ADR-011](adr/ADR-011-organization-and-product-structure.md) (structure and names) and [ADR-012](adr/ADR-012-implementation-language-policy.md) (languages). When this file and an ADR disagree, the ADR wins. Fix this file.
 
-> **Rename in progress.** The GitHub repositories already use the new names. Most files, identifiers, and documents in this repository still say *XSphereOS* / *XSphereDE* / `xsphere*`, until PR #30 is merged. In this document, the old and new names refer to the same things.
+> **Rename in progress.** The GitHub repositories already use the new names. Most files, identifiers, and documents in this repository still say *SpheradianOS* / *Spheradian* / `spheradian*`, until PR #30 is merged. In this document, the old and new names refer to the same things.
 
 ---
 

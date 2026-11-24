@@ -1,0 +1,72 @@
+#!/bin/sh
+# Never let the boot splash hide a problem (docs/BOOT-EXPERIENCE.md, section 7).
+#
+# While the splash is up, look once a second for a failed unit or for a boot
+# that has stopped making progress. On either, end the splash and print what is
+# wrong, in plain text, on the console. When the splash goes away by itself,
+# look one last time, so a unit that failed in its final moment is still
+# reported. The same text is kept in a file for later display.
+set -eu
+
+plymouth="${SPHERADIAN_PLYMOUTH:-plymouth}"
+systemctl="${SPHERADIAN_SYSTEMCTL:-systemctl}"
+pause="${SPHERADIAN_SLEEP:-sleep}"
+console="${SPHERADIAN_CONSOLE:-/dev/console}"
+report_file="${SPHERADIAN_REPORT:-/run/spheradianos/boot-report}"
+stall_limit="${SPHERADIAN_STALL_SECONDS:-20}"
+
+# Says what is wrong. The text must be readable without the theme.
+report() {
+	mkdir -p "$(dirname "$report_file")"
+	{
+		printf '\n'
+		printf 'SpheradianOS: %s\n\n' "$1"
+		printf '%s\n\n' "$2"
+		printf 'Full log: journalctl -b    Unit details: systemctl status UNIT\n\n'
+	} | tee "$report_file" >"$console"
+}
+
+# Ends the splash first, so the explanation is visible.
+reveal() {
+	"$plymouth" quit || true
+	report "$@"
+}
+
+failed_units() {
+	"$systemctl" list-units --state=failed --no-legend --plain 2>/dev/null || true
+}
+
+pending_jobs() {
+	"$systemctl" list-jobs --no-legend --plain 2>/dev/null || true
+}
+
+previous_jobs=""
+idle_seconds=0
+
+while "$plymouth" --ping; do
+	failed="$(failed_units)"
+	if [ -n "$failed" ]; then
+		reveal "a unit failed during startup." "$failed"
+		exit 0
+	fi
+
+	jobs="$(pending_jobs)"
+	if [ "$jobs" = "$previous_jobs" ]; then
+		idle_seconds=$((idle_seconds + 1))
+	else
+		idle_seconds=0
+		previous_jobs="$jobs"
+	fi
+	if [ "$idle_seconds" -ge "$stall_limit" ]; then
+		reveal "startup has made no progress for ${stall_limit} seconds. Still waiting for:" "$jobs"
+		exit 0
+	fi
+
+	"$pause" 1
+done
+
+# The splash is gone. A unit that failed just before it left has not been seen.
+failed="$(failed_units)"
+if [ -n "$failed" ]; then
+	report "a unit failed during startup." "$failed"
+fi

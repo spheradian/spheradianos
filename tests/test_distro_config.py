@@ -1,4 +1,4 @@
-"""Static assertions for XSphereOS live-build configuration and package manifests."""
+"""Static assertions for SpheradianOS live-build configuration and package manifests."""
 
 import contextlib
 import importlib.util
@@ -39,7 +39,7 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("--firmware-binary false", auto_config)
         self.assertIn("--firmware-chroot false", auto_config)
         self.assertIn("--chroot-squashfs-compression-type zstd", auto_config)
-        self.assertIn("username=xsphere", auto_config)
+        self.assertIn("username=spheradian", auto_config)
         self.assertNotIn("username=root", auto_config)
 
     def test_console_grade_fluidity_config_exists(self) -> None:
@@ -49,13 +49,19 @@ class DistroConfigTests(unittest.TestCase):
         self.assertIn("compression-algorithm = zstd", zram_cfg)
 
         slice_cfg = (
-            REPO_ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "xsphere-session.slice"
+            REPO_ROOT
+            / "config"
+            / "includes.chroot"
+            / "etc"
+            / "systemd"
+            / "system"
+            / "spheradian-session.slice"
         ).read_text(encoding="utf-8")
         self.assertIn("CPUWeight=500", slice_cfg)
         self.assertIn("MemoryLow=", slice_cfg)
 
     def test_m1_kiosk_session_and_fallback_configured(self) -> None:
-        manifest = (REPO_ROOT / "config" / "package-lists" / "xsphereos-base.list.chroot").read_text(
+        manifest = (REPO_ROOT / "config" / "package-lists" / "spheradianos-base.list.chroot").read_text(
             encoding="utf-8"
         )
         for pkg in ("seatd", "cage", "mesa-vulkan-drivers", "libegl-mesa0", "foot"):
@@ -72,14 +78,14 @@ class DistroConfigTests(unittest.TestCase):
             / "etc"
             / "systemd"
             / "system"
-            / "xsphere-session.service"
+            / "spheradian-session.service"
         ).read_text(encoding="utf-8")
-        self.assertIn("Slice=xsphere-session.slice", service)
-        self.assertIn("ConditionKernelCommandLine=!xsphere.session=console", service)
-        self.assertIn("User=xsphere", service)
+        self.assertIn("Slice=spheradian-session.slice", service)
+        self.assertIn("ConditionKernelCommandLine=!spheradian.session=console", service)
+        self.assertIn("User=spheradian", service)
         # Conflicts= is applied when the boot transaction is built, before the
         # condition is checked, so it would stop the tty1 getty even when the
-        # session is then skipped (xsphere.session=console): no shell at all.
+        # session is then skipped (spheradian.session=console): no shell at all.
         self.assertNotIn("Conflicts=getty@tty1.service", service)
 
         # The same kernel switch selects exactly one owner of tty1.
@@ -91,34 +97,49 @@ class DistroConfigTests(unittest.TestCase):
             / "systemd"
             / "system"
             / "getty@tty1.service.d"
-            / "xsphere-session.conf"
+            / "spheradian-session.conf"
         ).read_text(encoding="utf-8")
         self.assertIn("[Unit]", getty_condition)
-        self.assertIn("ConditionKernelCommandLine=xsphere.session=console", getty_condition)
+        self.assertIn("ConditionKernelCommandLine=spheradian.session=console", getty_condition)
 
         launcher = (
-            REPO_ROOT / "config" / "includes.chroot" / "usr" / "lib" / "xsphereos" / "xsphere-session"
+            REPO_ROOT / "config" / "includes.chroot" / "usr" / "lib" / "spheradianos" / "spheradian-session"
         ).read_text(encoding="utf-8")
-        self.assertIn("cage -s -- /usr/bin/xspherede", launcher)
+        self.assertIn("cage -s -- /usr/bin/spheradian", launcher)
         self.assertIn("exec cage -s -- /usr/bin/foot", launcher)
+        # scripts/boot-test.py cuts spheradian's output out of the journal between these.
+        self.assertIn("spheradian-session: starting spheradian", launcher)
+        self.assertIn("falling back to foot", launcher)
+
+    def test_spheradian_is_built_against_the_image_glibc(self) -> None:
+        # Built on the CI host it linked GLIBC_2.43 symbols, which trixie (2.41)
+        # lacks, so it could never start in the image and cage fell back to foot.
+        script = (REPO_ROOT / "scripts" / "build-spheradian.sh").read_text(encoding="utf-8")
+        self.assertRegex(script, r"rust:[0-9.]+-trixie@sha256:[0-9a-f]{64}")
+        self.assertIn("podman run", script)
+        self.assertIn("cargo build", script)
+        self.assertIn("--locked", script)
 
     def test_session_journal_reaches_the_boot_test_only_inside_its_qemu(self) -> None:
         systemd_dir = REPO_ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system"
-        unit = (systemd_dir / "xsphereos-test-journal.service").read_text(encoding="utf-8")
+        unit = (systemd_dir / "spheradianos-test-journal.service").read_text(encoding="utf-8")
         self.assertIn("ConditionVirtualization=vm", unit)
-        self.assertIn("ExecStart=/usr/lib/xsphereos/test-journal", unit)
-        wanted = systemd_dir / "multi-user.target.wants" / "xsphereos-test-journal.service"
+        self.assertIn("ExecStart=/usr/lib/spheradianos/test-journal", unit)
+        wanted = systemd_dir / "multi-user.target.wants" / "spheradianos-test-journal.service"
         self.assertTrue(wanted.is_symlink())
 
         script = (
-            REPO_ROOT / "config" / "includes.chroot" / "usr" / "lib" / "xsphereos" / "test-journal"
+            REPO_ROOT / "config" / "includes.chroot" / "usr" / "lib" / "spheradianos" / "test-journal"
         ).read_text(encoding="utf-8")
         # Gated on a fw_cfg entry that only scripts/boot-test.py gives its QEMU guest.
-        self.assertIn("/sys/firmware/qemu_fw_cfg/by_name/opt/xsphereos/test-journal/raw", script)
+        self.assertIn("/sys/firmware/qemu_fw_cfg/by_name/opt/spheradianos/test-journal/raw", script)
         self.assertIn('[ -e "$flag" ] || exit 0', script)
-        self.assertIn("-u xsphere-session.service", script)
+        self.assertIn("-u spheradian-session.service", script)
         self.assertIn(">/dev/ttyS0", script)
-        self.assertIn("status --full xsphere-session.service", script)
+        self.assertIn("status --full spheradian-session.service", script)
+        # The session's own output is logged under its user's logind scope.
+        self.assertIn('_UID="$(id -u spheradian)"', script)
+        self.assertIn("=== spheradianos-test-journal: session processes ===", script)
 
     def test_package_lists_have_justifications_and_no_forbidden_packages(self) -> None:
         lists_dir = REPO_ROOT / "config" / "package-lists"
@@ -161,15 +182,28 @@ class DistroConfigTests(unittest.TestCase):
         isolinux_cfg = (REPO_ROOT / "config" / "bootloaders" / "isolinux" / "isolinux.cfg").read_text(
             encoding="utf-8"
         )
-        self.assertIn("default live-amd64", isolinux_cfg)
-        self.assertNotIn("vesamenu.c32", isolinux_cfg)
-        self.assertNotIn("timeout 0", isolinux_cfg)
+        directives = [
+            line.split("#", 1)[0].strip()
+            for line in isolinux_cfg.splitlines()
+            if line.split("#", 1)[0].strip()
+        ]
+        self.assertIn("default live-amd64", directives)
+        self.assertNotIn("timeout 0", directives)
+        self.assertNotIn("prompt 1", directives)
+        # ADR-002 amendment: vesamenu only as a hidden, timed screen, never blocking.
+        self.assertIn("ui vesamenu.c32", directives)
+        self.assertIn("menu hidden", directives)
+        self.assertIn("timeout 5", directives)
 
         isolinux_live = (REPO_ROOT / "config" / "bootloaders" / "isolinux" / "live.cfg.in").read_text(
             encoding="utf-8"
         )
         self.assertIn("linux /live/vmlinuz", isolinux_live)
         self.assertIn("initrd /live/initrd.img", isolinux_live)
+        # The default entry keeps the bootloader's graphics mode, so no text-mode
+        # cursor shows while the kernel loads (BOOT-EXPERIENCE.md 2).
+        default_entry = isolinux_live.split("label live-amd64-failsafe")[0]
+        self.assertIn("append @APPEND_LIVE@ vga=current", default_entry)
         self.assertNotIn("@LINUX_LIVE@", isolinux_live)
         self.assertNotIn("@INITRD_LIVE@", isolinux_live)
 
@@ -221,7 +255,7 @@ class DistroConfigTests(unittest.TestCase):
                     Path(exe).name in {"sh", "bash", "dash"} and "-c" in argv[1:],
                     f"{unit_path.name} ExecStart must not invoke an inline shell: {raw_cmd}",
                 )
-                if exe.startswith(("/usr/lib/xsphereos/", "/usr/local/")):
+                if exe.startswith(("/usr/lib/spheradianos/", "/usr/local/")):
                     target = chroot_root / exe.lstrip("/")
                     self.assertTrue(target.is_file(), f"{unit_path.name} missing ExecStart target {exe}")
                     self.assertTrue(
@@ -249,17 +283,17 @@ class DistroConfigTests(unittest.TestCase):
 
     def test_privacy_security_and_old_hardware_baseline(self) -> None:
         chroot_etc = REPO_ROOT / "config" / "includes.chroot" / "etc"
-        apt_cfg = (chroot_etc / "apt" / "apt.conf.d" / "90xsphereos").read_text(encoding="utf-8")
+        apt_cfg = (chroot_etc / "apt" / "apt.conf.d" / "90spheradianos").read_text(encoding="utf-8")
         self.assertIn('APT::Install-Recommends "false";', apt_cfg)
         self.assertIn('APT::Install-Suggests "false";', apt_cfg)
 
-        base_list_path = REPO_ROOT / "config" / "package-lists" / "xsphereos-base.list.chroot"
+        base_list_path = REPO_ROOT / "config" / "package-lists" / "spheradianos-base.list.chroot"
         base_packages = {line.strip() for line in base_list_path.read_text(encoding="utf-8").splitlines()}
         self.assertIn("firmware-linux-free", base_packages)
 
         autologin_path = chroot_etc / "systemd" / "system" / "getty@tty1.service.d" / "autologin.conf"
         autologin_cfg = autologin_path.read_text(encoding="utf-8")
-        self.assertIn("--autologin xsphere", autologin_cfg)
+        self.assertIn("--autologin spheradian", autologin_cfg)
         self.assertNotIn("--autologin root", autologin_cfg)
 
         sudoers_dir = chroot_etc / "sudoers.d"

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=spheradian-still
+Description=SpheradianOS boot splash, reduced motion: one still frame.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/spheradian
+ScriptFile=/usr/share/plymouth/themes/spheradian-still/spheradian-still.script

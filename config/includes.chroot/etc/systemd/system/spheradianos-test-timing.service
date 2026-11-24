@@ -1,0 +1,14 @@
+# Test only: when "spheradian.test.timing" is on the kernel command line, report
+# the boot timestamps on the serial port for scripts/boot-budget.py, which
+# measures the splash's cost (docs/BOOT-EXPERIENCE.md 6.1).
+[Unit]
+Description=SpheradianOS boot test: report boot timestamps
+ConditionKernelCommandLine=spheradian.test.timing
+After=multi-user.target
+
+[Service]
+Type=exec
+ExecStart=/usr/lib/spheradianos/boot-timing
+
+[Install]
+WantedBy=multi-user.target

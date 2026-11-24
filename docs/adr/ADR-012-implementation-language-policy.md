@@ -27,7 +27,7 @@ Measured on `main` at `a4c3aa0`:
 | `scripts/*.py` (boot test, asset generator, preview renderer, timeline, package audit) | ~1,830 | Python | Developer machine, CI | No |
 | `tests/*.py` | ~1,120 | Python | Developer machine, CI | No |
 | `scripts/*.sh`, `auto/*` | ~140 | POSIX shell | Developer machine, CI | No |
-| `usr/lib/xsphereos/xsphere-session`, `boot-watch`, `test-journal` | small | POSIX shell | **Target system** | Yes |
+| `usr/lib/spheradianos/spheradian-session`, `boot-watch`, `test-journal` | small | POSIX shell | **Target system** | Yes |
 | initramfs hooks, `profile.d` script | small | POSIX shell | **Target system** (initramfs, login) | Yes |
 | Plymouth theme script | small | Plymouth script | **Target system** | Yes |
 | `spheradian` compositor (other repository) | ~3,400 | **Rust** | **Target system** | Yes (built from a pinned SHA, ADR-007) |
@@ -81,7 +81,7 @@ First case: **the boot timeline.** At B4 the compositor must continue the Ignite
 
 | Component | Today | Target | When |
 |---|---|---|---|
-| `xsphere-session` (session launcher with fallback) | `sh` | `spheradian-session` (Rust): starts the compositor, supervises it, falls back, persists the render-level downgrade (ADR-009) | M2, when `cage` is replaced by the native compositor |
+| `spheradian-session` (session launcher with fallback) | `sh` | `spheradian-session` (Rust): starts the compositor, supervises it, falls back, persists the render-level downgrade (ADR-009) | M2, when `cage` is replaced by the native compositor |
 | `boot-watch` (end the splash, watchdog, failure report) | `sh` | Logic moves into `spheradian-session` or a small Rust binary; the systemd unit stays | B6 / M4, when the boot report is shown in the session |
 | `test-journal` | `sh` | Unchanged (test only) | — |
 | initramfs hooks, `profile.d` script, Plymouth script | `sh`, Plymouth script | Unchanged (exceptions in §5.1) | — |

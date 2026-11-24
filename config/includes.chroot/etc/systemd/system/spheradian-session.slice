@@ -1,0 +1,8 @@
+# Protected cgroups v2 slice for Spheradian compositor & input path (ADR-004).
+[Unit]
+Description=SpheradianOS Protected Graphical Session Slice
+
+[Slice]
+CPUWeight=500
+IOWeight=500
+MemoryLow=256M

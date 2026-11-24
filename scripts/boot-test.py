@@ -29,6 +29,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MENU_WAIT = 4.0
+ISOLINUX_MENU_TIMEOUT = 15.0
+# QEMU's screendump of VGA text mode (80x25 cells of 9x16 pixels).
+TEXT_MODE_SIZE = (720, 400)
+# The kernel's display (virtio-gpu in QEMU) is at least this wide; the
+# bootloader's graphics screen (vesamenu, 640x480) is narrower.
+KERNEL_MIN_WIDTH = 1024
+TEXT_MODE_MARGIN = 1.0
 SPLASH_TIMEOUT = 40.0
 EXIT_TIMEOUT = 60.0
 SESSION_TIMEOUT = 20.0
@@ -36,10 +43,10 @@ STALL_HOLD = 8.0  # well past a normal boot, well before the watchdog
 WATCHDOG_TIMEOUT = 40.0  # the watchdog fires after 20 s without progress
 POLL = 0.5
 JOURNAL_TIMEOUT = 120.0  # the guest copies its journal 60 s after reaching multi-user
-JOURNAL_END = "=== xsphereos-test-journal: end ==="
+JOURNAL_END = "=== spheradianos-test-journal: end ==="
 KEYS = {" ": "spc", "\n": "ret", "\t": "tab", ".": "dot", "=": "equal", "-": "minus", "/": "slash"}
 SHIFTED = {"&": "7", "|": "backslash"}  # US layout, the live image default
-REPORT = "/run/xsphereos/boot-report"
+REPORT = "/run/spheradianos/boot-report"
 MOTION_SAMPLES = 6
 OVMF_CODE = Path("/usr/share/OVMF/OVMF_CODE_4M.fd")
 OVMF_VARS = Path("/usr/share/OVMF/OVMF_VARS_4M.fd")
@@ -93,11 +100,11 @@ class Guest:
                 "-qmp",
                 f"unix:{sock},server,nowait",
                 # The image copies the session journal to this port when it sees the
-                # fw_cfg entry below (config/includes.chroot/usr/lib/xsphereos/test-journal).
+                # fw_cfg entry below (config/includes.chroot/usr/lib/spheradianos/test-journal).
                 "-serial",
                 f"file:{self.serial_log}",
                 "-fw_cfg",
-                "name=opt/xsphereos/test-journal,string=1",
+                "name=opt/spheradianos/test-journal,string=1",
             ]
         )
         self.channel = self._connect(sock)
@@ -208,6 +215,15 @@ class Frame:
         that reaches 28 px above the centre, where the splash's glow has faded."""
         return self.mean(self.width // 2 - 90, self.height // 2 - 28, 180, 4) > 128
 
+    def is_text_mode(self):
+        return (self.width, self.height) == TEXT_MODE_SIZE
+
+    def shows_isolinux_menu(self):
+        """vesamenu's graphics screen with menu text on it."""
+        if self.width >= KERNEL_MIN_WIDTH or self.is_text_mode():
+            return False
+        return self.peak(0, 0, self.width, self.height) > 100
+
     def shows_grub_menu(self):
         """GRUB's text menu: dark centre, help text in the band above the bottom edge."""
         band_top = self.height * 85 // 100
@@ -240,13 +256,13 @@ def wait_until(predicate, guest, timeout, shots, label):
 def report_timeout(label, frame):
     """Say what was on screen when a check gave up; CI keeps no recording of the guest.
 
-    With XSPHERE_TEST_FAILURE_SHOTS set, the last screenshot is also kept there.
+    With SPHERADIAN_TEST_FAILURE_SHOTS set, the last screenshot is also kept there.
     """
     if frame is None:
         print(f"{label}: timed out before any screenshot", file=sys.stderr)
         return
     print(f"{label}: timed out; last screen: {frame.summary()}", file=sys.stderr)
-    folder = os.environ.get("XSPHERE_TEST_FAILURE_SHOTS")
+    folder = os.environ.get("SPHERADIAN_TEST_FAILURE_SHOTS")
     if folder:
         path = Path(folder)
         path.mkdir(parents=True, exist_ok=True)
@@ -280,7 +296,9 @@ def splash_moves(guest):
     return verdict
 
 
-SESSION_UNIT = ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "xsphere-session.service"
+SESSION_UNIT = (
+    ROOT / "config" / "includes.chroot" / "etc" / "systemd" / "system" / "spheradian-session.service"
+)
 
 
 def boot_parameters(console=False, reduced_motion=False, fault=None, session_installed=False):
@@ -291,11 +309,11 @@ def boot_parameters(console=False, reduced_motion=False, fault=None, session_ins
     """
     parameters = []
     if console or (fault and session_installed):
-        parameters.append("xsphere.session=console")
+        parameters.append("spheradian.session=console")
     if reduced_motion:
-        parameters.append("xsphere.motion=reduced")
+        parameters.append("spheradian.motion=reduced")
     if fault:
-        parameters.append(f"xsphere.test.{fault}")
+        parameters.append(f"spheradian.test.{fault}")
     return parameters
 
 
@@ -314,16 +332,13 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
                     return results
                 append_grub_parameters(guest, parameters)
             elif parameters:
-                # Send space + backspace during BIOS POST -> ISOLINUX window so the
-                # 0.5s timeout is cancelled at "boot:" without filling the input buffer.
-                wait_secs = 8.0 if guest.slowdown > 1 else MENU_WAIT
-                deadline = time.monotonic() + wait_secs
-                while time.monotonic() < deadline:
-                    guest.command("send-key", keys=[{"type": "qcode", "data": "spc"}])
-                    time.sleep(0.05)
-                    guest.command("send-key", keys=[{"type": "qcode", "data": "backspace"}])
-                    time.sleep(0.20)
-                guest.type_text("live-amd64 " + " ".join(parameters) + "\n")
+                results["a key opens the hidden ISOLINUX menu"] = open_isolinux_menu(guest, shots)
+                if not results["a key opens the hidden ISOLINUX menu"]:
+                    return results
+                # Tab edits the default entry's command line; append and boot it.
+                guest.type_text("\t " + " ".join(parameters) + "\n")
+            else:
+                results["no text-mode screen while the kernel loads"] = no_text_before_kernel(guest)
             results["splash is shown"] = wait_until(
                 Frame.shows_splash, guest, SPLASH_TIMEOUT, shots, "splash"
             )
@@ -340,10 +355,18 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
             if graphical_m1:
                 # The kiosk owns tty1, so the screen cannot prove the session runs (a
                 # restart loop left it black, and early boot text once passed for it).
-                # Ask the guest's journal instead (config/.../xsphereos/test-journal).
-                running, client = session_state(wait_for_journal(guest, JOURNAL_TIMEOUT))
+                # Ask the guest's journal instead (config/.../spheradianos/test-journal).
+                journal = wait_for_journal(guest, JOURNAL_TIMEOUT)
+                running, client = session_state(journal)
                 if client:
                     print(f"graphical session shows: {client}", file=sys.stderr)
+                if client != "spheradian":
+                    # The launcher's own lines, or the whole session journal when
+                    # it never tried spheradian (missing binary, fallback switch).
+                    attempt = spheradian_attempt(journal) or journal.splitlines()
+                    print("--- why spheradian is not running ---", file=sys.stderr)
+                    print("\n".join(attempt), file=sys.stderr)
+                    print("--- end ---", file=sys.stderr)
                 results["the graphical session is running"] = running
                 return results
             name = (
@@ -369,6 +392,46 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
     return results
 
 
+def open_isolinux_menu(guest, shots):
+    """Press space until ISOLINUX shows its menu (ADR-002: hidden, 0.5 s timeout).
+
+    One key at a time: the BIOS keyboard buffer is small, and any key both
+    cancels the timeout and reveals the hidden menu.
+    """
+    deadline = time.time() + ISOLINUX_MENU_TIMEOUT * guest.slowdown
+    count = 0
+    while time.time() < deadline:
+        guest.press("spc")
+        time.sleep(0.25)
+        keep = shots / f"menu-{count:03d}.ppm" if shots else None
+        if guest.screen(keep).shows_isolinux_menu():
+            return True
+        count += 1
+    return False
+
+
+def no_text_before_kernel(guest):
+    """True if the screen is never in text mode during the last second before
+    the kernel takes over the display.
+
+    Firmware and the ISOLINUX banner may use text mode for a moment at power-on;
+    that is outside our control. But if the bootloader leaves the screen in text
+    mode while the kernel loads, a blinking cursor sits there for seconds
+    (BOOT-EXPERIENCE.md section 2, stage 2), and that is what this catches.
+    """
+    deadline = time.time() + SPLASH_TIMEOUT * guest.slowdown
+    last_text_mode = None
+    while time.time() < deadline:
+        frame = guest.screen()
+        now = time.time()
+        if frame.is_text_mode():
+            last_text_mode = now
+        elif frame.width >= KERNEL_MIN_WIDTH:
+            return last_text_mode is None or now - last_text_mode > TEXT_MODE_MARGIN
+        time.sleep(0.03)
+    return False
+
+
 def wait_for_journal(guest, timeout):
     """Return the guest serial log once the journal copy is complete, or what there is."""
     deadline = time.time() + timeout * guest.slowdown
@@ -384,21 +447,41 @@ def wait_for_journal(guest, timeout):
 
 
 def session_state(journal):
-    """Return (running, client) for xsphere-session from the guest journal copy.
+    """Return (running, client) for spheradian-session from the guest journal copy.
 
     Running means systemd reports it active and it never exited, so a restart
-    loop caught between two attempts does not pass. The client is what cage shows.
+    loop caught between two attempts does not pass. The client is what cage shows,
+    read from the guest's list of the kiosk user's processes: pam_systemd moves
+    them into a logind scope, out of the unit's cgroup in systemctl status.
     """
-    if "xsphere-session.service: Main process exited" in journal:
+    if "spheradian-session.service: Main process exited" in journal:
         return False, None
-    status = journal.split("=== xsphereos-test-journal: unit states ===", 1)[-1]
+    status = journal.split("=== spheradianos-test-journal: unit states ===", 1)[-1]
     if "Active: active (running)" not in status:
         return False, None
     if "cage -s -- /usr/bin/foot" in status:
         return True, "foot (fallback)"
-    if "/usr/bin/xspherede" in status:
-        return True, "xspherede"
+    if "/usr/bin/spheradian" in status:
+        return True, "spheradian"
     return True, None
+
+
+def spheradian_attempt(journal):
+    """Return the journal lines of the launcher's first try of spheradian.
+
+    The launcher (config/.../spheradianos/spheradian-session) logs a line before it
+    starts spheradian and another when it falls back to foot; cage and spheradian
+    write to the same unit journal in between, so these lines say why it exited.
+    """
+    section = journal.split("=== spheradianos-test-journal: unit states ===", 1)[0]
+    attempt = []
+    for line in section.splitlines():
+        if not attempt and "spheradian-session: starting spheradian" not in line:
+            continue
+        attempt.append(line)
+        if "falling back to foot" in line:
+            break
+    return attempt
 
 
 def report_serial_log(results, path):
@@ -477,7 +560,7 @@ def main():
     parser.add_argument(
         "--reduced-motion",
         action="store_true",
-        help="boot with xsphere.motion=reduced and expect a still splash",
+        help="boot with spheradian.motion=reduced and expect a still splash",
     )
     parser.add_argument(
         "--fault",
@@ -488,7 +571,7 @@ def main():
     parser.add_argument(
         "--console",
         action="store_true",
-        help="boot with xsphere.session=console to test the tty1 shell path",
+        help="boot with spheradian.session=console to test the tty1 shell path",
     )
     options = parser.parse_args()
     if options.shots:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render a concept video of the XSphereOS boot sequence (docs/BOOT-EXPERIENCE.md).
+"""Render a concept video of the SpheradianOS boot sequence (docs/BOOT-EXPERIENCE.md).
 
 This is a design preview, not the boot code: it draws the five phases
 (Ignite, Gather, Wake, Resolve, Unfold) with a fixed, typical timing and
@@ -322,7 +322,7 @@ def draw_wordmark(frame, t):
         return
     draw = ImageDraw.Draw(frame)
     font = load_font(20)
-    text, spacing = "XSPHEREOS", 9
+    text, spacing = "SPHERADIANOS", 9
     widths = [draw.textlength(ch, font=font) for ch in text]
     x = (WIDTH - sum(widths) - spacing * (len(text) - 1)) / 2
     for ch, width in zip(text, widths, strict=True):
@@ -717,10 +717,10 @@ def main():
         frames = pool.map(render_frame, [(i, options.signature) for i in range(count)], chunksize=4)
     pcm = render_audio(options.signature)
 
-    video = options.out_dir / "xsphereos-boot-concept.avi"
-    sheet = options.out_dir / "xsphereos-boot-concept-frames.png"
+    video = options.out_dir / "spheradianos-boot-concept.avi"
+    sheet = options.out_dir / "spheradianos-boot-concept-frames.png"
     write_avi(video, frames, pcm)
-    write_wav(options.out_dir / "xsphereos-boot-concept.wav", pcm)
+    write_wav(options.out_dir / "spheradianos-boot-concept.wav", pcm)
     write_contact_sheet(sheet, frames)
     print(f"wrote {video} ({video.stat().st_size // 1024} KiB, {count} frames)")
     print(f"wrote {sheet}")

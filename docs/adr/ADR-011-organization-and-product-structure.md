@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-The project has outgrown its original framing ("XSphereOS, a Debian-based distribution for the XSphereDE desktop"). The GitHub organization `spheradian` already exists, the repositories have moved into it, and the desktop and the distribution have new names. What is still missing is a written decision on **who owns what, what is original, and how the pieces relate**.
+The project has outgrown its original framing ("SpheradianOS, a Debian-based distribution for the Spheradian desktop"). The GitHub organization `spheradian` already exists, the repositories have moved into it, and the desktop and the distribution have new names. What is still missing is a written decision on **who owns what, what is original, and how the pieces relate**.
 
 We compared five ways that established projects organize a company, a desktop, and a distribution (§4). No single model fits, so we combine two:
 
@@ -32,7 +32,7 @@ The decision also states plainly what is original and what is inherited (§5.2).
 ## 2. Context and Problem
 
 - **Is the project a remaster?** The question was raised directly: Python is the most-used language in this repository, so the work can look like "an ISO assembler". In this repository that is true. The original work is in Rust, in a different repository: the desktop. No document says this, so the project looks smaller than it is.
-- **The rename is underway, but no decision records it.** The `spheradian` organization was created on 2026-11-23. `mendsec/xspherede`, `mendsec/xsphereos`, and `mendsec/xspherede-security` now redirect to `spheradian/spheradian`, `spheradian/spheradianos`, and `spheradian/security`. The crate is now `spheradian`. PR #30 renames identifiers in this repository. The naming discussion lives in an issue (`spheradian/spheradian#17`), not in an ADR.
+- **The rename is underway, but no decision records it.** The `spheradian` organization was created on 2026-11-23. `spheradian/spheradian`, `spheradian/spheradianos`, and `spheradian/security` now redirect to `spheradian/spheradian`, `spheradian/spheradianos`, and `spheradian/security`. The crate is now `spheradian`. PR #30 renames identifiers in this repository. The naming discussion lives in an issue (`spheradian/spheradian#17`), not in an ADR.
 - **`DISTRO-DESIGN.md` §10 leaves open question 6 open:** "Name, branding, and licensing of the distribution as distinct from the desktop."
 - **The company layer is undocumented.** Fabrintek (`github.com/fabrintek`) already exists as the maintainer's IT services company. Its relationship to the open-source project has not been decided.
 - **The licences disagree.** `spheradian/spheradian` ships `LICENSE` as Apache-2.0 (also in `Cargo.toml`). The organization profile, ADR-003, and this repository's README say MIT. PR #23 adds an MIT `LICENSE` to this repository. §5.5 resolves this in favour of Apache-2.0.
@@ -126,7 +126,7 @@ This means `spheradian/files` should be renamed to `spheradian/spheradian-files`
 
 ### 5.4 Repository layout
 
-- **Now:** One repository per component, one recipe repository (this one), one security repository, and `.github`. This repository pins `spheradian` to a commit SHA (ADR-007, `scripts/build-xspherede.sh`, which PR #30 renames to `build-spheradian.sh`).
+- **Now:** One repository per component, one recipe repository (this one), one security repository, and `.github`. This repository pins `spheradian` to a commit SHA (ADR-007, `scripts/build-spheradian.sh`, which PR #30 renames to `build-spheradian.sh`).
 - **When 3 or more components ship in the image:** Add an integration repository (`spheradian/spheradian-epoch`) that pins every component, so a desktop release is one tag. This works like `cosmic-epoch`. The recipe then pins one epoch tag instead of several SHAs.
 - **At M4:** Each shipped component gets a `debian/` directory in its own repository, as in the `pop-os` repositories. The signed APT repository publishes binaries, and the image installs packages instead of staging binaries into `includes.chroot`. With an atomic system layer, packages are used when the image is **built**. Installed systems do not run `apt` against the base: they receive whole signed images (ADR-013).
 
@@ -186,7 +186,7 @@ This means `spheradian/files` should be renamed to `spheradian/spheradian-files`
 ## 9. Related
 
 - [ADR-001](ADR-001-github-roadmap-governance.md): GitHub roadmap and governance
-- [ADR-003](ADR-003-xspherede-visibility.md): desktop repository visibility (licence amended to Apache-2.0 by §5.5)
+- [ADR-003](ADR-003-spheradian-visibility.md): desktop repository visibility (licence amended to Apache-2.0 by §5.5)
 - [ADR-007](ADR-007-m1-kiosk-prototype-session.md): pinned desktop build in the image
 - [ADR-012](ADR-012-implementation-language-policy.md): implementation language policy
 - [docs/ORGANIZATION.md](../ORGANIZATION.md): the living map of the organization, repositories, and names

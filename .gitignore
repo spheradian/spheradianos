@@ -27,6 +27,6 @@ __pycache__/
 /binary.modified_timestamps
 /chroot.packages.install
 /chroot.packages.live
-# staged xspherede binary built by scripts/build-xspherede.sh
-/config/includes.chroot/usr/bin/xspherede
+# staged spheradian binary built by scripts/build-spheradian.sh
+/config/includes.chroot/usr/bin/spheradian
 /boot-failures/
