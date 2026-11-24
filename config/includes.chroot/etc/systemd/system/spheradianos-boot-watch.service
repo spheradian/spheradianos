@@ -1,0 +1,14 @@
+# Ends the boot splash and prints diagnostics if a unit fails or the boot stalls.
+[Unit]
+Description=SpheradianOS boot watch (never let the splash hide a problem)
+DefaultDependencies=no
+After=plymouth-start.service
+ConditionKernelCommandLine=splash
+ConditionKernelCommandLine=!plymouth.enable=0
+
+[Service]
+Type=exec
+ExecStart=/usr/lib/spheradianos/boot-watch
+
+[Install]
+WantedBy=sysinit.target

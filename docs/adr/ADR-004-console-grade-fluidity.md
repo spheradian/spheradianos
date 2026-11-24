@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-To deliver console-like responsiveness without rewriting kernel subsystems, XSphereOS must eliminate two latency bottlenecks: CPU-bound `xz` squashfs decompression during live boot/app launch and CPU/memory contention between heavy clients and the `xspherede` compositor. We decided to adopt `zstd` squashfs compression, `systemd` `cgroups v2` QoS + `zram` protection for `xspherede`, and enforce zero-copy `DMA-BUF` window capture.
+To deliver console-like responsiveness without rewriting kernel subsystems, SpheradianOS must eliminate two latency bottlenecks: CPU-bound `xz` squashfs decompression during live boot/app launch and CPU/memory contention between heavy clients and the `spheradian` compositor. We decided to adopt `zstd` squashfs compression, `systemd` `cgroups v2` QoS + `zram` protection for `spheradian`, and enforce zero-copy `DMA-BUF` window capture.
 
 ## 2. Context and Problem
 
@@ -26,14 +26,14 @@ To deliver console-like responsiveness without rewriting kernel subsystems, XSph
 ## 4. Options Considered
 
 - **Option A:** Keep `xz` and default `systemd` scheduling without QoS.
-- **Option B (Chosen):** `zstd` squashfs + `cgroups v2` QoS for `xspherede` + `zram` + mandatory `DMA-BUF` zero-copy.
+- **Option B (Chosen):** `zstd` squashfs + `cgroups v2` QoS for `spheradian` + `zram` + mandatory `DMA-BUF` zero-copy.
 - **Option C:** Build custom OS/kernel subsystems from scratch (excessive complexity and maintenance cost).
 
 ## 5. Decision
 
 Adopt **Option B**:
 1. Evaluate and switch `--chroot-squashfs-compression-type` from `xz` to `zstd`, recording boot-time and ISO-size deltas in `docs/DISTRO-DESIGN.md` (Issue `#1`).
-2. Configure a dedicated `systemd` `cgroups v2` slice (`CPUWeight`, `IOWeight`, `MemoryLow`) for `xspherede` and enable `zram` to avoid swap thrashing on modest hardware.
+2. Configure a dedicated `systemd` `cgroups v2` slice (`CPUWeight`, `IOWeight`, `MemoryLow`) for `spheradian` and enable `zram` to avoid swap thrashing on modest hardware.
 3. Enforce zero-copy `DMA-BUF` window capture as a mandatory M2 acceptance criterion for normal GPU profiles.
 
 ## 6. Consequences and Trade-offs

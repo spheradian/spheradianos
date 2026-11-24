@@ -1,4 +1,4 @@
-# XSphereOS Code & Security Review Guidelines
+# SpheradianOS Code & Security Review Guidelines
 
 Review every pull request against the rules in `docs/ENGINEERING-PLAN.md` and accepted ADRs under `docs/adr/`.
 
@@ -20,7 +20,7 @@ Review every pull request against the rules in `docs/ENGINEERING-PLAN.md` and ac
   - Preserve `--distribution trixie`, `--variant=minbase`, `--apt-recommends false`, `--debian-installer none`, `--chroot-squashfs-compression-type zstd` (`ADR-004`), and `--firmware-binary false` / `--firmware-chroot false` (`ADR-007`).
   - Every package line in `config/package-lists/*.list.chroot` must have a one-line `#` justification comment directly above it and zero inline `#` comments; forbid `task-`, `gnome-`, `kde-`, `plasma-`, `xfce4`, `lxqt`, `lxde`, `mate-`, `cinnamon`, `budgie-`, `enlightenment`, `xorg`, `xwayland`, `xserver-xorg`, `kali-`, `parrot-`, `indi-`, `libindi`, heavyweight display managers (`gdm3`, `sddm`, `lightdm`, `lxdm`, `xdm`), and telemetry, cleartext, remote-daemon, or opaque-proxy packages enforced by `scripts/audit_packages.py` and `tests/test_distro_config.py`.
 - **Boot experience (`ADR-002`, `docs/BOOT-EXPERIENCE.md`):**
-  - Preserve zero-prompt bootloader defaults (`timeout=0`, hidden menu, no audio beep) and honest Plymouth failure reporting (`boot-watch`, `xsphere.motion=reduced`, no hidden errors).
+  - Preserve zero-prompt bootloader defaults (`timeout=0`, hidden menu, no audio beep) and honest Plymouth failure reporting (`boot-watch`, `spheradian.motion=reduced`, no hidden errors).
 
 ## 3. Code Quality & Verification
 - Keep scripts single-purpose, POSIX `sh` (`shellcheck` and `shfmt` clean), and standard-library Python where shipped/tested.

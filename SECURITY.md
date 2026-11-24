@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-XSphereOS has no released images yet. Only the current `main` branch is supported. Signed `testing` and `stable` releases arrive with Milestone `M4`. This table will list them once they exist.
+SpheradianOS has no released images yet. Only the current `main` branch is supported. Signed `testing` and `stable` releases arrive with Milestone `M4`. This table will list them once they exist.
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -10,14 +10,14 @@ XSphereOS has no released images yet. Only the current `main` branch is supporte
 
 ## Scope
 
-XSphereOS is in early development. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary. See [Current Status](README.md#current-status) in the README. Reports are welcome for any defect in what this repository builds or runs, for example:
+SpheradianOS is in early development. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary. See [Current Status](README.md#current-status) in the README. Reports are welcome for any defect in what this repository builds or runs, for example:
 
 - **Image recipe and contents:** `auto/`, `config/package-lists/`, `config/hooks/`, and files shipped through `config/includes.chroot/` (APT sources, `systemd` units, `initramfs-tools`, Plymouth, `profile.d`).
 - **Boot path:** GRUB and ISOLINUX templates in `config/bootloaders/`, and the autologin and boot-experience units (watchdog, failure reporting).
 - **Build and test tooling:** `scripts/` (`build.sh`, `build-in-container.sh`, `run-qemu.sh`, `boot-test.py`, the asset generators).
 - **CI and supply chain:** `.github/workflows/`, pinned actions, and how packages and artifacts are fetched.
 
-Vulnerabilities in Debian packages that the image only ships unchanged should go to the [Debian Security Team](https://www.debian.org/security/). Tell us about them as well if the XSphereOS default configuration makes them worse. Issues in the desktop compositor go to [`spheradian/spheradian`](https://github.com/spheradian/spheradian/security/policy).
+Vulnerabilities in Debian packages that the image only ships unchanged should go to the [Debian Security Team](https://www.debian.org/security/). Tell us about them as well if the SpheradianOS default configuration makes them worse. Issues in the desktop compositor go to [`spheradian/spheradian`](https://github.com/spheradian/spheradian/security/policy).
 
 ## Reporting a Vulnerability
 

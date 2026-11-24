@@ -7,8 +7,8 @@ wall-clock boot time compared with a boot without it.
 Method: boot the ISO in KVM-accelerated QEMU many times, alternating between
 the normal command line and the same command line with plymouth.enable=0, the
 switch that turns the splash off. Each boot reports its own systemd timestamps
-on a serial port (xsphereos-test-timing.service, enabled by
-xsphere.test.timing), so the measured span is from the kernel's start to the
+on a serial port (spheradianos-test-timing.service, enabled by
+spheradian.test.timing), so the measured span is from the kernel's start to the
 tty1 session start, at microsecond resolution. The firmware, the bootloader and
 QEMU itself are left out: they do not depend on the splash and were most of the
 noise in the earlier screenshot-based comparison.
@@ -24,7 +24,7 @@ end is above it, otherwise (or with fewer than five boots per variant)
 unresolved: run more boots.
 
 With --reduced-motion the splash boots use the still theme
-(xsphere.motion=reduced), which separates the animation's cost from the cost
+(spheradian.motion=reduced), which separates the animation's cost from the cost
 of having a splash at all.
 
 Usage: scripts/boot-budget.py [ISO] [--runs N] [--budget-ms MS] [--reduced-motion] [--json FILE]
@@ -49,18 +49,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CHROOT = ROOT / "config" / "includes.chroot"
 PROBE_FILES = (
-    "usr/lib/xsphereos/boot-timing",
-    "etc/systemd/system/xsphereos-test-timing.service",
-    "etc/systemd/system/multi-user.target.wants/xsphereos-test-timing.service",
+    "usr/lib/spheradianos/boot-timing",
+    "etc/systemd/system/spheradianos-test-timing.service",
+    "etc/systemd/system/multi-user.target.wants/spheradianos-test-timing.service",
 )
-PROBE_LAYER = "/live/zz-xsphereos-timing.squashfs"
+PROBE_LAYER = "/live/zz-spheradianos-timing.squashfs"
 BOOT_ENTRY = "live-amd64"
 SPLASH_ON, SPLASH_OFF = "splash on", "splash off"
 VARIANTS = {SPLASH_ON: [], SPLASH_OFF: ["plymouth.enable=0"]}
 BOOT_TIMEOUT = 120.0
 RESAMPLES = 4000
 MIN_BOOTS = 5  # per variant; fewer give no verdict
-TIMING_LINE = re.compile(r"xsphere-timing((?: \w+=\d+)+)")
+TIMING_LINE = re.compile(r"spheradian-timing((?: \w+=\d+)+)")
 
 
 def default_append(live_cfg, entry=BOOT_ENTRY):
@@ -256,7 +256,7 @@ def main():
     parser.add_argument(
         "--reduced-motion",
         action="store_true",
-        help="measure the still theme (xsphere.motion=reduced) instead of the animated one",
+        help="measure the still theme (spheradian.motion=reduced) instead of the animated one",
     )
     parser.add_argument("--json", type=Path, help="also write the results here")
     options = parser.parse_args()
@@ -269,10 +269,10 @@ def main():
     samples = {SPLASH_ON: [], SPLASH_OFF: []}
     with tempfile.TemporaryDirectory() as workdir:
         patched, kernel, initrd, append = prepare(iso, workdir)
-        base = [*append, "xsphere.test.timing"]
+        base = [*append, "spheradian.test.timing"]
         variants = dict(VARIANTS)
         if options.reduced_motion:
-            variants[SPLASH_ON] = ["xsphere.motion=reduced"]
+            variants[SPLASH_ON] = ["spheradian.motion=reduced"]
         # One discarded boot first, so the ISO is in the host's page cache for every measured boot.
         boot_once(patched, kernel, initrd, base, workdir)
         for index, variant in enumerate(schedule(options.runs), 1):

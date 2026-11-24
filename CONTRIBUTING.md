@@ -1,8 +1,8 @@
-# Contributing to XSphereOS
+# Contributing to SpheradianOS
 
-Thanks for your interest in XSphereOS. This repository holds the Debian `live-build` recipe, the boot experience, and the test and release tooling for the distribution. The desktop compositor lives in [`spheradian/spheradian`](https://github.com/spheradian/spheradian), and contributions to the compositor go there.
+Thanks for your interest in SpheradianOS. This repository holds the Debian `live-build` recipe, the boot experience, and the test and release tooling for the distribution. The desktop compositor lives in [`spheradian/spheradian`](https://github.com/spheradian/spheradian), and contributions to the compositor go there.
 
-XSphereOS is in early development and has a single maintainer. Small, focused changes are the easiest to review. Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+SpheradianOS is in early development and has a single maintainer. Small, focused changes are the easiest to review. Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Before You Start
 
@@ -61,4 +61,4 @@ The full rules are in [docs/ENGINEERING-PLAN.md](docs/ENGINEERING-PLAN.md) (§3 
 
 ## License
 
-XSphereOS is released under the [Apache License 2.0](LICENSE). By submitting a contribution, you agree that it is licensed under the same terms (Apache License 2.0, section 5).
+SpheradianOS is released under the [Apache License 2.0](LICENSE). By submitting a contribution, you agree that it is licensed under the same terms (Apache License 2.0, section 5).
