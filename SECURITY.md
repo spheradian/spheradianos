@@ -10,7 +10,7 @@ XSphereOS has no released images yet. Only the current `main` branch is supporte
 
 ## Scope
 
-XSphereOS is in early development. Until Milestone **M5** is complete, trust-domain isolation in XSphereDE is **not** an enforced security boundary. See [Current Status](README.md#current-status) in the README. Reports are welcome for any defect in what this repository builds or runs, for example:
+XSphereOS is in early development. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary. See [Current Status](README.md#current-status) in the README. Reports are welcome for any defect in what this repository builds or runs, for example:
 
 - **Image recipe and contents:** `auto/`, `config/package-lists/`, `config/hooks/`, and files shipped through `config/includes.chroot/` (APT sources, `systemd` units, `initramfs-tools`, Plymouth, `profile.d`).
 - **Boot path:** GRUB and ISOLINUX templates in `config/bootloaders/`, and the autologin and boot-experience units (watchdog, failure reporting).

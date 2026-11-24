@@ -1,8 +1,8 @@
 # XSphereOS
 
-**XSphereOS** (`spheradian/spheradianos`) is a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **XSphereDE** spherical Wayland desktop, in the spirit of Kurumin Linux.
+**XSphereOS** (`spheradian/spheradianos`) is a minimal, Debian-based (`trixie`, `minbase`, `amd64`) live and installable Linux distribution built to boot straight into the **Spheradian** spherical Wayland desktop, in the spirit of Kurumin Linux.
 
-> **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in XSphereDE is **not** an enforced security boundary.
+> **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary.
 
 ---
 
@@ -40,7 +40,7 @@ XSphereOS is in active **M0 / Boot Experience (B1–B3)** development:
 | Milestone | Scope | Done When |
 |---|---|---|
 | **M0** · Base image | Minimal Debian `minbase` live ISO | Boots unattended in QEMU to an autologged-in shell; package count and ISO size budgets recorded; static & boot CI green |
-| **M1** · Prototype session | Early desktop & performance substrate | XSphereDE prototype runs in a stub/kiosk session; fallback flat Wayland session exists; `zstd` squashfs, `cgroups v2` QoS, and `zram` applied ([ADR-004](docs/adr/ADR-004-console-grade-fluidity.md)) |
+| **M1** · Prototype session | Early desktop & performance substrate | Spheradian prototype runs in a stub/kiosk session; fallback flat Wayland session exists; `zstd` squashfs, `cgroups v2` QoS, and `zram` applied ([ADR-004](docs/adr/ADR-004-console-grade-fluidity.md)) |
 | **M2** · Real compositor | Native Wayland session | `xspherede` (Smithay + `wgpu`) boots via DRM/KMS hand-off (**B4**); zero-copy `DMA-BUF` window capture renders a real terminal on the sphere |
 | **M3** · Usable desktop | Daily-driver essentials | Wayland-native browser, file manager, terminal, network, PipeWire/WirePlumber audio, procedural boot audio (**B5**, [ADR-005](docs/adr/ADR-005-boot-procedural-audio.md)), polar launcher, and low-power profile |
 | **M4** · Installable | Packaging & release pipeline | Installer, signed APT repo (`xsphereos-base`), first-boot flow (**B7**), reproducible builds, CycloneDX SBOM, and signed `testing` → `stable` releases |
@@ -128,7 +128,7 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
 - [`config/`](config/) — package manifests (`config/package-lists/` with one-line justification per package), hooks (`config/hooks/`), bootloader templates (`config/bootloaders/`), and chroot overlays (`config/includes.chroot/`).
 - [`scripts/`](scripts/) — image build, QEMU runner, size reporting, boot asset generation, preview rendering, and headless boot tests.
 - [`tests/`](tests/) — unit, timeline, splash, and distribution configuration tests.
-- [`preview/`](preview/) — generated concept boot audio/video previews and QEMU test captures.
+- `preview/` — generated locally by `scripts/render-boot-preview.py` and the boot tests (git-ignored, not in the repository).
 - [`docs/`](docs/) — architecture, design, engineering plan, references, and ADRs.
 - [`.github/workflows/`](.github/workflows/) — CI pipeline enforcing shell linting, formatting, and unit/config tests.
 
