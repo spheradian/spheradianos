@@ -35,7 +35,7 @@ The decision also states plainly what is original and what is inherited (§5.2).
 - **The rename is underway, but no decision records it.** The `spheradian` organization was created on 2026-11-23. `mendsec/xspherede`, `mendsec/xsphereos`, and `mendsec/xspherede-security` now redirect to `spheradian/spheradian`, `spheradian/spheradianos`, and `spheradian/security`. The crate is now `spheradian`. PR #30 renames identifiers in this repository. The naming discussion lives in an issue (`spheradian/spheradian#17`), not in an ADR.
 - **`DISTRO-DESIGN.md` §10 leaves open question 6 open:** "Name, branding, and licensing of the distribution as distinct from the desktop."
 - **The company layer is undocumented.** Fabrintek (`github.com/fabrintek`) already exists as the maintainer's IT services company. Its relationship to the open-source project has not been decided.
-- **The licences disagree.** `spheradian/spheradian` ships `LICENSE` as Apache-2.0 (also in `Cargo.toml`). The organization profile, ADR-003, and this repository's README say MIT. PR #23 adds an MIT `LICENSE` to this repository. §5.5 resolves this in favour of Apache-2.0.
+- **The licences disagree.** `spheradian/spheradian` ships `LICENSE` as Apache-2.0 (also in `Cargo.toml`). The organization profile, ADR-003, and this repository's README say MIT. PR #23 first proposed an MIT `LICENSE` for this repository. §5.5 resolves this in favour of Apache-2.0.
 
 ## 3. Scope
 
@@ -135,7 +135,7 @@ This means `spheradian/files` should be renamed to `spheradian/spheradian-files`
 **Decided by the approver on 2026-11-23: Apache-2.0 for all project code.**
 
 1. **Desktop components:** Apache-2.0, as `spheradian/spheradian` already ships (`LICENSE`, `Cargo.toml`). Every new component repository starts with the same licence. Apache-2.0 is permissive like MIT, and it adds an explicit patent grant and a `NOTICE` mechanism, which matters for a project that a company sponsors and that others may build products on.
-2. **Distribution recipe:** Apache-2.0 as well, one licence across the organization. This repository gets an Apache-2.0 `LICENSE`. PR #23, which proposes an MIT `LICENSE` here, must switch to Apache-2.0 before it merges.
+2. **Distribution recipe:** Apache-2.0 as well, one licence across the organization. This repository gets an Apache-2.0 `LICENSE`. PR #23, which first proposed an MIT `LICENSE` here, switched to Apache-2.0 and merged with it.
 3. **Where MIT was stated, it is corrected:**
    - ADR-003 and the architecture diagrams, in this change;
    - PR #23's `LICENSE` and ADR-010;
@@ -167,7 +167,7 @@ This means `spheradian/files` should be renamed to `spheradian/spheradian-files`
 |---|---|---|---|
 | 1 | Merge the identifier rename (PR #30), coordinated with the open PRs it conflicts with (#23, #27, #28, #29, #31) | `spheradianos` | — |
 | 2 | Accept this ADR and ADR-012; close open question 6 in `DISTRO-DESIGN.md` §10 | `spheradianos` | — (licence decided: Apache-2.0, §5.5) |
-| 3 | Align on Apache-2.0: `LICENSE` in this repository (done with this ADR), the organization profile in `.github`, and PR #23's `LICENSE` | `.github`, `spheradianos` | — |
+| 3 | Align on Apache-2.0: `LICENSE` in this repository (done with this ADR), the organization profile in `.github`, and PR #23's `LICENSE` (done: merged as Apache-2.0) | `.github`, `spheradianos` | — |
 | 4 | Close `spheradian/spheradian#17` with a link to this ADR | `spheradian` | Step 2 |
 | 5 | Rename `files` → `spheradian-files`; update the Pages links | `spheradian-files` | Step 2 |
 | 6 | Add the "sponsored by Fabrintek" line and a trademark policy to `.github` | `.github` | Step 3 |
