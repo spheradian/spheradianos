@@ -19,6 +19,7 @@ BOOTLOADERS = ROOT / "config" / "bootloaders"
 GRUB_THEME = BOOTLOADERS / "grub-pc" / "spheradian"
 FONT_HOOK = ROOT / "config" / "hooks" / "live" / "9100-spheradianos-grub-font.hook.binary"
 MENU_ART_BUDGET = 64 * 1024
+GRUB_FONT_ALLOWANCE = 4 * 1024  # ascii.pf2 is built at image build time (about 3 KiB)
 
 
 def load(name, filename):
@@ -72,7 +73,8 @@ class MenuArt(unittest.TestCase):
 
     def test_menu_art_fits_its_budget(self):
         files = [BOOTLOADERS / "isolinux" / "splash.png", *GRUB_THEME.iterdir()]
-        self.assertLessEqual(sum(p.stat().st_size for p in files), MENU_ART_BUDGET)
+        committed = sum(p.stat().st_size for p in files)
+        self.assertLessEqual(committed + GRUB_FONT_ALLOWANCE, MENU_ART_BUDGET)
 
 
 class Configuration(unittest.TestCase):
