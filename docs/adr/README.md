@@ -20,5 +20,6 @@ This directory stores Architecture Decision Records for **SpheradianOS**, per `d
 | [ADR-014](ADR-014-hardware-targets-and-budgets.md) | Hardware Targets, Reference Machines, and Resource Budgets (`amd64` First, `arm64` Raspberry Pi Second) | Proposed | 2026-11-23 |
 | [ADR-015](ADR-015-planisphere-2d-presentation.md) | Planisphere, the 2D Presentation of Spheradian as a First-Class Experience | Proposed | 2026-11-23 |
 | [ADR-016](ADR-016-first-usable-build-roadmap.md) | Roadmap Reordering: First Usable Build Before Boot Polish | Proposed | 2026-11-23 |
+| [ADR-017](ADR-017-command-layer-on-brush.md) | A Command Layer for Spheradian Built on the `brush` Crates (Depend, Do Not Fork) | Proposed | 2026-11-28 |
 
 ADR-008 is reserved for the three-pillar positioning ADR (Privacy, Security, Old Computers), which is not yet committed. ADR-013 is reserved for the atomic system layer (ADR-011 §7).
