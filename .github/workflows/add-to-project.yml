@@ -1,0 +1,29 @@
+name: Add to project
+
+# Adds new issues and pull requests to the SpheradianOS Roadmap project.
+# Uses pull_request (not pull_request_target), so PRs from forks and Dependabot
+# do not receive the project token and are not added automatically.
+on:
+  issues:
+    types: [opened, reopened, transferred]
+  pull_request:
+    types: [opened, reopened]
+
+permissions: {}
+
+jobs:
+  add-to-project:
+    name: Add to SpheradianOS Roadmap
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Skip forks and Dependabot, which do not receive the project token.
+    if: >-
+      github.repository_owner == 'spheradian' &&
+      (github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'))
+    steps:
+      - uses: actions/add-to-project@f2c1f1fa649a891be84948ea89b5dfba1526ef05 # v2.0.1
+        with:
+          project-url: https://github.com/orgs/spheradian/projects/2
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
