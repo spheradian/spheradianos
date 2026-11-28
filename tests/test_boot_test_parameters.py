@@ -244,10 +244,6 @@ class SpheradianAttemptTests(unittest.TestCase):
         self.assertIn("No compatible GPU adapter found", attempt[-1])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class IsolinuxMenuKeyTests(unittest.TestCase):
     """The key that reveals the hidden menu must be harmless once it is shown.
 
@@ -280,3 +276,6 @@ class IsolinuxMenuKeyTests(unittest.TestCase):
             self.assertTrue(boot_test.open_isolinux_menu(guest, None))
         self.assertTrue(guest.pressed)
         self.assertFalse(self.MOVES_SELECTION & set(guest.pressed), guest.pressed)
+
+if __name__ == "__main__":
+    unittest.main()
