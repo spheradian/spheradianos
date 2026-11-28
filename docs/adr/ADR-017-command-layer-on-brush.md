@@ -51,7 +51,7 @@ A shell does not draw or manage windows. That stays the compositor's job (ADR-00
 
 - **Option A: Fork `brush` and turn it into the Planisphere window manager.** Rejected. A shell cannot host Wayland clients, so the compositor is still required. A fork means maintaining about 70k lines of pre-1.0 code and its dependency tree as a second product. It would also drift from a fast-moving upstream.
 - **Option B: No command layer; keyboard bindings hard-coded in the compositor.** Cheapest now. But automation, user layouts, and testing each grow their own ad-hoc interface, and tier 0 stays a bare terminal.
-- **Option C: A Sway-style IPC protocol plus a small CLI client, used from any shell.** Proven. But it needs a shell on the target to be useful, and ADR-012 discourages adding one. It gives no control over how launched processes are confined.
+- **Option C: A Sway-style IPC protocol plus a small CLI client, used from any shell.** Proven. But it is only as useful as the shell on the target, which today is `dash` from `minbase`: ADR-012 §5.1 keeps shell on the target to short POSIX glue and forbids `bash` shebangs there, so scripting the desktop would rest on a minimal shell outside the project's control. It gives no control over how launched processes are confined.
 - **Option D: Embed a different language (Lua, Rhai, Nushell).** Rhai and Lua are small and safe, but unfamiliar to people who already script in Bash. Nushell is large and has its own syntax. None of them give us Bash-compatible scripts that users already have.
 - **Option E (Chosen): A separate `spheradian-shell` process built on the `brush` crates as pinned dependencies,** with scene builtins, a custom `ProcessLauncher`, and an IPC link to the compositor.
 
@@ -165,6 +165,7 @@ If the tree or the memory cost is unacceptable, S2 falls back to Option C (IPC p
 5. How the per-session token reaches `spheradian-shell` and how it is bound to one domain. Passing it by argv or environment would let every child in that domain inherit it and drive the compositor with the shell's capabilities, and the per-domain limit in §5.3 depends on that binding (for example an inherited file descriptor that is closed before exec, or `SO_PEERCRED` checks on the socket).
 6. Whether S1 is done when the static check uses the AST (§5.4 table, M2) or only once S2 is committed (§5.4 text, M3). Also: the scripts under `config/includes.chroot/` are POSIX `sh`, so a Bash parser may accept constructs that `sh` rejects. Should S1 also enforce POSIX?
 7. A release gate between S2 (M3) and S3 (M5). During that window the console is a working shell whose launcher passes everything through. Should S2 ship only in images labelled as prototypes until the console banner shows the "not a security boundary" notice?
+8. Default-deny capabilities: §5.3 limits shells "in high-risk domains" without defining them. Should every shell be limited to its own domain's windows by default, with `scene.arrange` beyond that and `session.power` granted explicitly?
 
 ## 9. Related
 
