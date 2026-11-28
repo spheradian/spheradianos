@@ -18,7 +18,7 @@ Without decomposed milestones and acceptance criteria, M1/M2 work risked startin
 
 ## 3. Scope
 
-- **In scope:** GitHub Milestones (`M0`–`M5`), Issues (`#1`–`#14`), Labels, and Project `#5` (`SpheradianOS — Roadmap`) in `spheradian/spheradianos`.
+- **In scope:** GitHub Milestones (`M0`–`M5`), Issues (`#1`–`#14`), Labels, and the `SpheradianOS — Roadmap` Project (organization Project `#2`, originally personal Project `#5`).
 - **Out of scope:** Detailed threat models and hardening specifics, which remain in the private `spheradian/security` repository.
 
 ## 4. Options Considered
@@ -38,4 +38,4 @@ Adopt **Option A**. All roadmap deliverables are tracked as Issues assigned to M
 
 ## 7. Security and Compliance
 
-~~`spheradian/spheradianos` and Project `#5` remain private.~~ Superseded by [ADR-010](ADR-010-spheradianos-public-visibility.md): `spheradian/spheradianos` becomes public after M0, and ADR-010 settles the visibility of Project `#5`. No sensitive security findings from `spheradian/security` are mirrored in GitHub Issues.
+~~`spheradian/spheradianos` and the roadmap Project remain private.~~ Superseded by [ADR-010](ADR-010-spheradianos-public-visibility.md): `spheradian/spheradianos` becomes public after M0, and ADR-010 makes the roadmap Project (organization Project `#2`) public as well. No sensitive security findings from `spheradian/security` are mirrored in GitHub Issues.
