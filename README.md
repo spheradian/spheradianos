@@ -145,7 +145,7 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
 - [`config/`](config/) — package manifests (`config/package-lists/` with one-line justification per package), hooks (`config/hooks/`), bootloader templates (`config/bootloaders/`), and chroot overlays (`config/includes.chroot/`).
 - [`scripts/`](scripts/) — image build, QEMU runner, size reporting, boot asset generation, preview rendering, and headless boot tests.
 - [`tests/`](tests/) — unit, timeline, splash, and distribution configuration tests.
-- [`preview/`](preview/) — generated concept boot audio/video previews and QEMU test captures.
+- `preview/` — generated locally by `scripts/render-boot-preview.py` and the boot tests (git-ignored, not in the repository).
 - [`docs/`](docs/) — architecture, design, engineering plan, references, and ADRs.
 - [`.github/workflows/`](.github/workflows/) — CI pipeline enforcing shell linting, formatting, and unit/config tests.
 

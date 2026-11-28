@@ -1,0 +1,2 @@
+# Default reviewer for everything. Branch protection can require this review.
+* @mendsec
