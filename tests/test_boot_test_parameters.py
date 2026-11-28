@@ -277,5 +277,6 @@ class IsolinuxMenuKeyTests(unittest.TestCase):
         self.assertTrue(guest.pressed)
         self.assertFalse(self.MOVES_SELECTION & set(guest.pressed), guest.pressed)
 
+
 if __name__ == "__main__":
     unittest.main()
