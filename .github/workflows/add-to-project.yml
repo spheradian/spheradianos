@@ -1,12 +1,12 @@
 name: Add to project
 
 # Adds new issues and pull requests to the SpheradianOS Roadmap project.
-# pull_request_target is used so the project token is available for PRs from
-# forks and Dependabot. This workflow never checks out or runs PR code.
+# Uses pull_request (not pull_request_target), so PRs from forks and Dependabot
+# do not receive the project token and are not added automatically.
 on:
   issues:
     types: [opened, reopened, transferred]
-  pull_request_target: # zizmor: ignore[dangerous-triggers] no checkout, no PR code executed
+  pull_request:
     types: [opened, reopened]
 
 permissions: {}
