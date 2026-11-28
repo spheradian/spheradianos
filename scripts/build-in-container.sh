@@ -25,7 +25,7 @@ podman run --rm --privileged --network host \
 		export DEBIAN_FRONTEND=noninteractive
 		apt-get update
 		apt-get install -y --no-install-recommends \
-			live-build debootstrap squashfs-tools xorriso ca-certificates
+			live-build debootstrap squashfs-tools xorriso ca-certificates python3
 		scripts/build.sh
 	'
 

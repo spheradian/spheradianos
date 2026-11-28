@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the boot splash theme deterministically (standard library only).
+"""Generate the boot splash theme and bootloader menu art (standard library only).
 
 Usage: scripts/gen-boot-assets.py
 Writes two tiny images and the Plymouth scripts of the animated theme and its
@@ -17,7 +17,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import boot_timeline as timeline  # noqa: E402
 
-THEMES = Path(__file__).resolve().parent.parent / "config/includes.chroot/usr/share/plymouth/themes"
+ROOT = Path(__file__).resolve().parent.parent
+THEMES = ROOT / "config/includes.chroot/usr/share/plymouth/themes"
+BOOTLOADERS = ROOT / "config/bootloaders"
 THEMES_IN_IMAGE = "/usr/share/plymouth/themes"
 SEED_COLOUR = (225, 235, 255)
 SEED_PIXELS = 128
@@ -292,12 +294,83 @@ def theme_files():
     return files
 
 
+# --- Bootloader menu art -------------------------------------------------------
+#
+# ISOLINUX draws its menu background during the hidden half-second timeout on
+# every boot, so that background is plain black: the boot stays dark until the
+# splash's first speck of light. GRUB draws its theme only when the menu is
+# opened, so it can show the sphere: the gathered state, as the splash ends.
+
+ISOLINUX_SIZE = (640, 480)  # vesamenu's graphics mode
+GRUB_ART_SIZE = (960, 600)  # 16:10; the theme pads it to any screen, keeping its shape
+GRUB_SPHERE_CENTRE = (0.5, 0.31)  # fractions of the width and height
+GRUB_SPHERE_RADIUS = 0.2  # fraction of the height
+GRUB_ART_GAIN = 0.75  # behind menu text, the art stays below full brightness
+
+
+def encode_png_rgb(width, height, pixels):
+    """8-bit RGB, no interlace, filter 0: a PNG subset both GRUB and vesamenu read."""
+    stride = width * 3
+    raw = b"".join(b"\x00" + pixels[row * stride : (row + 1) * stride] for row in range(height))
+    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + png_chunk(b"IHDR", header)
+        + png_chunk(b"IDAT", zlib.compress(raw, 9))
+        + png_chunk(b"IEND", b"")
+    )
+
+
+def add_glow(canvas, width, height, cx, cy, radius, colour, strength):
+    """Additively draw a soft round glow into an RGB float canvas."""
+    reach = int(radius * 3) + 1
+    for y in range(max(0, int(cy) - reach), min(height, int(cy) + reach + 1)):
+        for x in range(max(0, int(cx) - reach), min(width, int(cx) + reach + 1)):
+            d2 = ((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2) / (radius * radius)
+            if d2 < 9:
+                weight = strength * math.exp(-d2)
+                base = (y * width + x) * 3
+                for channel in range(3):
+                    canvas[base + channel] += colour[channel] * weight
+
+
+def render_grub_art():
+    """The gathered sphere: seed at the centre, every region awake in its colour."""
+    width, height = GRUB_ART_SIZE
+    canvas = [0.0] * (width * height * 3)
+    cx, cy = GRUB_SPHERE_CENTRE[0] * width, GRUB_SPHERE_CENTRE[1] * height
+    radius = GRUB_SPHERE_RADIUS * height
+    still = timeline.still_frame()
+    dots = []
+    for lat, lon in timeline.lattice_dots():
+        x, y, z = timeline.project(lat, lon, still["spin"])
+        region = timeline.region_of(math.degrees(lon))
+        dots.append((z, x, y, timeline.REGION_COLOURS[region]))
+    for z, x, y, colour in sorted(dots):  # back to front
+        strength = 0.9 * timeline.depth_cue(z)
+        add_glow(canvas, width, height, cx + x * radius, cy - y * radius, 2.2, colour, strength)
+    add_glow(canvas, width, height, cx, cy, radius * 0.09, SEED_COLOUR, 1.0)
+    add_glow(canvas, width, height, cx, cy, radius * 0.3, SEED_COLOUR, 0.25)
+    return bytes(int(min(255.0, value * GRUB_ART_GAIN) + 0.5) for value in canvas)
+
+
+def bootloader_files():
+    """Generated bootloader files, as {path relative to config/bootloaders: bytes}."""
+    black = bytes(ISOLINUX_SIZE[0] * ISOLINUX_SIZE[1] * 3)
+    return {
+        # Named splash.png so live-build uses it instead of rendering Debian's artwork.
+        "isolinux/splash.png": encode_png_rgb(*ISOLINUX_SIZE, black),
+        "grub-pc/spheradian/background.png": encode_png_rgb(*GRUB_ART_SIZE, render_grub_art()),
+    }
+
+
 def main():
-    for relative, data in theme_files().items():
-        path = THEMES / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
-        print(f"wrote {relative} ({len(data)} bytes)")
+    for base, files in ((THEMES, theme_files()), (BOOTLOADERS, bootloader_files())):
+        for relative, data in files.items():
+            path = base / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            print(f"wrote {path.relative_to(ROOT)} ({len(data)} bytes)")
 
 
 if __name__ == "__main__":

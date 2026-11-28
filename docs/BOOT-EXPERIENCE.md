@@ -183,6 +183,7 @@ How that was done, and what each technique means here:
 |---|---|---|
 | Everything this feature adds to the image (theme, score, synth) | 256 KiB, the size of that console's entire boot ROM | 12 KiB (both themes; no sound code yet) |
 | Theme files | 64 KiB | 12 KiB for the animated theme and its still variant. The B1 still image was 106 KiB, then 51 KiB with a palette; B2 replaced it with two glow images (3.4 KiB and 0.3 KiB) placed by arithmetic |
+| Bootloader menu art (ISOLINUX background, GRUB theme and its ASCII font) | 64 KiB, static test | 60 KiB: GRUB background 55 KiB, ISOLINUX black background 1 KiB, theme 1 KiB, font 3 KiB (made at build time from Debian's `unicode.pf2`). Measured cost of the themed menu on a normal UEFI boot in QEMU: within noise (median 2.72 s to the first splash frame against 2.66 s without it) |
 | Boot sound score (note list and parameters) | 4 KiB, no samples | not built; the concept score is estimated at under 1 KiB |
 | Boot sound synth, compiled | 64 KiB | not built |
 | Synth memory while playing | 256 KiB | not built |
