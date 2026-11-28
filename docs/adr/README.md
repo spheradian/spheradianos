@@ -15,3 +15,10 @@ This directory stores Architecture Decision Records for **SpheradianOS**, per `d
 | [ADR-007](ADR-007-m1-kiosk-prototype-session.md) | M1 Prototype Session via Wayland Kiosk (`cage` + `seatd`) and Pinned `spheradian` Build | Accepted | 2026-11-20 |
 | [ADR-009](ADR-009-gpu-render-levels-and-warmup.md) | GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4) | Accepted | 2026-11-21 |
 | [ADR-010](ADR-010-spheradianos-public-visibility.md) | Make `spheradian/spheradianos` Public After M0, Announce at M2 | Proposed | 2026-11-22 |
+| [ADR-011](ADR-011-organization-and-product-structure.md) | Organization and Product Structure (Fabrintek, Spheradian, SpheradianOS) After the System76 and Silverblue Models | Proposed | 2026-11-23 |
+| [ADR-012](ADR-012-implementation-language-policy.md) | Implementation Language Policy: Rust for What Ships, Scripts for What Builds | Proposed | 2026-11-23 |
+| [ADR-014](ADR-014-hardware-targets-and-budgets.md) | Hardware Targets, Reference Machines, and Resource Budgets (`amd64` First, `arm64` Raspberry Pi Second) | Proposed | 2026-11-23 |
+| [ADR-015](ADR-015-planisphere-2d-presentation.md) | Planisphere, the 2D Presentation of Spheradian as a First-Class Experience | Proposed | 2026-11-23 |
+| [ADR-016](ADR-016-first-usable-build-roadmap.md) | Roadmap Reordering: First Usable Build Before Boot Polish | Proposed | 2026-11-23 |
+
+ADR-008 is reserved for the three-pillar positioning ADR (Privacy, Security, Old Computers), which is not yet committed. ADR-013 is reserved for the atomic system layer (ADR-011 §7).

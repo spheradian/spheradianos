@@ -8,6 +8,8 @@
 **Impact:** Medium  
 **Reversibility:** Easy  
 
+> **Amended 2026-11-23 by [ADR-011](ADR-011-organization-and-product-structure.md) §5.5:** the licence is **Apache-2.0**, not MIT. The repository already shipped Apache-2.0 (`LICENSE`, `Cargo.toml`). The visibility decision below is unchanged.
+
 ## 1. Executive Summary
 
 `spheradian/spheradian` is currently public under the MIT license, while `spheradian/spheradianos` and `spheradian/security` are private. We decided to **keep `spheradian/spheradian` public**, preserving free unlimited CI/CD for the Rust compositor matrix and public auditability, while keeping distribution recipes and security threat models isolated in the two private repositories.

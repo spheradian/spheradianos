@@ -113,7 +113,12 @@ See [docs/adr/README.md](adr/README.md) for accepted and proposed ADRs:
 - [ADR-005](adr/ADR-005-boot-procedural-audio.md) — Boot Procedural Audio (B5) Integration and KVM Boot-Time Measurement
 - [ADR-006](adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery
 - [ADR-007](adr/ADR-007-m1-kiosk-prototype-session.md) — M1 Prototype Session via Wayland Kiosk (`cage` + `seatd`) and Pinned `spheradian` Build
-- [ADR-007](adr/ADR-007-three-pillar-positioning-and-anti-pattern-prevention.md) — Three-Pillar Positioning (Privacy, Security, Old Computers) and Vulnerability-Driven Anti-Pattern Prevention
+- ADR-008 (reserved, not yet committed) — Three-Pillar Positioning (Privacy, Security, Old Computers) and Vulnerability-Driven Anti-Pattern Prevention
+- [ADR-011](adr/ADR-011-organization-and-product-structure.md) — Organization and Product Structure (Fabrintek, Spheradian, SpheradianOS) After the System76 and Silverblue Models
+- [ADR-012](adr/ADR-012-implementation-language-policy.md) — Implementation Language Policy: Rust for What Ships, Scripts for What Builds
+- [ADR-014](adr/ADR-014-hardware-targets-and-budgets.md) — Hardware Targets, Reference Machines, and Resource Budgets
+- [ADR-015](adr/ADR-015-planisphere-2d-presentation.md) — Planisphere, the 2D Presentation of Spheradian
+- [ADR-016](adr/ADR-016-first-usable-build-roadmap.md) — Roadmap Reordering: First Usable Build Before Boot Polish
 
 ---
 

@@ -4,6 +4,21 @@
 
 > **Security scope:** Threat models, audit findings, and hardening specifics live in the private `spheradian/security` repository, not here. Until Milestone **M5** is complete, trust-domain isolation in Spheradian is **not** an enforced security boundary.
 
+> **Renamed:** formerly XSphereOS (the distribution) and XSphereDE (the desktop), now **SpheradianOS** and **Spheradian** under the [`spheradian`](https://github.com/spheradian) GitHub organization. Repositories, files, and identifiers have moved (PR #30). See [docs/ORGANIZATION.md](docs/ORGANIZATION.md).
+
+---
+
+## What Is Original Here
+
+This operating system is **Debian-based**: the kernel, drivers, systemd, Mesa, and the packages come unchanged from Debian `trixie`. The original work is built on top of them:
+
+- **The desktop:** a spherical Wayland compositor and shell in safe Rust (`spheradian/spheradian`). The interface, the organization of data, the filesystem, and security are designed as one.
+- **The system layer (planned):** an immutable base with atomic updates and rollback, its own filesystem layout, and memory management for responsive sessions on modest hardware. This follows Fedora Silverblue, and on Debian, Vanilla OS and Endless OS.
+- **The boot experience:** Ignite → Gather → Wake driven by real `systemd` milestones, with a watchdog and plain-text failure reports.
+- **Planned, all in Rust:** session manager, installer, first boot, settings, procedural boot audio, and enforced per-domain isolation (M2–M5).
+
+This repository is the image recipe. It uses `live-build`, shell, and Python **build and test tooling that never ships in the image**, the same role Make and shell play in `pop-os/iso`. Code that runs on the user's machine is written in Rust ([ADR-012](docs/adr/ADR-012-implementation-language-policy.md)). The organization and the desktop follow the System76 / Pop!_OS / COSMIC model, with Fabrintek as sponsor. The system layer follows the Silverblue model ([ADR-011](docs/adr/ADR-011-organization-and-product-structure.md)).
+
 ---
 
 ## Repository Ecosystem
@@ -34,6 +49,8 @@ SpheradianOS is in active **M0 / Boot Experience (B1–B3)** development:
 ---
 
 ## Roadmap
+
+> **Proposed reordering:** [ADR-016](docs/adr/ADR-016-first-usable-build-roadmap.md) redefines M2 as the *First Usable Build* (real apps on the sphere, controller and keyboard navigation, minimal Planisphere 2D mode, usability round 1). It moves B4 and B5 to M3 and adds **M6** for `arm64` / Raspberry Pi. The table below is the current plan until that ADR is accepted. The product vision is in [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md).
 
 ### Distribution Milestones (`M0`–`M5`)
 
@@ -128,7 +145,7 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
 - [`config/`](config/) — package manifests (`config/package-lists/` with one-line justification per package), hooks (`config/hooks/`), bootloader templates (`config/bootloaders/`), and chroot overlays (`config/includes.chroot/`).
 - [`scripts/`](scripts/) — image build, QEMU runner, size reporting, boot asset generation, preview rendering, and headless boot tests.
 - [`tests/`](tests/) — unit, timeline, splash, and distribution configuration tests.
-- [`preview/`](preview/) — generated concept boot audio/video previews and QEMU test captures.
+- `preview/` — generated locally by `scripts/render-boot-preview.py` and the boot tests (git-ignored, not in the repository).
 - [`docs/`](docs/) — architecture, design, engineering plan, references, and ADRs.
 - [`.github/workflows/`](.github/workflows/) — CI pipeline enforcing shell linting, formatting, and unit/config tests.
 
@@ -150,3 +167,16 @@ scripts/boot-test.py --uefi                # any of the above under UEFI (OVMF a
   - [ADR-006](docs/adr/ADR-006-installed-performance-and-recovery.md) — Installed System Performance (`host-only` `initramfs`) and Console-Style Recovery
   - [ADR-009](docs/adr/ADR-009-gpu-render-levels-and-warmup.md) — GPU Render Levels with Persisted Crash Downgrade, and Pipeline Warm-Up Behind the Splash (M2 / B4)
   - [ADR-010](docs/adr/ADR-010-spheradianos-public-visibility.md) — Make `spheradian/spheradianos` Public After M0, Announce at M2
+  - [ADR-011](docs/adr/ADR-011-organization-and-product-structure.md) — Organization and Product Structure (Fabrintek, Spheradian, SpheradianOS) After the System76 and Silverblue Models (Proposed)
+  - [ADR-012](docs/adr/ADR-012-implementation-language-policy.md) — Implementation Language Policy: Rust for What Ships, Scripts for What Builds (Proposed)
+  - [ADR-014](docs/adr/ADR-014-hardware-targets-and-budgets.md) — Hardware Targets, Reference Machines, and Resource Budgets (Proposed)
+  - [ADR-015](docs/adr/ADR-015-planisphere-2d-presentation.md) — Planisphere, the 2D Presentation of Spheradian (Proposed)
+  - [ADR-016](docs/adr/ADR-016-first-usable-build-roadmap.md) — Roadmap Reordering: First Usable Build Before Boot Polish (Proposed)
+- [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md) — Product vision: console feel, security between secureblue and Qubes OS, Sphere and Planisphere, hardware targets.
+- [docs/ORGANIZATION.md](docs/ORGANIZATION.md) — Organization map, repositories, naming rules, and what is original versus inherited.
+
+---
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE). The same licence applies across the `spheradian` organization ([ADR-011](docs/adr/ADR-011-organization-and-product-structure.md) §5.5). The names and logos of Spheradian and SpheradianOS are not covered by the code licence.
