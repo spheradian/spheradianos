@@ -66,7 +66,8 @@ All items must be done before the visibility switch.
 - [x] **Secret scan across all history.** Run `gitleaks` over every branch and every commit, not only the PR diff. Any finding means the secret is rotated, and the history is rewritten *before* publication.
   - 2026-11-22: `gitleaks git --log-opts=--all` scanned 67 commits on all remote branches. No leaks found. Run it again immediately before the switch to cover later commits.
 - [ ] **Issues, PRs, comments, and Actions logs.** Review them all. They become public along with the code. Anything that belongs in `spheradian/security` is moved there, and the original is edited or deleted.
-- [ ] **Project `#5`.** Decide whether `SpheradianOS — Roadmap` becomes public along with the repository, or stays private.
+- [x] **Roadmap project.** `SpheradianOS — Roadmap` becomes public along with the repository.
+  - 2026-11-28: the roadmap moved from the approver's personal Project `#5` to the organization, as [Project `#2`](https://github.com/orgs/spheradian/projects/2), and was made public. The desktop roadmap moved the same way, as [Project `#1`](https://github.com/orgs/spheradian/projects/1). The personal Projects `#5` and `#6` are closed. Project items link only to `spheradian/spheradianos` and `spheradian/spheradian` issues and pull requests, so nothing from `spheradian/security` is exposed. Recheck the items for security-impact wording before the switch, as for issues and PRs above.
 - [ ] **Commit author identity.** Accept that commit author names and e-mail addresses become public, or rewrite them to a noreply address before publication.
 - [ ] **Stale branches.** Delete remote branches that should not be published (for example `backup/*`, abandoned experiments).
   - 2026-11-22: `backup/*` exists only locally and was never pushed. The remote branches whose PRs were already merged were deleted: `ci/code-security-reviewers` (`#18`), `claude/adr-009-renumber-accepted` (`#21`), `claude/planning-progress-66bfed` (`#22`), and `claude/project-progress-review-2c45ab` (`#20`). Each pointed at its PR's merged head, so no work was lost. Remaining: enable *Automatically delete head branches* in the repository settings, and check the branch list again just before the switch.
@@ -97,7 +98,7 @@ All items must be done before the visibility switch.
 Done in the same change as this ADR (see the *Wording* item in §5).
 
 - ADR-003 §4: limit the "remain strictly private" clause to `spheradian/security`, and note that it is superseded for `spheradianos` by this ADR.
-- ADR-001 §7: replace with the Project `#5` decision from §5.
+- ADR-001 §7: replace with the roadmap project decision from §5 (organization Project `#2`, public).
 - `ENGINEERING-PLAN.md` §5.3: "`spheradian/security` stays private; `spheradianos` is public per ADR-010."
 - `README.md` and `docs/ARCHITECTURE.md`: repository table and layer labels.
 
@@ -109,5 +110,4 @@ Done in the same change as this ADR (see the *Wording* item in §5).
 
 ## 9. Open Questions
 
-1. Whether Project `#5` becomes public.
-2. Whether to rewrite commit author e-mails to a noreply address before publication.
+1. Whether to rewrite commit author e-mails to a noreply address before publication.
