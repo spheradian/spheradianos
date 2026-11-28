@@ -6,7 +6,7 @@ Usage: scripts/subset-grub-font.py SOURCE.pf2 TARGET.pf2
 GRUB reads its whole font file before it can draw a themed menu. Debian's
 unicode.pf2 is about 2.3 MB, and loading it on every boot delays the splash by
 about 0.8 s under OVMF (docs/BOOT-EXPERIENCE.md 6.4). The menu shows only
-printable ASCII, so a subset of about 4 KB does the same job.
+printable ASCII, so a subset of about 3 KB does the same job.
 
 Standard library only. The PF2 layout: a sequence of sections, each a 4-byte
 name and a 4-byte big-endian length, then the data. CHIX lists each character

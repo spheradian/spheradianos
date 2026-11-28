@@ -6,7 +6,10 @@ Run from the repository root: python3 -m unittest discover -s tests -v
 import importlib.util
 import os
 import re
+import shutil
 import struct
+import subprocess
+import tempfile
 import unittest
 import zlib
 from pathlib import Path
@@ -158,6 +161,53 @@ class FontSubset(unittest.TestCase):
     def test_rejects_a_font_without_the_needed_characters(self):
         with self.assertRaises(self.subset.FontError):
             self.subset.subset(make_font([0x4E2D]))
+
+
+class FontHook(unittest.TestCase):
+    def test_skips_only_when_grub_directory_is_absent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            binary = Path(tmp) / "binary"
+            binary.mkdir()
+            result = subprocess.run(
+                [str(FONT_HOOK)],
+                cwd=binary,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("skipping", result.stdout)
+
+    def test_fails_when_grub_exists_without_unicode_font(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            binary = Path(tmp) / "binary"
+            (binary / "boot" / "grub").mkdir(parents=True)
+            result = subprocess.run(
+                [str(FONT_HOOK)],
+                cwd=binary,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("not found", result.stderr)
+
+    def test_builds_ascii_subset_inside_fake_live_build_tree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scripts").mkdir()
+            shutil.copy2(ROOT / "scripts" / "subset-grub-font.py", root / "scripts" / "subset-grub-font.py")
+            binary = root / "binary"
+            grub_dir = binary / "boot" / "grub"
+            grub_dir.mkdir(parents=True)
+            (grub_dir / "spheradian").mkdir()
+            (grub_dir / "unicode.pf2").write_bytes(make_font([0x20, 0x41]))
+            result = subprocess.run(
+                [str(FONT_HOOK)],
+                cwd=binary,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue((grub_dir / "spheradian" / "ascii.pf2").is_file())
 
 
 if __name__ == "__main__":

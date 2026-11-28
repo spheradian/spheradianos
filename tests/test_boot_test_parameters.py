@@ -246,3 +246,37 @@ class SpheradianAttemptTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class IsolinuxMenuKeyTests(unittest.TestCase):
+    """The key that reveals the hidden menu must be harmless once it is shown.
+
+    Screenshots lag the guest, so a key can land after the menu is already up.
+    In syslinux's menu a space pages down (com32/menu/menumain.c, case ' '),
+    which selected the fail-safe entry: its command line has no quiet splash,
+    so the splash never showed and the boot failed in about half the runs.
+    """
+
+    # Keys that change the selected entry in a shown syslinux menu.
+    MOVES_SELECTION = {"spc", "down", "up", "pgdn", "pgup", "left", "right", "end", "minus", "kp_add"}
+
+    class MenuGuest:
+        slowdown = 1
+
+        def __init__(self, shown_after):
+            self.shown_after = shown_after
+            self.pressed = []
+
+        def press(self, *names):
+            self.pressed.extend(names)
+
+        def screen(self, keep_as=None):
+            shown = len(self.pressed) >= self.shown_after
+            return mock.Mock(shows_isolinux_menu=mock.Mock(return_value=shown))
+
+    def test_menu_keys_never_move_the_selection(self) -> None:
+        guest = self.MenuGuest(shown_after=2)
+        with mock.patch.object(boot_test.time, "sleep"):
+            self.assertTrue(boot_test.open_isolinux_menu(guest, None))
+        self.assertTrue(guest.pressed)
+        self.assertFalse(self.MOVES_SELECTION & set(guest.pressed), guest.pressed)

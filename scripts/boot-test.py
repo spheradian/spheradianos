@@ -410,15 +410,18 @@ def run(iso, shots, reduced_motion=False, fault=None, uefi=False, console=False)
 
 
 def open_isolinux_menu(guest, shots):
-    """Press space until ISOLINUX shows its menu (ADR-002: hidden, 0.5 s timeout).
+    """Press Home until ISOLINUX shows its menu (ADR-002: hidden, 0.5 s timeout).
 
     One key at a time: the BIOS keyboard buffer is small, and any key both
-    cancels the timeout and reveals the hidden menu.
+    cancels the timeout and reveals the hidden menu. Screenshots lag the
+    guest, so a key can arrive after the menu is already shown. Home is safe
+    then: it selects the first entry, which is the default. A space is not:
+    the menu pages down on it, which selected the fail-safe entry.
     """
     deadline = time.time() + ISOLINUX_MENU_TIMEOUT * guest.slowdown
     count = 0
     while time.time() < deadline:
-        guest.press("spc")
+        guest.press("home")
         time.sleep(0.25)
         keep = shots / f"menu-{count:03d}.ppm" if shots else None
         if guest.screen(keep).shows_isolinux_menu():
