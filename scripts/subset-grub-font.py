@@ -72,6 +72,7 @@ def subset(data, keep=KEEP):
     kept = [(code, flags, glyph_at(data, offset)) for code, flags, offset in entries if code in keep]
     if not kept:
         raise FontError("none of the requested characters are in the font")
+    kept.sort(key=lambda item: item[0])  # GRUB binary-searches CHIX by code point
 
     # Everything before CHIX keeps its size, so the glyph offsets are known up front.
     head = b"".join(
@@ -82,7 +83,7 @@ def subset(data, keep=KEEP):
     chix_size = 8 + CHIX_ENTRY.size * len(kept)
     offset = len(head) + chix_size + 8
     index, glyphs = [], []
-    for code, flags, glyph in kept:  # PF2 requires CHIX sorted by code point; it already is
+    for code, flags, glyph in kept:
         index.append(CHIX_ENTRY.pack(code, flags, offset))
         glyphs.append(glyph)
         offset += len(glyph)

@@ -148,6 +148,13 @@ class FontSubset(unittest.TestCase):
         for code, glyph in kept.items():
             self.assertEqual(glyph, original[code])
 
+    def test_index_is_sorted_even_when_the_source_is_not(self):
+        # GRUB binary-searches CHIX, so an unsorted index loses glyphs silently.
+        result = self.subset.subset(make_font([0x7E, 0x41, 0x20]))
+        chix = dict(self.subset.read_sections(result))[b"CHIX"]
+        codes = [self.subset.CHIX_ENTRY.unpack_from(chix, i)[0] for i in range(0, len(chix), 9)]
+        self.assertEqual(codes, [0x20, 0x41, 0x7E])
+
     def test_keeps_the_font_header(self):
         result = dict(self.subset.read_sections(self.subset.subset(make_font([0x41]))))
         self.assertEqual(result[b"NAME"], b"Test Regular 16\x00")
