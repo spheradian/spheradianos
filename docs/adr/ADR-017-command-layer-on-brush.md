@@ -162,6 +162,9 @@ If the tree or the memory cost is unacceptable, S2 falls back to Option C (IPC p
 2. Should the console overlay be available in the Sphere presentation too, or only in Planisphere?
 3. Login shell: does `spheradian-shell` become the default interactive shell in terminals, or only the console's shell, with `foot` keeping the user's choice?
 4. Stability policy for builtin names and flags before the first public release that ships S2.
+5. How the per-session token reaches `spheradian-shell` and how it is bound to one domain. Passing it by argv or environment would let every child in that domain inherit it and drive the compositor with the shell's capabilities, and the per-domain limit in §5.3 depends on that binding (for example an inherited file descriptor that is closed before exec, or `SO_PEERCRED` checks on the socket).
+6. Whether S1 is done when the static check uses the AST (§5.4 table, M2) or only once S2 is committed (§5.4 text, M3). Also: the scripts under `config/includes.chroot/` are POSIX `sh`, so a Bash parser may accept constructs that `sh` rejects. Should S1 also enforce POSIX?
+7. A release gate between S2 (M3) and S3 (M5). During that window the console is a working shell whose launcher passes everything through. Should S2 ship only in images labelled as prototypes until the console banner shows the "not a security boundary" notice?
 
 ## 9. Related
 
